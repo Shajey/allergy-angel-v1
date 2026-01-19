@@ -189,7 +189,7 @@ function CarePlanPage() {
     showToast(`Requested "${requirement.key}" from VNS Provider Services`, 'success');
   };
 
-  const handleViewRequest = (threadId: string) => {
+  const handleViewRequest = (_threadId: string) => {
     navigate('/messages');
   };
 
@@ -327,7 +327,7 @@ function CarePlanPage() {
   ];
 
   const patientName = activePatient?.fullName || "patient";
-  const isClinicianMode = isClinician(viewMode);
+  const _isClinicianMode = isClinician(viewMode);
   const headerCopy = getHeaderCopy("carePlan", patientName, viewMode);
   const cardClass = getCardClassName(viewMode);
 

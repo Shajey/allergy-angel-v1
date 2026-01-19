@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
-type ViewMode = "patient" | "caregiver" | "clinician";
+type ViewMode = "patient" | "caregiver" | "clinician" | "developer";
 
 interface PageHeaderProps {
   title: string;
@@ -41,6 +41,7 @@ export default function PageHeader({
 }: PageHeaderProps) {
   // Get persona-aware eyebrow color
   // Using -700 shades for clinician to reduce saturation and match comfort level
+  // Developer defaults to gray/slate styling
   const getEyebrowColorClass = (mode: ViewMode): string => {
     switch (mode) {
       case "patient":
@@ -49,6 +50,8 @@ export default function PageHeader({
         return "text-blue-600";
       case "clinician":
         return "text-purple-700";
+      case "developer":
+        return "text-slate-600";
     }
   };
 
@@ -72,6 +75,8 @@ export default function PageHeader({
         case "clinician":
           // Use purple-50 to indigo-100 for a softer, comfortable purple gradient
           return "bg-gradient-to-br from-purple-50 to-indigo-100 border-b border-purple-200/50";
+        case "developer":
+          return "bg-gradient-to-br from-slate-50 to-slate-100 border-b border-slate-200/50";
       }
     };
     const containerClasses = getHeroContainerClasses();

@@ -255,6 +255,8 @@ function DocumentsPage() {
         return 'border-blue-400';
       case 'clinician':
         return 'border-purple-400';
+      case 'developer':
+        return 'border-slate-400';
     }
   };
 

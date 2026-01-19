@@ -122,7 +122,7 @@ function MessagesPage() {
   };
 
   const patientName = activePatient?.fullName || "patient";
-  const isClinicianMode = isClinician(viewMode);
+  const _isClinicianMode = isClinician(viewMode);
   const headerCopy = getHeaderCopy("messages", patientName, viewMode);
   const cardClass = getCardClassName(viewMode);
 

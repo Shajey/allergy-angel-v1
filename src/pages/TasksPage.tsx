@@ -24,7 +24,7 @@ import {
 } from "@/lib/taskStore";
 import { addNotification } from "@/lib/notificationStore";
 import { addEvent } from "@/lib/timelineStore";
-import type { Task, TaskStatus, TaskPriority } from "@/types/tasks";
+import type { Task, TaskPriority } from "@/types/tasks";
 import {
   getTaskStatusColor,
   getTaskSourceColor,
@@ -98,11 +98,7 @@ export default function TasksPage() {
         },
       });
 
-      showToast({
-        title: "Task Reopened",
-        description: `"${task.title}" has been reopened.`,
-        type: "success",
-      });
+      showToast(`"${task.title}" has been reopened.`, "success");
     } else {
       // Complete task
       const completedAt = new Date().toISOString();
@@ -146,11 +142,7 @@ export default function TasksPage() {
         meta: { taskId: task.id, completedByRole: role },
       });
 
-      showToast({
-        title: "Task Completed",
-        description: `"${task.title}" has been marked as done.`,
-        type: "success",
-      });
+      showToast(`"${task.title}" has been marked as done.`, "success");
     }
 
     loadTasks();
@@ -161,11 +153,7 @@ export default function TasksPage() {
    */
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) {
-      showToast({
-        title: "Error",
-        description: "Task title is required.",
-        type: "error",
-      });
+      showToast("Task title is required.", "error");
       return;
     }
 
@@ -180,11 +168,7 @@ export default function TasksPage() {
       dueAt: newTaskDueDate ? new Date(newTaskDueDate).toISOString() : undefined,
     });
 
-    showToast({
-      title: "Task Added",
-      description: `"${newTaskTitle}" has been added to your tasks.`,
-      type: "success",
-    });
+    showToast(`"${newTaskTitle}" has been added to your tasks.`, "success");
 
     // Reset form
     setNewTaskTitle("");
@@ -205,11 +189,7 @@ export default function TasksPage() {
 
     deleteTask(task.patientId, task.id);
 
-    showToast({
-      title: "Task Deleted",
-      description: `"${task.title}" has been removed.`,
-      type: "success",
-    });
+    showToast(`"${task.title}" has been removed.`, "success");
 
     loadTasks();
   };
@@ -262,7 +242,7 @@ export default function TasksPage() {
 
   const activePatient = session.patients.find((p) => p.id === session.activePatientId);
   const patientName = activePatient?.fullName || "patient";
-  const isClinicianMode = isClinician(viewMode);
+  const _isClinicianMode = isClinician(viewMode);
   const headerCopy = getHeaderCopy("tasks", patientName, viewMode);
   const cardClass = getCardClassName(viewMode);
 

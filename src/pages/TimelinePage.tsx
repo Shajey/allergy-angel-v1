@@ -13,7 +13,6 @@ import { getEventCategory } from '@/types/timeline';
 import {
   FileText,
   MessageSquare,
-  ClipboardCheck,
   Bell,
   Clock,
   CheckCircle2,
@@ -135,7 +134,7 @@ function TimelinePage() {
     });
   };
 
-  const formatFullDate = (dateString: string) => {
+  const _formatFullDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString([], {
       weekday: 'short',
@@ -185,7 +184,7 @@ function TimelinePage() {
   ];
 
   const patientName = activePatient?.fullName || "patient";
-  const isClinicianMode = isClinician(viewMode);
+  const _isClinicianMode = isClinician(viewMode);
   const headerCopy = getHeaderCopy("timeline", patientName, viewMode);
   const cardClass = getCardClassName(viewMode);
 

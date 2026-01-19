@@ -436,7 +436,7 @@ export default function VisitsPage() {
   const session = getSession();
   const activePatient = session.patients.find((p) => p.id === session.activePatientId);
   const patientName = activePatient?.fullName || "patient";
-  const isClinicianMode = isClinician(viewMode);
+  const _isClinicianMode = isClinician(viewMode);
   const headerCopy = getHeaderCopy("visits", patientName, viewMode);
   const cardClass = getCardClassName(viewMode);
 

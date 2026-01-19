@@ -197,11 +197,7 @@ export default function TodayPage() {
       meta: { taskId: task.id, completedByRole: role },
     });
 
-    showToast({
-      title: "Task Completed",
-      description: `"${task.title}" has been marked as done.`,
-      type: "success",
-    });
+    showToast(`"${task.title}" has been marked as done.`, "success");
 
     loadData();
   };

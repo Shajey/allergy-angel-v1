@@ -63,7 +63,7 @@ function ContextSwitcher() {
     window.dispatchEvent(new Event('session-changed'));
   };
 
-  const handleRoleChange = (role: 'Patient' | 'Caregiver') => {
+  const _handleRoleChange = (role: 'Patient' | 'Caregiver') => {
     setUserRole(role);
     // Update state immediately
     const updatedSession = getSession();

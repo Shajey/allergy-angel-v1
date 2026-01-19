@@ -56,11 +56,7 @@ export default function ClinicalDocumentViewer({
     if (document.pdfUrl) {
       // POC: Open PDF URL in new tab
       window.open(document.pdfUrl, "_blank");
-      showToast({
-        title: "Opening Document",
-        description: "The document is opening in a new tab.",
-        type: "info",
-      });
+      showToast("The document is opening in a new tab.", "success");
     } else {
       // Simulate download by creating a text blob
       const content = `
@@ -90,21 +86,13 @@ ${document.qa.map((qa) => `Q: ${qa.question}\nA: ${qa.answer}\n`).join("\n")}
       window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      showToast({
-        title: "Document Downloaded",
-        description: "A text version of the document has been downloaded.",
-        type: "success",
-      });
+      showToast("A text version of the document has been downloaded.", "success");
     }
   };
 
   const handleMarkReviewed = () => {
     onMarkReviewed(document.id);
-    showToast({
-      title: "Document Reviewed",
-      description: `"${document.title}" has been marked as reviewed.`,
-      type: "success",
-    });
+    showToast(`"${document.title}" has been marked as reviewed.`, "success");
   };
 
   return (
