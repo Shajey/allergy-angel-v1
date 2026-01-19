@@ -32,7 +32,7 @@ import { CheckCircle2, XCircle, Clock, AlertCircle, MessageSquare, Send } from '
 import {
   createDocumentRequestThread,
   findThreadByDocKey,
-  addVNSDocumentAcknowledgment,
+  addCareOSDocumentAcknowledgment,
 } from '@/lib/messageStore';
 import {
   createDocumentRequestNotification,
@@ -170,7 +170,7 @@ function CarePlanPage() {
     setIsUploadOpen(true);
   };
 
-  const handleRequestFromVNS = (requirement: RequiredDocRule) => {
+  const handleRequestFromCareOS = (requirement: RequiredDocRule) => {
     const senderRole = session.user.role as MessageSender;
     
     // Create the message thread
@@ -186,7 +186,7 @@ function CarePlanPage() {
     // Add timeline event
     addDocRequestedEvent(session.activePatientId, requirement.key);
     
-    showToast(`Requested "${requirement.key}" from VNS Provider Services`, 'success');
+    showToast(`Requested "${requirement.key}" from CareOS Team`, 'success');
   };
 
   const handleViewRequest = (_threadId: string) => {
@@ -219,14 +219,14 @@ function CarePlanPage() {
       selectedRequirement.key
     );
 
-    // Check if this was for a requested document - if so, add VNS acknowledgment
+    // Check if this was for a requested document - if so, add CareOS acknowledgment
     const activeThread = findThreadByDocKey(session.activePatientId, selectedRequirement.key);
     if (activeThread) {
-      // Add VNS acknowledgment message and close thread
-      addVNSDocumentAcknowledgment(activeThread.id, selectedRequirement.key);
+      // Add CareOS acknowledgment message and close thread
+      addCareOSDocumentAcknowledgment(activeThread.id, selectedRequirement.key);
       // Create success notification
       createDocumentReceivedNotification(session.activePatientId, selectedRequirement.key);
-      // Add checklist item met event (since VNS acknowledged receipt)
+      // Add checklist item met event (since CareOS acknowledged receipt)
       addChecklistItemMetEvent(session.activePatientId, selectedRequirement.key);
     }
     
@@ -472,10 +472,10 @@ function CarePlanPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleRequestFromVNS(reqStatus.rule)}
+                            onClick={() => handleRequestFromCareOS(reqStatus.rule)}
                           >
                             <Send className="h-3 w-3 mr-1" />
-                            Request from VNS
+                            Request from CareOS
                           </Button>
                           <Button
                             size="sm"

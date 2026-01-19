@@ -118,7 +118,7 @@ function DemoLoginPage() {
     { title: "One portal", description: "Everything in one place.", accent: "green" as const },
     { title: "Documents", description: "Upload and track forms fast.", accent: "blue" as const },
     { title: "Care Plan", description: "Know what's needed next.", accent: "purple" as const },
-    { title: "Messaging", description: "Reach your VNS team easily.", accent: "amber" as const },
+    { title: "Messaging", description: "Reach your care team easily.", accent: "amber" as const },
     { title: "Timeline", description: "See your care journey.", accent: "teal" as const },
   ];
 
@@ -141,7 +141,7 @@ function DemoLoginPage() {
               <div className="flex flex-col justify-center space-y-6">
                 {/* Eyebrow */}
                 <span className="inline-flex items-center w-fit px-3 py-1 text-xs font-semibold tracking-wider text-emerald-700 uppercase bg-emerald-100/80 rounded-full">
-                  VNS Health Portal (POC)
+                  CareOS
                 </span>
 
                 {/* Headline */}

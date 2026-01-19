@@ -109,14 +109,14 @@ function MessagesPage() {
   };
 
   const getSenderIcon = (sender: MessageSender) => {
-    if (sender === 'VNS') {
+    if (sender === 'CareOS') {
       return <Building2 className="h-4 w-4" />;
     }
     return <User className="h-4 w-4" />;
   };
 
   const getSenderLabel = (sender: MessageSender) => {
-    if (sender === 'VNS') return 'VNS Provider Services';
+    if (sender === 'CareOS') return 'CareOS Team';
     if (sender === session.user.role) return 'You';
     return sender;
   };
@@ -231,7 +231,7 @@ function MessagesPage() {
               <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
                 {selectedThread.messages.map((message) => {
                   const isOwnMessage = message.sender === session.user.role;
-                  const isVNS = message.sender === 'VNS';
+                  const isCareOS = message.sender === 'CareOS';
                   
                   return (
                     <div
@@ -242,7 +242,7 @@ function MessagesPage() {
                         className={`max-w-[80%] rounded-lg p-3 ${
                           isOwnMessage
                             ? 'bg-blue-600 text-white'
-                            : isVNS
+                            : isCareOS
                             ? 'bg-gray-100 text-gray-900'
                             : 'bg-green-100 text-green-900'
                         }`}

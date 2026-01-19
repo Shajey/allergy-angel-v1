@@ -70,7 +70,7 @@ function TimelinePage() {
         return <ArrowUpCircle className="h-5 w-5 text-blue-600" />;
       case 'DocumentStatusChanged':
         return <FileText className="h-5 w-5 text-purple-600" />;
-      case 'DocRequestedFromVNS':
+      case 'DocRequestedFromCareOS':
         return <Send className="h-5 w-5 text-orange-600" />;
       case 'MessageSent':
         return <MessageSquare className="h-5 w-5 text-green-600" />;

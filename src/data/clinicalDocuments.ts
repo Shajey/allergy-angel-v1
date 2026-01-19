@@ -25,7 +25,7 @@ export interface ClinicalDocument {
   type: ClinicalDocumentType;
   title: string;
   status: ClinicalDocumentStatus;
-  authorOrg: "VNS Health Plan";
+  authorOrg: "CareOS";
   authorRole: AuthorRole;
   createdAt: string; // ISO date
   relatedEpisode?: string;
@@ -103,7 +103,7 @@ export const clinicalDocuments: ClinicalDocument[] = [
     type: "PCSP",
     title: "Person-Centered Service Plan - January 2026",
     status: "New",
-    authorOrg: "VNS Health Plan",
+    authorOrg: "CareOS",
     authorRole: "Care Manager RN",
     createdAt: "2026-01-15T10:30:00Z",
     relatedEpisode: "EP-2026-001",
@@ -127,7 +127,7 @@ export const clinicalDocuments: ClinicalDocument[] = [
       {
         question: "Who do I contact if I have questions?",
         answer:
-          `Your Care Manager, ${CARE_TEAM.CARE_MANAGER_RN}, can be reached through the secure messaging feature in this portal or by calling 1-800-VNS-CARE.`,
+          `Your Care Manager, ${CARE_TEAM.CARE_MANAGER_RN}, can be reached through the secure messaging feature in this portal.`,
       },
     ],
     pdfUrl: "/sample/pcsp.pdf",
@@ -139,7 +139,7 @@ export const clinicalDocuments: ClinicalDocument[] = [
     type: "HRA",
     title: "Health Risk Assessment - Annual Review",
     status: "Reviewed",
-    authorOrg: "VNS Health Plan",
+    authorOrg: "CareOS",
     authorRole: "RN",
     createdAt: "2026-01-10T14:00:00Z",
     relatedEpisode: "EP-2026-001",
@@ -170,7 +170,7 @@ export const clinicalDocuments: ClinicalDocument[] = [
     type: "VisitSummary",
     title: "Home Visit Summary - January 17, 2026",
     status: "New",
-    authorOrg: "VNS Health Plan",
+    authorOrg: "CareOS",
     authorRole: "PT",
     createdAt: "2026-01-17T16:45:00Z",
     relatedEpisode: "EP-2026-001",

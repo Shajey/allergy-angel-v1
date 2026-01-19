@@ -1,5 +1,5 @@
 /**
- * Centralized mock people data for the VNS Health Portal POC.
+ * Centralized mock people data for the CareOS Portal POC.
  * All demo names are fictional and culturally diverse.
  * 
  * Usage: Import names from this file instead of hardcoding in components.

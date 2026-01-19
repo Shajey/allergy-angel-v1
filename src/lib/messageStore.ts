@@ -9,15 +9,15 @@ const mockThreads: MessageThread[] = [
   {
     id: "thread-1",
     patientId: "patient-1",
-    subject: "Welcome to VNS Health Portal",
-    participants: ["Caregiver", "VNS"],
+    subject: "Welcome to CareOS",
+    participants: ["Caregiver", "CareOS"],
     status: "Open",
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     messages: [
       {
         id: "msg-1",
-        sender: "VNS",
-        body: "Welcome to the VNS Health Patient Portal! We're here to help you manage your care. Feel free to reach out if you have any questions about your care plan, documents, or services.",
+        sender: "CareOS",
+        body: "Welcome to CareOS! We're here to help you manage your care. Feel free to reach out if you have any questions about your care plan, documents, or services.",
         createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
@@ -28,7 +28,7 @@ const mockThreads: MessageThread[] = [
       },
       {
         id: "msg-3",
-        sender: "VNS",
+        sender: "CareOS",
         body: "You can find all required documents under the Care Plan section. Navigate to Care Plan from the main menu, and you'll see a checklist of all required documents with their current status. If any documents are missing, you can upload them directly from there.",
         createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000 + 3600000).toISOString(),
       },
@@ -38,7 +38,7 @@ const mockThreads: MessageThread[] = [
     id: "thread-2",
     patientId: "patient-2",
     subject: "Scheduling Question",
-    participants: ["Caregiver", "VNS"],
+    participants: ["Caregiver", "CareOS"],
     status: "Closed",
     createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     messages: [
@@ -50,8 +50,8 @@ const mockThreads: MessageThread[] = [
       },
       {
         id: "msg-5",
-        sender: "VNS",
-        body: "Of course! Please call our scheduling line at 1-800-VNS-CARE or I can help you find an available time. What works best for you?",
+        sender: "CareOS",
+        body: "Of course! Please call our scheduling line or I can help you find an available time. What works best for you?",
         createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
@@ -62,7 +62,7 @@ const mockThreads: MessageThread[] = [
       },
       {
         id: "msg-7",
-        sender: "VNS",
+        sender: "CareOS",
         body: "You're welcome! This thread is now closed. Feel free to start a new conversation if you need anything else.",
         createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
       },
@@ -207,7 +207,7 @@ export function createDocumentRequestThread(
   return addThread({
     patientId,
     subject: `Request: ${documentName}`,
-    participants: [senderRole, "VNS"],
+    participants: [senderRole, "CareOS"],
     status: "Open",
     requestedDocKey: documentName,
     messages: [
@@ -222,9 +222,9 @@ export function createDocumentRequestThread(
 }
 
 /**
- * Add VNS acknowledgment message when a document is uploaded.
+ * Add CareOS acknowledgment message when a document is uploaded.
  */
-export function addVNSDocumentAcknowledgment(threadId: string, documentName: string): Message | null {
+export function addCareOSDocumentAcknowledgment(threadId: string, documentName: string): Message | null {
   const allThreads = getAllThreads();
   const index = allThreads.findIndex((t) => t.id === threadId);
   
@@ -232,7 +232,7 @@ export function addVNSDocumentAcknowledgment(threadId: string, documentName: str
   
   const ackMessage: Message = {
     id: `msg-${Date.now()}`,
-    sender: "VNS",
+    sender: "CareOS",
     body: `Thank you for uploading the "${documentName}" document. We have received it and it is now being processed. You will be notified once it has been reviewed and approved.`,
     createdAt: new Date().toISOString(),
   };

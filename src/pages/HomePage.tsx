@@ -39,7 +39,7 @@ function HomePage() {
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-4xl font-bold text-center text-primary-main">
-            VNS Health Provider Services Portal – POC
+            CareOS Portal
           </CardTitle>
           <CardDescription className="text-lg text-center">
             <span className={`px-2 py-1 rounded text-sm mr-2 ${getRoleBadgeClass(session.user.role)}`}>

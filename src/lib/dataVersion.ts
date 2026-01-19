@@ -4,7 +4,7 @@
  */
 
 const DATA_VERSION_KEY = "vns-data-version";
-const CURRENT_VERSION = 2; // Increment this when mock data changes
+const CURRENT_VERSION = 3; // Increment this when mock data changes
 
 /**
  * Storage keys that should be cleared when data version changes.
@@ -27,7 +27,7 @@ export function checkAndMigrateDataVersion(): void {
     const version = storedVersion ? parseInt(storedVersion, 10) : 0;
 
     if (version < CURRENT_VERSION) {
-      console.log(`[VNS POC] Data version changed (${version} → ${CURRENT_VERSION}). Reseeding mock data...`);
+      console.log(`[CareOS] Data version changed (${version} → ${CURRENT_VERSION}). Reseeding mock data...`);
       
       // Clear all mock data storage keys
       STORAGE_KEYS_TO_CLEAR.forEach((key) => {

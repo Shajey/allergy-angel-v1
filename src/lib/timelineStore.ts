@@ -114,7 +114,7 @@ export function seedEventsIfEmpty(patientId: string): void {
       id: `seed-${patientId}-3`,
       patientId,
       type: "MessageSent",
-      title: "Message sent: Welcome to VNS Health Portal",
+      title: "Message sent: Welcome to CareOS",
       description: "A message was sent in the conversation thread.",
       createdAt: new Date(now - 5 * day).toISOString(),
       link: "/messages",
@@ -122,9 +122,9 @@ export function seedEventsIfEmpty(patientId: string): void {
     {
       id: `seed-${patientId}-4`,
       patientId,
-      type: "DocRequestedFromVNS",
-      title: "Requested from VNS: Plan of Care",
-      description: "A request was sent to VNS Provider Services for this document.",
+      type: "DocRequestedFromCareOS",
+      title: "Requested from CareOS: Plan of Care",
+      description: "A request was sent to CareOS Team for this document.",
       createdAt: new Date(now - 3 * day).toISOString(),
       link: "/messages",
     },
@@ -195,15 +195,15 @@ export function addDocRequestedEvent(
   
   let description: string;
   if (role === "Caregiver" && patient) {
-    description = `Caregiver requested "${docKey}" from VNS Provider Services on behalf of ${patient.fullName}.`;
+    description = `Caregiver requested "${docKey}" from CareOS Team on behalf of ${patient.fullName}.`;
   } else {
-    description = `Patient requested "${docKey}" from VNS Provider Services.`;
+    description = `Patient requested "${docKey}" from CareOS Team.`;
   }
   
   return addEvent({
     patientId,
-    type: "DocRequestedFromVNS",
-    title: `Requested from VNS: ${docKey}`,
+    type: "DocRequestedFromCareOS",
+    title: `Requested from CareOS: ${docKey}`,
     description,
     link: "/messages",
     meta: { docKey, senderRole: role },

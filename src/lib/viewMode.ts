@@ -78,7 +78,7 @@ export function getHeaderCopy(
       : "View and manage uploaded documents",
     messages: (name, isClinician) => isClinician
       ? `Secure communication log for ${name}`
-      : `Communicate with VNS Provider Services`,
+      : `Communicate with your CareOS team`,
     timeline: (name, isClinician) => isClinician
       ? `Audit-style activity feed for ${name}`
       : `Recent activity for ${name}`,

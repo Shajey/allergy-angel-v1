@@ -114,7 +114,7 @@ export default function VisitDetailModal({
       addThread({
         patientId: visit.patientId,
         subject,
-        participants: [senderRole, "VNS"],
+        participants: [senderRole, "CareOS"],
         status: "Open",
         messages: [
           {
@@ -130,7 +130,7 @@ export default function VisitDetailModal({
       addNotification({
         patientId: visit.patientId,
         title: "Visit Change Request Sent",
-        message: "Your request to change the visit has been sent to VNS scheduling.",
+        message: "Your request to change the visit has been sent to CareOS scheduling.",
         type: "Info",
         actionLink: "/messages",
       });
@@ -151,7 +151,7 @@ export default function VisitDetailModal({
       // Update visit status
       updateVisit(visit.patientId, visit.id, { status: "PendingChange" });
 
-      showToast("Your visit change request has been sent to VNS scheduling.", "success");
+      showToast("Your visit change request has been sent to CareOS scheduling.", "success");
 
       onVisitUpdated?.();
       onOpenChange(false);
@@ -186,7 +186,7 @@ export default function VisitDetailModal({
       addThread({
         patientId: visit.patientId,
         subject,
-        participants: [senderRole, "VNS"],
+        participants: [senderRole, "CareOS"],
         status: "Open",
         messages: [
           {
@@ -203,7 +203,7 @@ export default function VisitDetailModal({
         patientId: visit.patientId,
         title: "Visit Cancellation Request Sent",
         message:
-          "Your request to cancel the visit has been sent to VNS scheduling.",
+          "Your request to cancel the visit has been sent to CareOS scheduling.",
         type: "Info",
         actionLink: "/messages",
       });
@@ -224,7 +224,7 @@ export default function VisitDetailModal({
       // Update visit status to Cancelled
       updateVisit(visit.patientId, visit.id, { status: "Cancelled" });
 
-      showToast("Your visit cancellation request has been sent to VNS scheduling.", "success");
+      showToast("Your visit cancellation request has been sent to CareOS scheduling.", "success");
 
       onVisitUpdated?.();
       onOpenChange(false);

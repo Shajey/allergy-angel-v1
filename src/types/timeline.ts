@@ -1,7 +1,7 @@
 export type TimelineEventType =
   | "DocumentUploaded"
   | "DocumentStatusChanged"
-  | "DocRequestedFromVNS"
+  | "DocRequestedFromCareOS"
   | "MessageSent"
   | "ChecklistItemMet"
   | "ChecklistItemMissing"
@@ -29,7 +29,7 @@ export function getEventCategory(type: TimelineEventType): TimelineCategory {
     case "DocumentUploaded":
     case "DocumentStatusChanged":
       return "documents";
-    case "DocRequestedFromVNS":
+    case "DocRequestedFromCareOS":
     case "ChecklistItemMet":
     case "ChecklistItemMissing":
       return "care-plan";

@@ -487,7 +487,7 @@ function DocumentsPage() {
                 Clinical Documents
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Care plans, assessments, and visit summaries from your care team at VNS Health
+                Care plans, assessments, and visit summaries from your CareOS care team
               </p>
             </div>
 
@@ -498,7 +498,7 @@ function DocumentsPage() {
               <Info className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm text-slate-700">
-                  These documents are shared between your VNS care team and your health plan to help coordinate your care.
+                  These documents are shared between your CareOS care team and your health plan to help coordinate your care.
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   Your care team may review these documents together to ensure services align with your care plan.

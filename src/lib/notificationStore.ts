@@ -17,7 +17,7 @@ const mockNotifications: Notification[] = [
   {
     id: "notif-2",
     patientId: "patient-1",
-    title: "Welcome to VNS Health Portal",
+    title: "Welcome to CareOS",
     message: "Your patient portal is now active. You can view documents, track your care plan, and message your care team.",
     type: "Info",
     read: true,
@@ -144,7 +144,7 @@ export function createDocumentRequestNotification(
   return addNotification({
     patientId,
     title: "Document Requested",
-    message: `You requested "${documentName}" from VNS Provider Services.`,
+    message: `You requested "${documentName}" from CareOS Team.`,
     type: "Info",
     actionLink: "/messages",
   });
@@ -160,7 +160,7 @@ export function createDocumentReceivedNotification(
   return addNotification({
     patientId,
     title: "Document Received",
-    message: `VNS Provider Services has received your "${documentName}" document.`,
+    message: `CareOS Team has received your "${documentName}" document.`,
     type: "Success",
   });
 }

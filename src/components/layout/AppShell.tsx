@@ -15,7 +15,7 @@ function AppShell() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link to="/today" className="text-xl font-bold text-gray-900">
-              VNS Health Portal
+              CareOS
             </Link>
             <div className="flex items-center gap-6">
               <nav className="flex gap-6">

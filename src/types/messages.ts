@@ -1,4 +1,4 @@
-export type MessageSender = "Patient" | "Caregiver" | "VNS";
+export type MessageSender = "Patient" | "Caregiver" | "CareOS";
 export type ThreadStatus = "Open" | "Closed";
 
 export interface Message {
