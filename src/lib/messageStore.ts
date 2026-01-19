@@ -1,5 +1,6 @@
 import type { MessageThread, Message, MessageSender } from "@/types/messages";
 import { getSession } from "./sessionStore";
+import { PATIENTS } from "./mockPeople";
 
 const STORAGE_KEY = "vns-messages";
 
@@ -22,7 +23,7 @@ const mockThreads: MessageThread[] = [
       {
         id: "msg-2",
         sender: "Caregiver",
-        body: "Thank you! I have a question about the required documents for Maya's care plan. Where can I find the full list?",
+        body: `Thank you! I have a question about the required documents for ${PATIENTS.CHILD_1.fullName}'s care plan. Where can I find the full list?`,
         createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
@@ -44,7 +45,7 @@ const mockThreads: MessageThread[] = [
       {
         id: "msg-4",
         sender: "Caregiver",
-        body: "Hi, I need to reschedule Azalea's next home visit. Is that possible?",
+        body: `Hi, I need to reschedule ${PATIENTS.CHILD_2.fullName}'s next home visit. Is that possible?`,
         createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {

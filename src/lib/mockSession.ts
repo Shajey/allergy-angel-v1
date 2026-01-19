@@ -1,38 +1,39 @@
 import type { SessionState } from "@/types/session";
+import { PATIENTS, CAREGIVERS, DEFAULT_USER } from "./mockPeople";
 
 export const mockSession: SessionState = {
   user: {
-    id: "user-1",
-    displayName: "Shajey R.",
-    role: "Caregiver",
+    id: DEFAULT_USER.id,
+    displayName: DEFAULT_USER.displayName,
+    role: DEFAULT_USER.role,
   },
-  activePatientId: "patient-1",
+  activePatientId: PATIENTS.CHILD_1.id,
   patients: [
     {
-      id: "patient-1",
-      fullName: "Maya R.",
-      dob: "2010-05-15",
-      memberId: "M123456789",
+      id: PATIENTS.CHILD_1.id,
+      fullName: PATIENTS.CHILD_1.fullName,
+      dob: PATIENTS.CHILD_1.dob,
+      memberId: PATIENTS.CHILD_1.memberId,
       relationshipLabel: "Daughter",
       serviceLineId: "CHHA",
       startDate: "2024-01-01",
       isSelf: false,
     },
     {
-      id: "patient-2",
-      fullName: "Azalea R.",
-      dob: "2012-08-22",
-      memberId: "A987654321",
-      relationshipLabel: "Daughter",
+      id: PATIENTS.CHILD_2.id,
+      fullName: PATIENTS.CHILD_2.fullName,
+      dob: PATIENTS.CHILD_2.dob,
+      memberId: PATIENTS.CHILD_2.memberId,
+      relationshipLabel: "Son",
       serviceLineId: "HomeCare",
       startDate: "2024-01-15",
       isSelf: false,
     },
     {
-      id: "patient-3",
-      fullName: "Shajey R.",
-      dob: "1985-03-10",
-      memberId: "S456789123",
+      id: PATIENTS.SELF.id,
+      fullName: PATIENTS.SELF.fullName,
+      dob: PATIENTS.SELF.dob,
+      memberId: PATIENTS.SELF.memberId,
       relationshipLabel: "Self",
       serviceLineId: "BehavioralHealth",
       startDate: "2024-02-01",
@@ -40,9 +41,9 @@ export const mockSession: SessionState = {
     },
   ],
   caregiverProfile: {
-    id: "caregiver-1",
-    displayName: "Shajey R.",
-    relationship: "Parent",
-    patientIds: ["patient-1", "patient-2"], // Can manage Maya and Azalea
+    id: CAREGIVERS.PRIMARY.id,
+    displayName: CAREGIVERS.PRIMARY.displayName,
+    relationship: CAREGIVERS.PRIMARY.relationship,
+    patientIds: [PATIENTS.CHILD_1.id, PATIENTS.CHILD_2.id], // Can manage Sofia and Lucas
   },
 };

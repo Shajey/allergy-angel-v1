@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PageShell, { PageShellContent } from "@/components/layout/PageShell";
 import PageHeader from "@/components/layout/PageHeader";
+import { PATIENTS } from "@/lib/mockPeople";
 
 /**
  * ClinicianTodayPage - A visual demo of the clinician hero variant.
@@ -13,7 +14,7 @@ export default function ClinicianTodayPage() {
       <PageHeader
         title="Today"
         eyebrow="Dashboard"
-        subtitle="Operational view for Azalea R."
+        subtitle={`Operational view for ${PATIENTS.CHILD_2.fullName}`}
         badge="RN / PT / HHA"
         hero
         viewMode="clinician"

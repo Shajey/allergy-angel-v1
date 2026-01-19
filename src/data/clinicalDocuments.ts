@@ -3,6 +3,8 @@
  * These are documents from the care team (PCSP, HRA, Visit Summaries, etc.)
  */
 
+import { CARE_TEAM } from "@/lib/mockPeople";
+
 export type ClinicalDocumentType =
   | "PCSP"
   | "HRA"
@@ -109,7 +111,7 @@ export const clinicalDocuments: ClinicalDocument[] = [
       { label: "Effective Date", value: "January 15, 2026" },
       { label: "Review Date", value: "July 15, 2026" },
       { label: "Primary Goal", value: "Improve mobility and reduce fall risk" },
-      { label: "Care Coordinator", value: "Maria Santos, RN" },
+      { label: "Care Coordinator", value: CARE_TEAM.CARE_MANAGER_RN },
     ],
     qa: [
       {
@@ -125,7 +127,7 @@ export const clinicalDocuments: ClinicalDocument[] = [
       {
         question: "Who do I contact if I have questions?",
         answer:
-          "Your Care Manager, Maria Santos RN, can be reached through the secure messaging feature in this portal or by calling 1-800-VNS-CARE.",
+          `Your Care Manager, ${CARE_TEAM.CARE_MANAGER_RN}, can be reached through the secure messaging feature in this portal or by calling 1-800-VNS-CARE.`,
       },
     ],
     pdfUrl: "/sample/pcsp.pdf",
@@ -176,13 +178,13 @@ export const clinicalDocuments: ClinicalDocument[] = [
       { label: "Visit Date", value: "January 17, 2026" },
       { label: "Visit Type", value: "Physical Therapy - Initial Eval" },
       { label: "Duration", value: "60 minutes" },
-      { label: "Clinician", value: "James Chen, PT" },
+      { label: "Clinician", value: CARE_TEAM.PT_JAMES },
     ],
     qa: [
       {
         question: "What was accomplished during this visit?",
         answer:
-          "James conducted an initial evaluation including gait assessment, balance testing, and home safety review. He identified three areas in the home that need grab bars installed.",
+          "The therapist conducted an initial evaluation including gait assessment, balance testing, and home safety review. Three areas in the home were identified that need grab bars installed.",
       },
       {
         question: "What exercises were recommended?",
@@ -192,7 +194,7 @@ export const clinicalDocuments: ClinicalDocument[] = [
       {
         question: "When is the next visit?",
         answer:
-          "Your next PT visit is scheduled for January 20, 2026 at 2:00 PM. James will bring resistance bands to progress your exercises.",
+          "Your next PT visit is scheduled for January 20, 2026 at 2:00 PM. The therapist will bring resistance bands to progress your exercises.",
       },
     ],
     reviewedAt: null,

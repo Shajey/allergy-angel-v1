@@ -1,4 +1,5 @@
 import type { Visit, VisitType, VisitLocation } from "@/types/visits";
+import { getAllClinicianNames } from "./mockPeople";
 
 const STORAGE_KEY_PREFIX = "vns.visits";
 
@@ -98,15 +99,8 @@ export function seedVisitsIfEmpty(patientId: string): void {
   const day = 24 * 60 * 60 * 1000;
   const hour = 60 * 60 * 1000;
 
-  // Clinician names for realism
-  const clinicians = [
-    "Sarah Johnson, RN",
-    "Michael Chen, PT",
-    "Emily Rodriguez, OT",
-    "James Williams, HHA",
-    "Dr. Lisa Park",
-    "Maria Garcia, LCSW",
-  ];
+  // Clinician names from centralized mock data
+  const clinicians = getAllClinicianNames();
 
   const _visitTypes: VisitType[] = [
     "Nursing",
