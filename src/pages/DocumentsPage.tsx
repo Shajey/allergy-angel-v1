@@ -29,7 +29,8 @@ import {
 import PageShell, { PageShellContent } from '@/components/layout/PageShell';
 import PageHeader from '@/components/layout/PageHeader';
 import ClinicalDocumentViewer from '@/components/documents/ClinicalDocumentViewer';
-import { useViewMode } from '@/context/ViewModeContext';
+import { useViewMode, type ViewMode } from '@/context/ViewModeContext';
+import { Info } from 'lucide-react';
 import { getHeaderCopy, getCardClassName } from '@/lib/viewMode';
 import type {
   DocumentRecord,
@@ -244,6 +245,18 @@ function DocumentsPage() {
     'Billing',
     'Other',
   ];
+
+  // Get persona-aware border color for context banner
+  const getContextBannerBorderClass = (mode: ViewMode): string => {
+    switch (mode) {
+      case 'patient':
+        return 'border-emerald-400';
+      case 'caregiver':
+        return 'border-blue-400';
+      case 'clinician':
+        return 'border-purple-400';
+    }
+  };
 
   const documentStatuses: DocumentStatus[] = [
     'Available',
@@ -474,6 +487,21 @@ function DocumentsPage() {
               <p className="text-sm text-gray-600 mt-1">
                 Care plans, assessments, and visit summaries from your care team at VNS Health
               </p>
+            </div>
+
+            {/* Context Banner - explains the purpose of Clinical Documents */}
+            <div
+              className={`bg-slate-50 border-l-4 ${getContextBannerBorderClass(viewMode)} rounded-lg p-4 flex items-start gap-3`}
+            >
+              <Info className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm text-slate-700">
+                  These documents are shared between your VNS care team and your health plan to help coordinate your care.
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Your care team may review these documents together to ensure services align with your care plan.
+                </p>
+              </div>
             </div>
 
             {/* New Count Banner */}
