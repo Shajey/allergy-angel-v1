@@ -1,73 +1,56 @@
-# React + TypeScript + Vite
+# CareOS Portal (POC)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+CareOS is a concept portal demonstrating a modern, role-aware care experience for patients, caregivers, and clinicians.
 
-Currently, two official plugins are available:
+This project is a **design and product proof-of-concept**, not a production system.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## What this demonstrates
 
-## React Compiler
+- A role-based care portal experience:
+  - Patient
+  - Caregiver
+  - Clinician (Login As / support view)
+  - Developer (demo mode)
+- Clear visual context for “who you are” and “who you’re viewing”
+- A shared care surface across documents, care plans, messaging, and timeline
+- Modern, calm UI patterns suitable for healthcare use
+- How a single portal can support multiple care personas without confusion
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## What this is not
 
-## Expanding the ESLint configuration
+- Not connected to real healthcare systems
+- Not using real patient data
+- Not production-ready authentication or authorization
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Tech stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- React + TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui
+- Deployed on Vercel
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Why this exists
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+This project exists to explore:
+- Product thinking around role-based healthcare portals
+- UX clarity in complex care relationships
+- Rapid prototyping using modern AI-assisted development tools
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## About the creator
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+CareOS is part of **Shajey’s Projects** — a collection of exploratory product and design prototypes.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Shajey Rumi is a product manager focused on:
+- healthcare platforms
+- multi-persona systems
+- clarity in complex workflows
+- and the practical application of AI in product development
+
+This project reflects an interest in how care experiences can be:
+- more humane
+- more intelligible
+- and more connected across patients, caregivers, clinicians, and health plans.
+
+More to come.
