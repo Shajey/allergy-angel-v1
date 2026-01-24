@@ -7,10 +7,10 @@ import { getHeaderCopy } from '@/lib/viewMode';
 import { getSession, getCaregiverProfile, getSelfPatient, getCaregiverPatients } from '@/lib/sessionStore';
 import { getServiceLine } from '@/lib/serviceLines';
 import type { SessionState, PatientProfile } from '@/types/session';
-import { User, Users, Calendar, Hash, Stethoscope } from 'lucide-react';
+import { User, Users, Calendar, Hash, Stethoscope, Info } from 'lucide-react';
 
 function ProfilePage() {
-  const { viewMode } = useViewMode();
+  const { viewMode, identityRole, isDeveloperEntry, isClinicianLoginAs } = useViewMode();
   const [session, setSession] = useState<SessionState>(getSession());
 
   useEffect(() => {
@@ -37,6 +37,34 @@ function ProfilePage() {
   const patientName = activePatient?.fullName || "patient";
   const headerCopy = getHeaderCopy("profile", patientName, viewMode);
 
+  // Use identityRole for badge styling
+  const getIdentityBadgeClass = () => {
+    switch (identityRole) {
+      case 'patient':
+        return 'bg-green-100 text-green-700';
+      case 'caregiver':
+        return 'bg-blue-100 text-blue-700';
+      case 'clinician':
+        return 'bg-purple-100 text-purple-700';
+      case 'developer':
+        return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const getIdentityLabel = () => {
+    switch (identityRole) {
+      case 'patient':
+        return 'Patient';
+      case 'caregiver':
+        return 'Caregiver';
+      case 'clinician':
+        return 'Clinician (Login As)';
+      case 'developer':
+        return 'Developer';
+    }
+  };
+
+  // Legacy function for session.user.role
   const getRoleBadgeClass = (role: string) => {
     return role === 'Caregiver'
       ? 'bg-blue-100 text-blue-700'
@@ -116,6 +144,22 @@ function ProfilePage() {
       />
 
       <PageShellContent className="max-w-4xl">
+        {/* Clinician Login-As Banner */}
+        {isClinicianLoginAs && (
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-start gap-3 mb-6">
+            <Info className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-purple-900">
+                Clinician Login-As Mode
+              </p>
+              <p className="text-sm text-purple-700 mt-1">
+                You are viewing the portal as the patient to help with support and troubleshooting.
+                This is the patient's view of their care information.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Section Header */}
         <section>
           <div className="mb-6">
@@ -129,18 +173,20 @@ function ProfilePage() {
           </div>
         </section>
 
-        {/* Current User Card */}
+        {/* Current User Card - Use identityRole as source of truth */}
         <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="p-6">
             <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              {session.user.role === 'Caregiver' ? (
+              {identityRole === 'caregiver' ? (
                 <Users className="h-5 w-5" />
+              ) : identityRole === 'clinician' ? (
+                <Stethoscope className="h-5 w-5" />
               ) : (
                 <User className="h-5 w-5" />
               )}
               Current User
             </CardTitle>
-            <CardDescription>Your current viewing role and context</CardDescription>
+            <CardDescription>Your current identity and context</CardDescription>
           </CardHeader>
           <CardContent className="p-6 pt-0">
             <div className="space-y-4">
@@ -152,13 +198,13 @@ function ProfilePage() {
               </div>
               
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Current Role</div>
-                <span className={`px-3 py-1 rounded text-sm font-medium ${getRoleBadgeClass(session.user.role)}`}>
-                  {session.user.role}
+                <div className="text-sm text-muted-foreground mb-1">Identity Role</div>
+                <span className={`px-3 py-1 rounded text-sm font-medium ${getIdentityBadgeClass()}`}>
+                  {getIdentityLabel()}
                 </span>
               </div>
               
-              {session.user.role === 'Caregiver' && activePatient && (
+              {identityRole === 'caregiver' && activePatient && (
                 <div>
                   <div className="text-sm text-muted-foreground mb-1">Managing</div>
                   <p className="font-medium">{activePatient.fullName}</p>
@@ -173,13 +219,13 @@ function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Patient Role - Show Self Patient Info */}
-        {session.user.role === 'Patient' && selfPatient && (
+        {/* Patient Identity - Show Self Patient Info */}
+        {identityRole === 'patient' && selfPatient && (
           <PatientInfoCard patient={selfPatient} title="Patient Information" />
         )}
 
-        {/* Caregiver Role - Show Caregiver Profile and Linked Patients */}
-        {session.user.role === 'Caregiver' && (
+        {/* Caregiver Identity - Show Caregiver Profile and Linked Patients */}
+        {identityRole === 'caregiver' && (
           <>
             {/* Caregiver Profile */}
             {caregiverProfile && (
@@ -267,8 +313,39 @@ function ProfilePage() {
           </>
         )}
 
-        {/* If user can also be a patient, show their patient profile */}
-        {session.user.role === 'Caregiver' && selfPatient && (
+        {/* Clinician Identity - Show currently viewing patient info */}
+        {identityRole === 'clinician' && activePatient && (
+          <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="p-6">
+              <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Patient Being Viewed
+              </CardTitle>
+              <CardDescription>You are viewing this patient's portal in login-as mode</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="space-y-4">
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">Patient Name</div>
+                  <p className="font-medium text-lg">{activePatient.fullName}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Member ID</div>
+                    <p className="font-medium">{activePatient.memberId || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Date of Birth</div>
+                    <p className="font-medium">{formatDate(activePatient.dob)}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Developer mode: show role switch hint when viewing as caregiver */}
+        {isDeveloperEntry && viewMode === 'caregiver' && selfPatient && (
           <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
             <CardHeader className="p-6">
               <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">

@@ -161,16 +161,26 @@ export function getCaregiverPatients(session?: SessionState): PatientProfile[] {
 }
 
 /**
- * Get patients available based on current role.
- * - Patient role: only self
- * - Caregiver role: only linked patients
+ * Get patients available based on identity role.
+ * - Patient identity: only self
+ * - Caregiver identity: only linked patients  
+ * - Clinician identity: all patients (Phase 1 login-as mode)
+ * - Developer: depends on current viewMode
  */
-export function getAvailablePatients(): PatientProfile[] {
+export function getAvailablePatients(identityRole?: string): PatientProfile[] {
   const session = getSession();
-  if (session.user.role === "Patient") {
+  
+  // If identityRole is provided, use it; otherwise fall back to session.user.role for legacy
+  const role = identityRole?.toLowerCase() || session.user.role.toLowerCase();
+  
+  if (role === "patient") {
     const selfPatient = session.patients.find((p) => p.isSelf);
     return selfPatient ? [selfPatient] : [];
+  } else if (role === "clinician") {
+    // Clinician can access all patients in Phase 1 login-as mode
+    return session.patients;
   } else {
+    // Caregiver or developer viewing as caregiver
     return getCaregiverPatients(session);
   }
 }

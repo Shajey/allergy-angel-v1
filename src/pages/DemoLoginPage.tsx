@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useViewMode } from "@/context/ViewModeContext";
-import type { ViewMode } from "@/context/ViewModeContext";
+import type { ViewMode, IdentityRole } from "@/context/ViewModeContext";
 import { ValueCard } from "@/components/landing/ValueCard";
 import { cn } from "@/lib/utils";
+import { setActivePatientId, getSelfPatient, getCaregiverPatients, getSession } from "@/lib/sessionStore";
 
 interface PersonaButtonProps {
   label: string;
@@ -106,11 +107,54 @@ function HeroIllustration() {
  * Matches the reference design with hero section + value cards.
  */
 function DemoLoginPage() {
-  const { setViewMode } = useViewMode();
+  const { setViewMode, setIdentityRole } = useViewMode();
   const navigate = useNavigate();
 
   const handlePersonaSelect = (persona: ViewMode) => {
-    setViewMode(persona);
+    // Set identityRole - this is the source of truth for role labels
+    setIdentityRole(persona as IdentityRole);
+    
+    // Set viewMode and configure activePatientId based on identity
+    switch (persona) {
+      case "patient": {
+        setViewMode("patient");
+        // Patient identity: always view own data
+        const selfPatient = getSelfPatient();
+        if (selfPatient) {
+          setActivePatientId(selfPatient.id);
+        }
+        break;
+      }
+      case "caregiver": {
+        setViewMode("caregiver");
+        // Caregiver identity: select first managed patient
+        const caregiverPatients = getCaregiverPatients();
+        if (caregiverPatients.length > 0) {
+          setActivePatientId(caregiverPatients[0].id);
+        }
+        break;
+      }
+      case "clinician": {
+        setViewMode("clinician");
+        // Clinician Phase 1: "login as patient" mode - select first available patient
+        const session = getSession();
+        if (session.patients.length > 0) {
+          setActivePatientId(session.patients[0].id);
+        }
+        break;
+      }
+      case "developer": {
+        // Developer: default to caregiver view, can switch freely
+        setViewMode("caregiver");
+        const devPatients = getCaregiverPatients();
+        if (devPatients.length > 0) {
+          setActivePatientId(devPatients[0].id);
+        }
+        break;
+      }
+    }
+    
+    window.dispatchEvent(new Event('session-changed'));
     navigate("/today");
   };
 
@@ -139,20 +183,27 @@ function DemoLoginPage() {
             <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-12 p-8 lg:p-12">
               {/* Left column: Text + Persona Selection */}
               <div className="flex flex-col justify-center space-y-6">
-                {/* Eyebrow */}
-                <span className="inline-flex items-center w-fit px-3 py-1 text-xs font-semibold tracking-wider text-emerald-700 uppercase bg-emerald-100/80 rounded-full">
+                {/* Brand Wordmark */}
+                <span className="text-xl lg:text-2xl font-semibold text-emerald-700 tracking-tight">
                   CareOS
                 </span>
 
                 {/* Headline */}
-                <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 leading-tight">
-                  Do more.
-                  <br />
-                  Be supported.
-                </h1>
+                <div className="space-y-3">
+                  <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 leading-tight">
+                    Do more.
+                    <br />
+                    Be supported.
+                  </h1>
+
+                  {/* Raison d'être */}
+                  <p className="text-gray-600 text-base lg:text-lg max-w-md leading-relaxed">
+                    CareOS is a care platform connecting patients, caregivers, clinicians, and health plans.
+                  </p>
+                </div>
 
                 {/* Paragraph */}
-                <p className="text-gray-600 text-base lg:text-lg max-w-md leading-relaxed">
+                <p className="text-gray-500 text-sm lg:text-base max-w-md leading-relaxed">
                   Select how you're entering this portal to continue. Your experience will be
                   tailored to your role.
                 </p>
@@ -215,9 +266,14 @@ function DemoLoginPage() {
       {/* Footer note */}
       <footer className="w-full pb-8">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="text-center text-xs text-gray-400">
-            This is a proof-of-concept demo. No real authentication is performed.
-          </p>
+          <div className="text-center space-y-1">
+            <p className="text-xs text-gray-400">
+              This is a prototype portal for demonstration purposes.
+            </p>
+            <p className="text-xs text-gray-400">
+              All patient information and data shown is sample data only.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import PageShell, { PageShellContent } from "@/components/layout/PageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { useViewMode } from "@/context/ViewModeContext";
-import { isClinician, getHeaderCopy, getCardClassName } from "@/lib/viewMode";
+import { isClinician, getHeaderCopy, getCardClassName, getPrimaryCardBorderClass } from "@/lib/viewMode";
 import { getSession } from "@/lib/sessionStore";
 import {
   getUpcomingVisits,
@@ -439,6 +439,7 @@ export default function VisitsPage() {
   const _isClinicianMode = isClinician(viewMode);
   const headerCopy = getHeaderCopy("visits", patientName, viewMode);
   const cardClass = getCardClassName(viewMode);
+  const primaryBorderClass = getPrimaryCardBorderClass(viewMode);
 
   return (
     <PageShell>
@@ -463,7 +464,7 @@ export default function VisitsPage() {
           </div>
         </section>
 
-        <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass}`}>
+        <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass} ${primaryBorderClass}`}>
           <CardHeader className="p-6">
             <div className="flex items-center justify-between">
               <div>

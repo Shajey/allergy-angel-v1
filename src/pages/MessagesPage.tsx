@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageShell, { PageShellContent } from '@/components/layout/PageShell';
 import PageHeader from '@/components/layout/PageHeader';
 import { useViewMode } from '@/context/ViewModeContext';
-import { isClinician, getHeaderCopy, getCardClassName } from '@/lib/viewMode';
+import { isClinician, getHeaderCopy, getCardClassName, getPrimaryCardBorderClass } from '@/lib/viewMode';
 import { getSession } from '@/lib/sessionStore';
 import { getThreads, addMessage, getThreadById } from '@/lib/messageStore';
 import type { MessageThread, Message, MessageSender } from '@/types/messages';
@@ -125,6 +125,7 @@ function MessagesPage() {
   const _isClinicianMode = isClinician(viewMode);
   const headerCopy = getHeaderCopy("messages", patientName, viewMode);
   const cardClass = getCardClassName(viewMode);
+  const primaryBorderClass = getPrimaryCardBorderClass(viewMode);
 
   return (
     <PageShell>
@@ -204,7 +205,7 @@ function MessagesPage() {
         </Card>
 
         {/* Conversation View */}
-        <Card className={`lg:col-span-2 flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass}`}>
+        <Card className={`lg:col-span-2 flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass} ${primaryBorderClass}`}>
           {selectedThread ? (
             <>
               <CardHeader className="border-b pb-4">

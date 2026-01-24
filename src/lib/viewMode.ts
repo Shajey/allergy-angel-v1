@@ -104,3 +104,21 @@ export function getCardClassName(viewMode: ViewMode): string {
   }
   return "";
 }
+
+/**
+ * Get primary card border class for role-based accent (B2 spec).
+ * Adds a thin left border in the role color.
+ * Patient → Green, Caregiver → Blue, Clinician → Purple
+ */
+export function getPrimaryCardBorderClass(viewMode: ViewMode): string {
+  switch (viewMode) {
+    case "patient":
+      return "border-l-2 border-l-emerald-500";
+    case "caregiver":
+      return "border-l-2 border-l-blue-500";
+    case "clinician":
+      return "border-l-2 border-l-purple-500";
+    case "developer":
+      return "border-l-2 border-l-slate-400";
+  }
+}

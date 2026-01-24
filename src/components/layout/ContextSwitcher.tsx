@@ -8,17 +8,18 @@ import {
   resetSession,
   getAvailablePatients,
   canSwitchToRole,
+  getCaregiverProfile,
 } from '@/lib/sessionStore';
 import { clearAllDocuments } from '@/lib/storage';
-import type { SessionState } from '@/types/session';
-import { ChevronDown, User, Users, Settings, Stethoscope } from 'lucide-react';
-import { useViewMode, type ViewMode } from '@/context/ViewModeContext';
+import type { SessionState, PatientProfile } from '@/types/session';
+import { ChevronDown, User, Users, Settings, Stethoscope, Heart } from 'lucide-react';
+import { useViewMode, type ViewMode, type IdentityRole } from '@/context/ViewModeContext';
 
 function ContextSwitcher() {
   const [session, setSession] = useState<SessionState>(getSession());
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { viewMode, setViewMode } = useViewMode();
+  const { viewMode, setViewMode, identityRole, isDeveloperEntry, isClinicianLoginAs } = useViewMode();
 
   // Update session when localStorage changes
   useEffect(() => {
@@ -52,6 +53,25 @@ function ContextSwitcher() {
   }, [isOpen]);
 
   const activePatient = session.patients.find((p) => p.id === session.activePatientId);
+  const caregiverProfile = getCaregiverProfile();
+  
+  /**
+   * Get the caregiver's relationship TO the active patient.
+   * The relationshipLabel on the patient record indicates the patient's relation to caregiver
+   * (e.g., "Daughter" means patient is caregiver's daughter).
+   * We invert this for display: if patient is "Daughter", caregiver is "Parent".
+   */
+  const getCaregiverRelationshipToPatient = (patient: PatientProfile | undefined): string | null => {
+    if (!patient || !caregiverProfile) return null;
+    // The patient.relationshipLabel tells us what the patient IS to the caregiver
+    // We need to describe what the caregiver IS to the patient
+    const patientRelation = patient.relationshipLabel;
+    if (!patientRelation || patientRelation === 'Self') return null;
+    
+    // Return the caregiver's relationship (stored in caregiverProfile.relationship)
+    // This is more accurate than trying to invert the patient's label
+    return caregiverProfile.relationship || null;
+  };
 
   const handlePatientChange = (patientId: string) => {
     setActivePatientId(patientId);
@@ -96,13 +116,58 @@ function ContextSwitcher() {
     if (confirm('Are you sure you want to reset all demo data? This will clear all documents and session data.')) {
       clearAllDocuments();
       resetSession();
+      // Clear all role/mode storage to return to landing page
+      localStorage.removeItem('vns-view-mode');
+      localStorage.removeItem('vns-entry-mode');
+      localStorage.removeItem('vns-identity-role');
       setSession(getSession());
       setIsOpen(false);
       window.dispatchEvent(new Event('session-changed'));
-      window.location.reload(); // Reload to reset state
+      window.location.href = '/'; // Redirect to landing page
     }
   };
 
+  // Get identity role badge class based on identityRole (source of truth)
+  const getIdentityBadgeClass = (role: IdentityRole) => {
+    switch (role) {
+      case 'patient':
+        return 'bg-green-100 text-green-700';
+      case 'caregiver':
+        return 'bg-blue-100 text-blue-700';
+      case 'clinician':
+        return 'bg-purple-100 text-purple-700';
+      case 'developer':
+        return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const getIdentityIcon = (role: IdentityRole) => {
+    switch (role) {
+      case 'patient':
+        return <User className="h-3 w-3" />;
+      case 'caregiver':
+        return <Users className="h-3 w-3" />;
+      case 'clinician':
+        return <Stethoscope className="h-3 w-3" />;
+      case 'developer':
+        return <Settings className="h-3 w-3" />;
+    }
+  };
+
+  const getIdentityLabel = (role: IdentityRole) => {
+    switch (role) {
+      case 'patient':
+        return 'Patient';
+      case 'caregiver':
+        return 'Caregiver';
+      case 'clinician':
+        return 'Clinician (Login As)';
+      case 'developer':
+        return 'Developer';
+    }
+  };
+
+  // Deprecated: only used for legacy session.user.role
   const getRoleBadgeClass = (role: string) => {
     return role === 'Caregiver'
       ? 'bg-blue-100 text-blue-700'
@@ -142,6 +207,8 @@ function ContextSwitcher() {
         return 'bg-green-50 text-green-700 ring-green-200';
       case 'caregiver':
         return 'bg-blue-50 text-blue-700 ring-blue-200';
+      case 'developer':
+        return 'bg-slate-50 text-slate-700 ring-slate-200';
     }
   };
 
@@ -153,6 +220,8 @@ function ContextSwitcher() {
         return <User className="h-3 w-3" />;
       case 'caregiver':
         return <Users className="h-3 w-3" />;
+      case 'developer':
+        return <Settings className="h-3 w-3" />;
     }
   };
 
@@ -164,15 +233,34 @@ function ContextSwitcher() {
         return 'Patient View';
       case 'caregiver':
         return 'Caregiver View';
+      case 'developer':
+        return 'Developer Mode';
     }
   };
 
+  // Determine the effective role to display (for developer, show what they're viewing as)
+  const displayRole: IdentityRole = isDeveloperEntry ? (viewMode as IdentityRole) : identityRole;
+  
+  // Get the identity display name (who is logged in)
+  const getIdentityDisplayName = () => {
+    switch (displayRole) {
+      case 'patient':
+        return activePatient?.fullName || 'Patient';
+      case 'caregiver':
+        return caregiverProfile?.displayName || session.user.displayName;
+      case 'clinician':
+        return 'Support Staff';
+      case 'developer':
+        return 'Developer';
+    }
+  };
+  
   return (
     <div className="relative flex items-center gap-2" ref={dropdownRef}>
-      {/* View Mode Indicator - always visible for all modes */}
-      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 ${getModeIndicatorStyles(viewMode)}`}>
-        {getModeIcon(viewMode)}
-        {getModeLabel(viewMode)}
+      {/* Role Indicator Pill - shows identityRole (or viewMode for developer) */}
+      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 ${getModeIndicatorStyles(displayRole)}`}>
+        {getModeIcon(displayRole)}
+        {getModeLabel(displayRole)}
       </span>
       <Button
         variant="outline"
@@ -180,16 +268,21 @@ function ContextSwitcher() {
         className="flex items-center gap-2"
       >
         <span className="text-sm flex items-center gap-2">
-          <span className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${
-            viewMode === 'clinician' ? 'bg-purple-50 text-purple-700' : getRoleBadgeClass(session.user.role)
-          }`}>
-            {viewMode === 'clinician' ? <Stethoscope className="h-3 w-3" /> : getRoleIcon(session.user.role)}
-            {viewMode === 'clinician' ? 'Clinician' : session.user.role}
+          {/* Identity badge + name - clear who is logged in */}
+          <span className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${getIdentityBadgeClass(displayRole)}`}>
+            {getIdentityIcon(displayRole)}
+            {getIdentityLabel(displayRole)}
           </span>
-          {viewMode !== 'clinician' && session.user.role === 'Caregiver' && (
-            <span className="text-muted-foreground">for</span>
+          <span className="text-gray-700 font-medium">
+            {getIdentityDisplayName()}
+          </span>
+          {/* For caregiver/clinician, also show which patient chart is being viewed */}
+          {(displayRole === 'caregiver' || displayRole === 'clinician') && activePatient && (
+            <>
+              <span className="text-gray-400">→</span>
+              <span className="text-gray-600">{activePatient.fullName}</span>
+            </>
           )}
-          {activePatient?.fullName || 'No Patient'}
         </span>
         <ChevronDown className="h-4 w-4" />
       </Button>
@@ -197,62 +290,110 @@ function ContextSwitcher() {
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50">
           <div className="p-2">
-            {/* Current Context Display */}
+            
+            {/* ============================================================
+                SECTION 1: IDENTITY - Who am I logged in as?
+                ============================================================ */}
             <div className="px-3 py-2 mb-2 border-b border-gray-200">
-              <div className="text-xs text-muted-foreground mb-1">Current Context</div>
-              <div className="text-sm font-medium">
-                <span className={`px-2 py-1 rounded text-xs mr-2 ${getRoleBadgeClass(session.user.role)}`}>
-                  {session.user.role}
+              <div className="text-xs text-muted-foreground mb-2">Your Identity</div>
+              
+              {/* Identity Badge + Name */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${getIdentityBadgeClass(displayRole)}`}>
+                  {getIdentityIcon(displayRole)}
+                  {getIdentityLabel(displayRole)}
                 </span>
-                {activePatient?.fullName}
+                {/* Show identity name based on role */}
+                <span className="text-sm font-medium">
+                  {displayRole === 'patient' 
+                    ? activePatient?.fullName 
+                    : displayRole === 'caregiver' 
+                      ? (caregiverProfile?.displayName || session.user.displayName)
+                      : displayRole === 'clinician'
+                        ? 'Support Staff'
+                        : 'Developer'}
+                </span>
               </div>
+
+              {/* CARE CONTEXT: Which patient chart am I viewing? */}
+              {/* For patient identity, the context IS themselves */}
+              {/* For caregiver/clinician, show the active patient separately */}
+              {(displayRole === 'caregiver' || displayRole === 'clinician') && activePatient && (
+                <div className="bg-gray-50 rounded px-2 py-1.5 mt-2">
+                  <div className="text-xs text-muted-foreground">Viewing Patient</div>
+                  <div className="text-sm font-medium text-gray-900">{activePatient.fullName}</div>
+                </div>
+              )}
+
+              {/* Caregiver: Show relationship to current patient */}
+              {displayRole === 'caregiver' && activePatient && getCaregiverRelationshipToPatient(activePatient) && (
+                <div className="text-xs text-blue-600 mt-1.5 flex items-center gap-1">
+                  <Heart className="h-3 w-3" />
+                  Relationship: {getCaregiverRelationshipToPatient(activePatient)} of {activePatient.fullName.split(' ')[0]}
+                </div>
+              )}
+
+              {/* Clinician login-as hint */}
+              {(isClinicianLoginAs || (isDeveloperEntry && viewMode === 'clinician')) && (
+                <p className="text-xs text-purple-600 mt-1.5">
+                  Viewing portal as patient for support/troubleshooting
+                </p>
+              )}
             </div>
 
-            {/* Switch View Mode */}
-            <div className="mb-2">
-              <div className="px-3 py-1 text-xs font-semibold text-muted-foreground">
-                Viewing As
+            {/* ============================================================
+                SECTION 2: DEVELOPER ROLE SIMULATION (only for developer)
+                ============================================================ */}
+            {isDeveloperEntry && (
+              <div className="mb-2">
+                <div className="px-3 py-1 text-xs font-semibold text-muted-foreground">
+                  Simulating Role
+                </div>
+                <div className="flex gap-1 px-2 mb-2">
+                  <button
+                    onClick={() => handleViewModeChange('patient')}
+                    disabled={!canSwitchToRole('Patient')}
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors ${
+                      getViewModeButtonClass('patient')
+                    } ${!canSwitchToRole('Patient') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <User className="h-3 w-3" />
+                    Patient
+                  </button>
+                  <button
+                    onClick={() => handleViewModeChange('caregiver')}
+                    disabled={!canSwitchToRole('Caregiver')}
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors ${
+                      getViewModeButtonClass('caregiver')
+                    } ${!canSwitchToRole('Caregiver') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <Users className="h-3 w-3" />
+                    Caregiver
+                  </button>
+                  <button
+                    onClick={() => handleViewModeChange('clinician')}
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors ${
+                      getViewModeButtonClass('clinician')
+                    }`}
+                  >
+                    <Stethoscope className="h-3 w-3" />
+                    Clinician
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-1 px-2 mb-2">
-                <button
-                  onClick={() => handleViewModeChange('patient')}
-                  disabled={!canSwitchToRole('Patient')}
-                  className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors ${
-                    getViewModeButtonClass('patient')
-                  } ${!canSwitchToRole('Patient') ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <User className="h-3 w-3" />
-                  Patient
-                </button>
-                <button
-                  onClick={() => handleViewModeChange('caregiver')}
-                  disabled={!canSwitchToRole('Caregiver')}
-                  className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors ${
-                    getViewModeButtonClass('caregiver')
-                  } ${!canSwitchToRole('Caregiver') ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <Users className="h-3 w-3" />
-                  Caregiver
-                </button>
-                <button
-                  onClick={() => handleViewModeChange('clinician')}
-                  className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors ${
-                    getViewModeButtonClass('clinician')
-                  }`}
-                >
-                  <Stethoscope className="h-3 w-3" />
-                  Clinician
-                </button>
-              </div>
-            </div>
+            )}
 
-            {/* Switch Patient - Only show for Caregiver or if multiple options */}
-            {session.user.role === 'Caregiver' && (
+            {/* ============================================================
+                SECTION 3: PATIENT SELECTION (Caregiver/Clinician only)
+                Patient identity should NOT see this - they only view self
+                ============================================================ */}
+            {(identityRole === 'caregiver' || identityRole === 'clinician' || 
+              (isDeveloperEntry && (viewMode === 'caregiver' || viewMode === 'clinician'))) && (
               <div className="mb-2 border-t border-gray-200 pt-2">
                 <div className="px-3 py-1 text-xs font-semibold text-muted-foreground">
-                  Managing Patient
+                  {displayRole === 'clinician' ? 'Select Patient' : 'Patients You Manage'}
                 </div>
-                {getAvailablePatients().map((patient) => (
+                {getAvailablePatients(displayRole).map((patient) => (
                   <button
                     key={patient.id}
                     onClick={() => handlePatientChange(patient.id)}
@@ -260,20 +401,35 @@ function ContextSwitcher() {
                       patient.id === session.activePatientId ? 'bg-blue-50 font-medium' : ''
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span>{patient.fullName}</span>
-                      {patient.relationshipLabel && (
-                        <span className="text-xs text-muted-foreground">
-                          {patient.relationshipLabel}
-                        </span>
-                      )}
-                    </div>
+                    {/* Show patient name only - relationship context is shown in identity section */}
+                    <span>{patient.fullName}</span>
                   </button>
                 ))}
               </div>
             )}
 
-            {/* Profile Link */}
+            {/* ============================================================
+                SECTION 4: CARE TEAM (Patient identity only)
+                Show caregivers who help this patient
+                ============================================================ */}
+            {displayRole === 'patient' && caregiverProfile && (
+              <div className="mb-2 border-t border-gray-200 pt-2">
+                <div className="px-3 py-1 text-xs font-semibold text-muted-foreground">
+                  Your Care Team
+                </div>
+                <div className="px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    <span>{caregiverProfile.displayName}</span>
+                    <span className="text-xs text-muted-foreground">— {caregiverProfile.relationship}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================
+                SECTION 5: ACTIONS
+                ============================================================ */}
             <div className="border-t border-gray-200 pt-2">
               <Link
                 to="/profile"
@@ -285,7 +441,6 @@ function ContextSwitcher() {
               </Link>
             </div>
 
-            {/* Reset Demo Data */}
             <div className="border-t border-gray-200 pt-2">
               <button
                 onClick={handleResetDemo}

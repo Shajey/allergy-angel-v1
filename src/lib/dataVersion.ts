@@ -4,7 +4,7 @@
  */
 
 const DATA_VERSION_KEY = "vns-data-version";
-const CURRENT_VERSION = 3; // Increment this when mock data changes
+const CURRENT_VERSION = 4; // Increment this when mock data changes (v4: CareOS identity refinements)
 
 /**
  * Storage keys that should be cleared when data version changes.

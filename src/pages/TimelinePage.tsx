@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageShell, { PageShellContent } from '@/components/layout/PageShell';
 import PageHeader from '@/components/layout/PageHeader';
 import { useViewMode } from '@/context/ViewModeContext';
-import { isClinician, getHeaderCopy, getCardClassName } from '@/lib/viewMode';
+import { isClinician, getHeaderCopy, getCardClassName, getPrimaryCardBorderClass } from '@/lib/viewMode';
 import { getSession } from '@/lib/sessionStore';
 import { getEvents } from '@/lib/timelineStore';
 import type { TimelineEvent, TimelineCategory, TimelineEventType } from '@/types/timeline';
@@ -187,6 +187,7 @@ function TimelinePage() {
   const _isClinicianMode = isClinician(viewMode);
   const headerCopy = getHeaderCopy("timeline", patientName, viewMode);
   const cardClass = getCardClassName(viewMode);
+  const primaryBorderClass = getPrimaryCardBorderClass(viewMode);
 
   return (
     <PageShell>
@@ -226,7 +227,7 @@ function TimelinePage() {
         </section>
 
         {/* Timeline */}
-        <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass}`}>
+        <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass} ${primaryBorderClass}`}>
           <CardHeader className="p-6">
             <div className="mb-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Audit Log</span>

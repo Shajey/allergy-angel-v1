@@ -13,20 +13,26 @@ interface PageHeaderProps {
 }
 
 /**
- * PageHeader provides consistent page header styling with optional hero mode.
+ * PageHeader provides consistent CareOS page identity pattern.
  *
- * viewMode controls persona-aware eyebrow coloring:
- * - patient: emerald-600
- * - caregiver: blue-600
- * - clinician: purple-700 (muted for visual comfort)
+ * V1 Identity Styling (per spec):
+ * - Eyebrow: text-xs, uppercase, tracking-wide, font-medium, role-colored
+ * - Title: text-3xl lg:text-4xl, font-semibold
+ * - Subtitle: text-sm, text-muted-foreground
+ *
+ * Role-based eyebrow colors (B2 spec):
+ * - Patient: emerald-600 (green)
+ * - Caregiver: blue-600 (blue)
+ * - Clinician: purple-600 (purple)
+ * - Developer: slate-500 (gray)
  *
  * When hero={true}:
- * - Enhanced spacing and gradient background
+ * - Enhanced spacing and gradient background (Today page only)
  * - Larger typography
  *
  * When hero={false} (default):
  * - Standard layout with consistent spacing
- * - Standard title size
+ * - Follows the page identity header pattern
  *
  * Optional badge prop renders a pill badge next to the title.
  */
@@ -39,9 +45,8 @@ export default function PageHeader({
   badge,
   children,
 }: PageHeaderProps) {
-  // Get persona-aware eyebrow color
-  // Using -700 shades for clinician to reduce saturation and match comfort level
-  // Developer defaults to gray/slate styling
+  // Eyebrow color: role-based per B2 spec
+  // Patient → Green, Caregiver → Blue, Clinician → Purple
   const getEyebrowColorClass = (mode: ViewMode): string => {
     switch (mode) {
       case "patient":
@@ -49,14 +54,15 @@ export default function PageHeader({
       case "caregiver":
         return "text-blue-600";
       case "clinician":
-        return "text-purple-700";
+        return "text-purple-600";
       case "developer":
-        return "text-slate-600";
+        return "text-slate-500";
     }
   };
 
   // Base eyebrow styling (consistent everywhere)
-  const eyebrowBaseClasses = "text-xs uppercase tracking-wider font-semibold";
+  // Spec: text-xs, uppercase, tracking-wide, font-medium, muted gray by default
+  const eyebrowBaseClasses = "text-xs uppercase tracking-wide font-medium";
   const eyebrowColorClass = getEyebrowColorClass(viewMode);
   const eyebrowClasses = `${eyebrowBaseClasses} ${eyebrowColorClass}`;
 
@@ -126,13 +132,15 @@ export default function PageHeader({
     ? "max-w-7xl mx-auto px-6 lg:px-8 py-6"
     : "max-w-7xl mx-auto px-6 lg:px-8 pt-8 pb-0";
 
+  // Spec: text-3xl lg:text-4xl font-semibold
   const titleClasses = isClinician
-    ? "text-2xl font-semibold text-slate-900"
-    : "text-3xl font-bold text-gray-900";
+    ? "text-2xl lg:text-3xl font-semibold text-slate-900"
+    : "text-3xl lg:text-4xl font-semibold text-gray-900";
 
+  // Spec: text-sm text-muted-foreground
   const subtitleClasses = isClinician
-    ? "text-slate-600 mt-1"
-    : "text-gray-600 mt-1";
+    ? "text-sm text-slate-600 mt-1"
+    : "text-sm text-muted-foreground mt-1";
 
   return (
     <div className={containerClasses}>

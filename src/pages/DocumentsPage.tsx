@@ -31,7 +31,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import ClinicalDocumentViewer from '@/components/documents/ClinicalDocumentViewer';
 import { useViewMode, type ViewMode } from '@/context/ViewModeContext';
 import { Info } from 'lucide-react';
-import { getHeaderCopy, getCardClassName } from '@/lib/viewMode';
+import { getHeaderCopy, getCardClassName, getPrimaryCardBorderClass } from '@/lib/viewMode';
 import type {
   DocumentRecord,
   DocumentType,
@@ -273,6 +273,7 @@ function DocumentsPage() {
   const patientName = activePatient?.fullName || "patient";
   const headerCopy = getHeaderCopy("documents", patientName, viewMode);
   const cardClass = getCardClassName(viewMode);
+  const primaryBorderClass = getPrimaryCardBorderClass(viewMode);
 
   // Format date for clinical docs
   const formatClinicalDate = (dateString: string): string => {
@@ -387,7 +388,7 @@ function DocumentsPage() {
             </div>
 
             {/* Documents Table */}
-            <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass}`}>
+            <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass} ${primaryBorderClass}`}>
               <CardContent className="p-0">
                 {filteredDocuments.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
@@ -536,7 +537,7 @@ function DocumentsPage() {
             )}
 
             {/* Clinical Documents Table */}
-            <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass}`}>
+            <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass} ${primaryBorderClass}`}>
               <CardContent className="p-0">
                 {clinicalDocs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 px-6 text-center">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import PageShell, { PageShellContent } from "@/components/layout/PageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { useViewMode } from "@/context/ViewModeContext";
+import { Info } from "lucide-react";
 import { getSession } from "@/lib/sessionStore";
 import { getTopTasks, ensureAutoTasks, updateTask } from "@/lib/taskStore";
 import { getUpcomingVisits } from "@/lib/visitStore";
@@ -76,7 +77,7 @@ function formatRelativeTime(dateString: string): string {
 }
 
 export default function TodayPage() {
-  const { viewMode } = useViewMode();
+  const { viewMode, isClinicianLoginAs } = useViewMode();
   const [session, setSession] = useState(getSession());
   const [nextVisit, setNextVisit] = useState<Visit | null>(null);
   const [topTasks, setTopTasks] = useState<Task[]>([]);
@@ -251,6 +252,21 @@ export default function TodayPage() {
 
       {/* Main Content */}
       <PageShellContent>
+          {/* Clinician Login-As Banner */}
+          {isClinicianLoginAs && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-start gap-3 mb-6">
+              <Info className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-purple-900">
+                  Clinician Login-As Mode
+                </p>
+                <p className="text-sm text-purple-700 mt-1">
+                  You are viewing the portal as the patient to help with support and troubleshooting.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Quick Actions Section */}
           <section>
             <div className="mb-6">
