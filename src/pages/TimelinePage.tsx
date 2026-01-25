@@ -201,24 +201,25 @@ function TimelinePage() {
       <PageShellContent>
         {/* Section Header */}
         <section>
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
               Activity History
             </span>
-            <h2 className="text-2xl font-bold text-gray-900 mt-1">Your Timeline</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">Your Timeline</h2>
             <p className="text-sm text-gray-600 mt-1">
               Track all activity related to your care
             </p>
           </div>
 
           {/* Filter Buttons */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
             {filterButtons.map((btn) => (
               <Button
                 key={btn.value}
                 variant={filter === btn.value ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter(btn.value)}
+                className="text-xs sm:text-sm"
               >
                 {btn.label}
               </Button>
@@ -228,16 +229,16 @@ function TimelinePage() {
 
         {/* Timeline */}
         <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass} ${primaryBorderClass}`}>
-          <CardHeader className="p-6">
+          <CardHeader className="p-4 sm:p-6">
             <div className="mb-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Audit Log</span>
             </div>
-            <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <Clock className="h-5 w-5" />
+            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
               Activity Feed
             </CardTitle>
           </CardHeader>
-        <CardContent className="p-6 pt-0">
+        <CardContent className="p-4 sm:p-6 pt-0">
           {filteredEvents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
               <Clock className="h-12 w-12 mb-4 text-gray-300" />
@@ -267,7 +268,7 @@ function TimelinePage() {
                         key={event.id}
                         onClick={() => handleEventClick(event)}
                         disabled={!event.link}
-                        className={`relative flex gap-4 w-full text-left p-3 rounded-lg transition-colors ${
+                        className={`relative flex gap-2 sm:gap-4 w-full text-left p-2.5 sm:p-3 rounded-lg transition-colors ${
                           event.link
                             ? 'hover:bg-gray-50 cursor-pointer'
                             : 'cursor-default'
@@ -275,7 +276,7 @@ function TimelinePage() {
                       >
                         {/* Icon with background */}
                         <div className="flex-shrink-0 z-10 bg-white p-0.5">
-                          <div className="p-1.5 rounded-full bg-gray-100">
+                          <div className="p-1 sm:p-1.5 rounded-full bg-gray-100">
                             {getEventIcon(event.type)}
                           </div>
                         </div>
@@ -283,19 +284,19 @@ function TimelinePage() {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-1">
-                            <h4 className="font-medium text-sm truncate">
+                            <h4 className="font-medium text-xs sm:text-sm truncate">
                               {event.title}
                             </h4>
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
                               {formatTime(event.createdAt)}
                             </span>
                           </div>
                           {event.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-2">
                               {event.description}
                             </p>
                           )}
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                             {getEventBadge(event.type)}
                             {event.link && (
                               <span className="text-xs text-blue-600">

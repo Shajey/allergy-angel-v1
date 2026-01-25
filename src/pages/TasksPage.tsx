@@ -259,11 +259,11 @@ export default function TasksPage() {
       <PageShellContent>
         {/* Section Header */}
         <section>
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
               Task Management
             </span>
-            <h2 className="text-2xl font-bold text-gray-900 mt-1">Your Tasks</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">Your Tasks</h2>
             <p className="text-sm text-gray-600 mt-1">
               Track and complete tasks related to your care plan
             </p>
@@ -271,19 +271,19 @@ export default function TasksPage() {
         </section>
 
         <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass} ${primaryBorderClass}`}>
-          <CardHeader className="p-6">
-            <div className="flex items-center justify-between">
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Task Queue</span>
-                <CardTitle className="text-xl font-semibold text-gray-900 mt-1">All Tasks</CardTitle>
+                <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900 mt-1">All Tasks</CardTitle>
               </div>
-              <Button onClick={() => setIsAddingTask(!isAddingTask)}>
+              <Button onClick={() => setIsAddingTask(!isAddingTask)} className="w-full sm:w-auto">
                 {isAddingTask ? "Cancel" : "Add Task"}
               </Button>
             </div>
 
           {/* Filter Tabs */}
-          <div className="flex gap-2 mt-6">
+          <div className="flex flex-wrap gap-2 mt-4 sm:mt-6">
             <button
               className={getFilterClass("all")}
               onClick={() => setFilter("all")}
@@ -305,10 +305,10 @@ export default function TasksPage() {
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           {/* Add Task Form */}
           {isAddingTask && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">
                 Add New Task
               </h3>
@@ -324,7 +324,7 @@ export default function TasksPage() {
                     className="w-full"
                   />
                 </div>
-                <div className="grid md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Due Date (Optional)
@@ -355,8 +355,8 @@ export default function TasksPage() {
                     </Select>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleAddTask}>Add Task</Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button onClick={handleAddTask} className="w-full sm:w-auto">Add Task</Button>
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -365,6 +365,7 @@ export default function TasksPage() {
                       setNewTaskDueDate("");
                       setNewTaskPriority("Medium");
                     }}
+                    className="w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
@@ -379,7 +380,7 @@ export default function TasksPage() {
               {sortedTasks.map((task) => (
                 <div
                   key={task.id}
-                  className={`flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors ${
+                  className={`flex items-start gap-2 sm:gap-3 p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors ${
                     task.status === "Done" ? "opacity-60" : ""
                   }`}
                 >
@@ -387,12 +388,12 @@ export default function TasksPage() {
                     type="checkbox"
                     checked={task.status === "Done"}
                     onChange={() => handleTaskToggle(task)}
-                    className="mt-1 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="mt-1 w-4 h-4 sm:w-5 sm:h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-1">
                       <span
-                        className={`text-base font-medium ${
+                        className={`text-sm sm:text-base font-medium ${
                           task.status === "Done"
                             ? "line-through text-gray-500"
                             : "text-gray-900"
@@ -421,7 +422,7 @@ export default function TasksPage() {
                         {task.description}
                       </p>
                     )}
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 sm:gap-4 text-xs text-gray-500 flex-wrap">
                       {task.dueAt && task.status !== "Done" && (
                         <span
                           className={
@@ -445,12 +446,13 @@ export default function TasksPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     {task.link && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => navigate(task.link!)}
+                        className="text-xs sm:text-sm"
                       >
                         Go
                       </Button>
@@ -460,7 +462,7 @@ export default function TasksPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteTask(task)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs sm:text-sm"
                       >
                         Delete
                       </Button>

@@ -5,6 +5,14 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    screens: {
+      'xs': '375px',   // Mobile (starting point)
+      'sm': '640px',   // Small mobile/landscape
+      'md': '768px',   // Tablet
+      'lg': '1024px',  // Desktop
+      'xl': '1280px',  // Large desktop
+      '2xl': '1536px', // Extra large desktop
+    },
     extend: {
       colors: {
         // shadcn/ui compatible colors (must come first)

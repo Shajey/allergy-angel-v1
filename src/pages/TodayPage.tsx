@@ -234,15 +234,15 @@ export default function TodayPage() {
         hero
       >
         {!isClinician && activePatient && (
-          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-blue-200/50">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+          <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-blue-200/50">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-xs sm:text-sm flex-shrink-0">
               {activePatient.fullName.split(" ").map((n) => n[0]).join("")}
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs uppercase tracking-wider text-gray-500 font-medium">
                 Active Patient
               </p>
-              <p className="text-base font-semibold text-gray-900">
+              <p className="text-sm sm:text-base font-semibold text-gray-900 truncate">
                 {activePatient.fullName}
               </p>
             </div>
@@ -254,13 +254,13 @@ export default function TodayPage() {
       <PageShellContent>
           {/* Clinician Login-As Banner */}
           {isClinicianLoginAs && (
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-start gap-3 mb-6">
-              <Info className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4 flex items-start gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <Info className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-purple-900">
+                <p className="text-xs sm:text-sm font-medium text-purple-900">
                   Clinician Login-As Mode
                 </p>
-                <p className="text-sm text-purple-700 mt-1">
+                <p className="text-xs sm:text-sm text-purple-700 mt-1">
                   You are viewing the portal as the patient to help with support and troubleshooting.
                 </p>
               </div>
@@ -269,28 +269,28 @@ export default function TodayPage() {
 
           {/* Quick Actions Section */}
           <section>
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Quick Actions
               </span>
-              <h2 className="text-2xl font-bold text-gray-900 mt-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
                 What's Next
               </h2>
             </div>
-            <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
               {/* Next Visit */}
               <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-xl font-semibold flex items-center justify-between">
+                <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
+                  <CardTitle className="text-lg sm:text-xl font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                     <span>Next Visit</span>
                     <Link to="/visits">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs sm:text-sm">
                         View All →
                       </Button>
                     </Link>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-4">
+                <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
                   {nextVisit ? (
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
@@ -404,17 +404,17 @@ export default function TodayPage() {
 
               {/* Top Tasks */}
               <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-xl font-semibold flex items-center justify-between">
+                <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
+                  <CardTitle className="text-lg sm:text-xl font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                     <span>Top Tasks</span>
                     <Link to="/tasks">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs sm:text-sm">
                         View All →
                       </Button>
                     </Link>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-4">
+                <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
                   {topTasks.length > 0 ? (
                     <div className="space-y-3">
                       {topTasks.map((task) => (
@@ -477,23 +477,23 @@ export default function TodayPage() {
 
           {/* Progress & Activity Section */}
           <section>
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Overview
               </span>
-              <h2 className="text-2xl font-bold text-gray-900 mt-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
                 Progress & Activity
               </h2>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {/* Clinical Documents */}
               <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-xl font-semibold flex items-center justify-between">
-                    <span>Clinical Documents</span>
+                <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
+                  <CardTitle className="text-lg sm:text-xl font-semibold">
+                    Clinical Documents
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-4">
+                <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center">
@@ -541,17 +541,17 @@ export default function TodayPage() {
               </Card>
               {/* Care Plan Progress */}
               <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-xl font-semibold flex items-center justify-between">
+                <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
+                  <CardTitle className="text-lg sm:text-xl font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                     <span>Care Plan Progress</span>
                     <Link to="/care-plan">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs sm:text-sm">
                         View Plan →
                       </Button>
                     </Link>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-4">
+                <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
                   <div className="space-y-5">
                     <div>
                       <div className="flex items-center justify-between mb-3">
@@ -590,17 +590,17 @@ export default function TodayPage() {
 
               {/* Recent Activity */}
               <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-xl font-semibold flex items-center justify-between">
+                <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
+                  <CardTitle className="text-lg sm:text-xl font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                     <span>Recent Activity</span>
                     <Link to="/timeline">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs sm:text-sm">
                         View Timeline →
                       </Button>
                     </Link>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-4">
+                <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
                   {recentActivity.length > 0 ? (
                     <div className="space-y-4">
                       {recentActivity.map((event) => (

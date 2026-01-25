@@ -137,14 +137,14 @@ function MessagesPage() {
       />
 
       <PageShellContent>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 h-[calc(100vh-340px)] min-h-[500px]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)] lg:h-[calc(100vh-340px)] min-h-[500px]">
         {/* Thread List */}
         <Card className={`lg:col-span-1 flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass}`}>
-          <CardHeader className="p-6 pb-4">
+          <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
             <div className="mb-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Message Threads</span>
             </div>
-            <CardTitle className="text-xl font-semibold text-gray-900">Conversations</CardTitle>
+            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">Conversations</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-0">
             {threads.length === 0 ? (
@@ -208,16 +208,16 @@ function MessagesPage() {
         <Card className={`lg:col-span-2 flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass} ${primaryBorderClass}`}>
           {selectedThread ? (
             <>
-              <CardHeader className="border-b pb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{selectedThread.subject}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
+              <CardHeader className="border-b p-4 sm:p-6 pb-3 sm:pb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base sm:text-lg truncate">{selectedThread.subject}</CardTitle>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
                       {selectedThread.participants.join(', ')}
                     </p>
                   </div>
                   <span
-                    className={`text-xs px-2 py-1 rounded ${
+                    className={`text-xs px-2 py-1 rounded flex-shrink-0 ${
                       selectedThread.status === 'Open'
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-600'
@@ -229,7 +229,7 @@ function MessagesPage() {
               </CardHeader>
               
               {/* Messages */}
-              <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+              <CardContent className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
                 {selectedThread.messages.map((message) => {
                   const isOwnMessage = message.sender === session.user.role;
                   const isCareOS = message.sender === 'CareOS';
@@ -240,7 +240,7 @@ function MessagesPage() {
                       className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
+                        className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-2.5 sm:p-3 ${
                           isOwnMessage
                             ? 'bg-blue-600 text-white'
                             : isCareOS
@@ -267,9 +267,9 @@ function MessagesPage() {
 
               {/* Message Composer */}
               {selectedThread.status === 'Open' && (
-                <div className="border-t p-4">
+                <div className="border-t p-3 sm:p-4">
                   {/* Sending As Indicator */}
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="text-xs text-muted-foreground">Sending as:</span>
                     <span className={`text-xs px-2 py-0.5 rounded ${
                       session.user.role === 'Caregiver'
@@ -279,17 +279,17 @@ function MessagesPage() {
                       {session.user.role}
                     </span>
                     {session.user.role === 'Caregiver' && activePatient && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground truncate">
                         (on behalf of {activePatient.fullName})
                       </span>
                     )}
                   </div>
-                  <form onSubmit={handleSendMessage} className="flex gap-3">
+                  <form onSubmit={handleSendMessage} className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <textarea
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       placeholder="Type your message..."
-                      className="flex-1 min-h-[60px] max-h-[120px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 min-h-[60px] max-h-[120px] p-2.5 sm:p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
@@ -297,16 +297,16 @@ function MessagesPage() {
                         }
                       }}
                     />
-                    <Button type="submit" disabled={!newMessage.trim()} className="self-end">
-                      <Send className="h-4 w-4 mr-2" />
-                      Send
+                    <Button type="submit" disabled={!newMessage.trim()} className="self-end sm:self-auto w-full sm:w-auto">
+                      <Send className="h-4 w-4 sm:mr-2" />
+                      <span className="sm:inline hidden">Send</span>
                     </Button>
                   </form>
                 </div>
               )}
 
               {selectedThread.status === 'Closed' && (
-                <div className="border-t p-4 bg-gray-50 text-center text-sm text-muted-foreground">
+                <div className="border-t p-3 sm:p-4 bg-gray-50 text-center text-xs sm:text-sm text-muted-foreground">
                   This conversation is closed. Start a new request from your Care Plan if needed.
                 </div>
               )}

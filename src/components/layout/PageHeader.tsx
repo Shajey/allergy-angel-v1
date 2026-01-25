@@ -88,12 +88,12 @@ export default function PageHeader({
     const containerClasses = getHeroContainerClasses();
 
     const titleClasses = isClinician
-      ? "text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight"
-      : "text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight";
+      ? "text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight"
+      : "text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight";
 
     const innerPaddingClasses = isClinician
-      ? "max-w-7xl mx-auto px-8 py-10 lg:py-12"
-      : "max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16";
+      ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 xl:py-12"
+      : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 xl:py-16";
 
     return (
       <div className={containerClasses}>
@@ -114,7 +114,7 @@ export default function PageHeader({
                 </span>
               )}
             </div>
-            {subtitle && <p className="text-lg text-gray-600">{subtitle}</p>}
+            {subtitle && <p className="text-base sm:text-lg text-gray-600">{subtitle}</p>}
             {children}
           </div>
         </div>
@@ -129,13 +129,13 @@ export default function PageHeader({
     : "";
 
   const innerClasses = isClinician
-    ? "max-w-7xl mx-auto px-6 lg:px-8 py-6"
-    : "max-w-7xl mx-auto px-6 lg:px-8 pt-8 pb-0";
+    ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6"
+    : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-0";
 
-  // Spec: text-3xl lg:text-4xl font-semibold
+  // Spec: text-3xl lg:text-4xl font-semibold (mobile-first)
   const titleClasses = isClinician
-    ? "text-2xl lg:text-3xl font-semibold text-slate-900"
-    : "text-3xl lg:text-4xl font-semibold text-gray-900";
+    ? "text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900"
+    : "text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900";
 
   // Spec: text-sm text-muted-foreground
   const subtitleClasses = isClinician

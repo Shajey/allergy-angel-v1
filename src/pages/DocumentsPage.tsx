@@ -771,9 +771,9 @@ function DocumentsPage() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleUploadSubmit}>
-              <div className="space-y-4 py-4">
+              <div className="space-y-3 sm:space-y-4 py-2 sm:py-4">
                 <div>
-                  <label htmlFor="title" className="text-sm font-medium mb-2 block">
+                  <label htmlFor="title" className="text-sm font-medium mb-1.5 sm:mb-2 block">
                     Title *
                   </label>
                   <Input
@@ -782,17 +782,18 @@ function DocumentsPage() {
                     value={uploadTitle}
                     onChange={(e) => setUploadTitle(e.target.value)}
                     required
+                    className="w-full"
                   />
                 </div>
                 <div>
-                  <label htmlFor="type" className="text-sm font-medium mb-2 block">
+                  <label htmlFor="type" className="text-sm font-medium mb-1.5 sm:mb-2 block">
                     Type *
                   </label>
                   <Select
                     value={uploadType}
                     onValueChange={(value) => setUploadType(value as DocumentType)}
                   >
-                    <SelectTrigger id="type">
+                    <SelectTrigger id="type" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -805,7 +806,7 @@ function DocumentsPage() {
                   </Select>
                 </div>
                 <div>
-                  <label htmlFor="notes" className="text-sm font-medium mb-2 block">
+                  <label htmlFor="notes" className="text-sm font-medium mb-1.5 sm:mb-2 block">
                     Notes (optional)
                   </label>
                   <Input
@@ -813,23 +814,27 @@ function DocumentsPage() {
                     placeholder="Add any notes about this document"
                     value={uploadNotes}
                     onChange={(e) => setUploadNotes(e.target.value)}
+                    className="w-full"
                   />
                 </div>
-                <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center">
-                  <p className="text-sm text-muted-foreground">
+                <div className="border-2 border-dashed border-muted rounded-lg p-4 sm:p-8 text-center">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     File upload will be handled in a future release
                   </p>
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsUploadOpen(false)}
+                  className="w-full sm:w-auto order-2 sm:order-1"
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Upload Document</Button>
+                <Button type="submit" className="w-full sm:w-auto order-1 sm:order-2">
+                  Upload Document
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>

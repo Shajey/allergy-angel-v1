@@ -453,11 +453,11 @@ export default function VisitsPage() {
       <PageShellContent>
         {/* Section Header */}
         <section>
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
               Encounter Schedule
             </span>
-            <h2 className="text-2xl font-bold text-gray-900 mt-1">Your Visits</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">Your Visits</h2>
             <p className="text-sm text-gray-600 mt-1">
               View and manage your scheduled appointments with your care team
             </p>
@@ -465,13 +465,13 @@ export default function VisitsPage() {
         </section>
 
         <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 ${cardClass} ${primaryBorderClass}`}>
-          <CardHeader className="p-6">
-            <div className="flex items-center justify-between">
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Schedule</span>
-                <CardTitle className="text-xl font-semibold text-gray-900 mt-1">Scheduled Visits</CardTitle>
+                <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900 mt-1">Scheduled Visits</CardTitle>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                 <button
                   className={getTabClass("upcoming")}
                   onClick={() => setActiveTab("upcoming")}
@@ -493,7 +493,7 @@ export default function VisitsPage() {
               </div>
             </div>
           </CardHeader>
-        <CardContent className="p-6 pt-0">
+        <CardContent className="p-4 sm:p-6 pt-0">
           {/* Upcoming Tab */}
           {activeTab === "upcoming" && (
             <div className="space-y-4">
