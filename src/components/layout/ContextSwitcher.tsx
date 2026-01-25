@@ -265,30 +265,30 @@ function ContextSwitcher() {
       <Button
         variant="outline"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2"
+        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
       >
-        <span className="text-sm flex items-center gap-2">
+        <span className="text-xs sm:text-sm flex items-center gap-1 sm:gap-2 flex-wrap">
           {/* Identity badge + name - clear who is logged in */}
-          <span className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${getIdentityBadgeClass(displayRole)}`}>
+          <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs flex items-center gap-1 ${getIdentityBadgeClass(displayRole)}`}>
             {getIdentityIcon(displayRole)}
-            {getIdentityLabel(displayRole)}
+            <span className="hidden sm:inline">{getIdentityLabel(displayRole)}</span>
           </span>
-          <span className="text-gray-700 font-medium">
+          <span className="text-gray-700 font-medium truncate max-w-[120px] sm:max-w-none">
             {getIdentityDisplayName()}
           </span>
           {/* For caregiver/clinician, also show which patient chart is being viewed */}
           {(displayRole === 'caregiver' || displayRole === 'clinician') && activePatient && (
             <>
-              <span className="text-gray-400">→</span>
-              <span className="text-gray-600">{activePatient.fullName}</span>
+              <span className="text-gray-400 hidden sm:inline">→</span>
+              <span className="text-gray-600 truncate max-w-[100px] sm:max-w-none">{activePatient.fullName}</span>
             </>
           )}
         </span>
-        <ChevronDown className="h-4 w-4" />
+        <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+        <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-[80vh] overflow-y-auto">
           <div className="p-2">
             
             {/* ============================================================
@@ -353,7 +353,7 @@ function ContextSwitcher() {
                   <button
                     onClick={() => handleViewModeChange('patient')}
                     disabled={!canSwitchToRole('Patient')}
-                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors min-h-[44px] ${
                       getViewModeButtonClass('patient')
                     } ${!canSwitchToRole('Patient') ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
@@ -363,7 +363,7 @@ function ContextSwitcher() {
                   <button
                     onClick={() => handleViewModeChange('caregiver')}
                     disabled={!canSwitchToRole('Caregiver')}
-                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors min-h-[44px] ${
                       getViewModeButtonClass('caregiver')
                     } ${!canSwitchToRole('Caregiver') ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
@@ -372,7 +372,7 @@ function ContextSwitcher() {
                   </button>
                   <button
                     onClick={() => handleViewModeChange('clinician')}
-                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs rounded transition-colors min-h-[44px] ${
                       getViewModeButtonClass('clinician')
                     }`}
                   >
@@ -397,7 +397,7 @@ function ContextSwitcher() {
                   <button
                     key={patient.id}
                     onClick={() => handlePatientChange(patient.id)}
-                    className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 ${
+                    className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 min-h-[48px] flex items-center ${
                       patient.id === session.activePatientId ? 'bg-blue-50 font-medium' : ''
                     }`}
                   >
