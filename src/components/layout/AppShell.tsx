@@ -2,46 +2,30 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Outlet } from 'react-router-dom';
 import { Menu } from 'lucide-react';
-import ContextSwitcher from './ContextSwitcher';
 import NotificationsPanel from './NotificationsPanel';
 import MobileDrawer from './MobileDrawer';
 import BottomNav from './BottomNav';
-import { useViewMode } from '@/context/ViewModeContext';
+
 
 function AppShell() {
   const location = useLocation();
-  const { viewMode } = useViewMode();
+
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Role-based active nav styling (B2 spec)
-  // Patient -> Green, Caregiver -> Blue, Clinician -> Purple
-  const getActiveNavClass = (): string => {
-    switch (viewMode) {
-      case 'patient':
-        return 'bg-emerald-100 text-emerald-700';
-      case 'caregiver':
-        return 'bg-blue-100 text-blue-700';
-      case 'clinician':
-        return 'bg-purple-100 text-purple-700';
-      case 'developer':
-        return 'bg-slate-100 text-slate-700';
-    }
-  };
 
-  const activeClass = getActiveNavClass();
+
+  const activeClass = 'bg-slate-100 text-slate-900';
   const inactiveClass = 'text-gray-600 hover:text-gray-900 hover:bg-gray-100';
+  
 
   const navLinks = [
-    { path: '/today', label: 'Today' },
-    { path: '/tasks', label: 'Tasks' },
-    { path: '/care-plan', label: 'Care Plan' },
-    { path: '/documents', label: 'Documents' },
-    { path: '/messages', label: 'Messages' },
-    { path: '/timeline', label: 'Timeline' },
-    { path: '/visits', label: 'Visits' },
+    { path: '/ask', label: 'Ask' },
+    { path: '/profile', label: 'Profile' },
+    { path: '/history', label: 'History' },
   ];
+  
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,9 +45,9 @@ function AppShell() {
           <Link
             to="/"
             className="absolute left-1/2 -translate-x-1/2 text-xl font-bold text-gray-900 hover:text-emerald-700 transition-colors"
-            aria-label="Go to CareOS home"
+            aria-label="Go to Allergy Angel home"
           >
-            CareOS
+            Allergy Angel
           </Link>
 
           {/* Notifications Bell - RIGHT */}
@@ -79,9 +63,9 @@ function AppShell() {
             <Link
               to="/"
               className="text-lg sm:text-xl font-bold text-gray-900 hover:text-emerald-700 transition-colors"
-              aria-label="Go to CareOS home"
+              aria-label="Go to Allergy Angel home"
             >
-              CareOS
+              Allergy Angel
             </Link>
 
             {/* Desktop Navigation */}
@@ -102,7 +86,7 @@ function AppShell() {
             {/* Right side actions */}
             <div className="flex items-center gap-2 sm:gap-4">
               <NotificationsPanel />
-              <ContextSwitcher />
+              
             </div>
           </div>
         </div>

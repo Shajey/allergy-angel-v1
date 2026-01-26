@@ -1,44 +1,67 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, Info, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getSession } from '@/lib/sessionStore';
-import {
-  getNotifications,
-  getUnreadCount,
-  markRead,
-  markAllRead,
-} from '@/lib/notificationStore';
-import type { Notification, NotificationType } from '@/types/notifications';
+
+type NotificationType = 'ActionRequired' | 'Success' | 'Info';
+
+type Notification = {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  createdAt: string; // ISO
+  read: boolean;
+  actionLink?: string;
+};
+
+const seedNotifications = (): Notification[] => {
+  const now = new Date();
+  const iso = (minsAgo: number) =>
+    new Date(now.getTime() - minsAgo * 60 * 1000).toISOString();
+
+  return [
+    {
+      id: 'n1',
+      type: 'ActionRequired',
+      title: 'Profile incomplete',
+      message: 'Add your supplements or medications to improve confidence.',
+      createdAt: iso(60 * 6),
+      read: false,
+      actionLink: '/profile',
+    },
+    {
+      id: 'n2',
+      type: 'Info',
+      title: 'Tip: clearer label photo',
+      message: 'If we can’t read ingredients, take a closer photo of the label.',
+      createdAt: iso(60 * 24 * 3),
+      read: true,
+      actionLink: '/ask',
+    },
+    {
+      id: 'n3',
+      type: 'Success',
+      title: 'Confidence improved',
+      message: 'Thanks for confirming a supplement — future checks will be more accurate.',
+      createdAt: iso(60 * 24 * 10),
+      read: true,
+      actionLink: '/history',
+    },
+  ];
+};
 
 function NotificationsPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Load notifications
   useEffect(() => {
-    const loadNotifications = () => {
-      const session = getSession();
-      const patientNotifications = getNotifications(session.activePatientId);
-      setNotifications(patientNotifications);
-      setUnreadCount(getUnreadCount(session.activePatientId));
-    };
-
-    loadNotifications();
-
-    // Listen for changes
-    const handleChange = () => loadNotifications();
-    window.addEventListener('session-changed', handleChange);
-    window.addEventListener('notifications-changed', handleChange);
-
-    return () => {
-      window.removeEventListener('session-changed', handleChange);
-      window.removeEventListener('notifications-changed', handleChange);
-    };
+    setNotifications(seedNotifications());
   }, []);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   // Close panel when clicking outside
   useEffect(() => {
@@ -48,19 +71,14 @@ function NotificationsPanel() {
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   const handleNotificationClick = (notification: Notification) => {
-    if (!notification.read) {
-      markRead(notification.id);
-    }
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
+    );
     if (notification.actionLink) {
       navigate(notification.actionLink);
       setIsOpen(false);
@@ -68,8 +86,7 @@ function NotificationsPanel() {
   };
 
   const handleMarkAllRead = () => {
-    const session = getSession();
-    markAllRead(session.activePatientId);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const getNotificationIcon = (type: NotificationType) => {
@@ -86,7 +103,6 @@ function NotificationsPanel() {
 
   const getNotificationBgClass = (type: NotificationType, read: boolean) => {
     if (read) return 'bg-gray-50';
-    
     switch (type) {
       case 'ActionRequired':
         return 'bg-amber-50';
@@ -115,7 +131,6 @@ function NotificationsPanel() {
 
   return (
     <div className="relative" ref={panelRef}>
-      {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -129,10 +144,8 @@ function NotificationsPanel() {
         )}
       </button>
 
-      {/* Dropdown Panel */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 md:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[70vh] overflow-hidden flex flex-col">
-          {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
             <h3 className="font-semibold text-gray-900">Notifications</h3>
             {unreadCount > 0 && (
@@ -148,7 +161,6 @@ function NotificationsPanel() {
             )}
           </div>
 
-          {/* Notifications List */}
           <div className="flex-1 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
