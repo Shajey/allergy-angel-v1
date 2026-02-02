@@ -1,0 +1,39 @@
+# Allergy Angel v1 — Cursor Rules
+
+You are implementing Allergy Angel v1.
+
+## Authoritative Instructions
+
+- Follow `/docs/SPEC.md` exactly
+- Do NOT introduce features, routes, or entities not in SPEC.md
+- Use mock APIs as defined
+- Optimize for UX completeness before backend fidelity
+- If uncertain, return "Insufficient data"
+
+## File References
+
+- **Primary spec:** `/docs/SPEC.md` (always follow this)
+- **Product context:** `/docs/MRD.md` (only if explicitly asked for intent)
+
+## Current Phase
+
+Phase 1: Ask → Result with mock /api/check
+
+**In scope this phase:**
+- /ask page with TextInput, PhotoUpload, BarcodeScanner
+- /result page with RiskBadge, ConfidenceIndicator, ExplanationCard
+- Mock /api/check returning CheckResult
+
+**Out of scope this phase:**
+- /history page
+- /profile page
+- Profile confirmation flows
+- Premium features
+- Barcode edge cases
+
+## Code Standards
+
+- Mobile-first responsive
+- TypeScript strict mode
+- Use types from SPEC.md Core Types section
+- localStorage keys: `allergyangel_profile`, `allergyangel_history`
