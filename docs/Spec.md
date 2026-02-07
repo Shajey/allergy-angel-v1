@@ -220,3 +220,6 @@ Profile
 - Accessible contrast + typography
 - Risk badge colors: Safe=green, Caution=yellow, Avoid=red, Insufficient=gray
 - Fast perceived response (optimistic UI acceptable)
+
+## Related Docs
+- Phase 6 (Extraction & Agent Boundary): `docs/Phase-6-Extraction.md`

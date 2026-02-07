@@ -1,0 +1,11 @@
+{
+    "rawText": "string",
+    "userContext": {
+      "timezone": "America/New_York",
+      "preferredUnits": "mg/dL",
+      "knownMedications": ["string"]
+    },
+    "allowedEventTypes": ["meal", "symptom", "medication"],
+    "extractionMode": "fast"
+  }
+  

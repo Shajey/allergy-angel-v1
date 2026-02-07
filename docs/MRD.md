@@ -279,3 +279,7 @@ Accepts confirmations and edits.
 - Voice input
 - EHR integration
 - Clinical decision support positioning
+
+## Implementation Link
+Phase 6 implementation details (extraction pipeline, agent boundary, eval harness) live in:
+- `docs/Phase-6-Extraction.md`

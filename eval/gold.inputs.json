@@ -1,0 +1,64 @@
+{
+  "testCases": [
+    {
+      "name": "Glucose",
+      "input": "My glucose was 120 mg/dL this morning",
+      "expected": {
+        "type": "glucose",
+        "fields": {
+          "value": 120,
+          "unit": "mg/dL"
+        },
+        "needsClarification": false
+      }
+    },
+    {
+      "name": "Meds",
+      "input": "I took 500mg of Tylenol",
+      "expected": {
+        "type": "medication",
+        "fields": {
+          "medication": "Tylenol",
+          "dosage": "500mg"
+        },
+        "needsClarification": false
+      }
+    },
+    {
+      "name": "Meal",
+      "input": "I ate a salad for lunch",
+      "expected": {
+        "type": "meal",
+        "fields": {
+          "meal": "a",
+          "carbs": null
+        },
+        "needsClarification": false
+      }
+    },
+    {
+      "name": "Symptom-Clarify",
+      "input": "I feel weird",
+      "expected": {
+        "type": "symptom",
+        "fields": {
+          "symptom": null,
+          "severity": null
+        },
+        "needsClarification": true
+      }
+    },
+    {
+      "name": "Symptom-Headache",
+      "input": "I have a headache",
+      "expected": {
+        "type": "symptom",
+        "fields": {
+          "symptom": "headache",
+          "severity": null
+        },
+        "needsClarification": false
+      }
+    }
+  ]
+}
