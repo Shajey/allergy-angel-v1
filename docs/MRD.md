@@ -283,3 +283,11 @@ Accepts confirmations and edits.
 ## Implementation Link
 Phase 6 implementation details (extraction pipeline, agent boundary, eval harness) live in:
 - `docs/Phase-6-Extraction.md`
+
+## 17. Deferred Depth: Advanced Inference Loops (Individual vs. Collective)
+
+> This section captures future-facing inference concepts. These are explicitly **out of scope for v1 execution** and are included to preserve design intent without slowing horizontal delivery.
+
+* **Individual Logic:** Layering user profiles (meds, age, known allergies) over extractions to provide risk-aware framing.
+* **Collective Signal:** Aggregating "weak signals" (like May's "feeling yucky") across similar profiles to surface non-diagnostic patterns.
+* **Safety Guardrails:** Strict separation between "Accumulated Evidence" and "Medical Advice," especially for pediatric (Zea/May) vs. adult (Amber) profiles.

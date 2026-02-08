@@ -9,10 +9,16 @@ interface ExpectedResult {
   needsClarification: boolean;
 }
 
+interface ExpectedEventStub {
+  type: string;
+}
+
 interface TestCase {
   name: string;
   input: string;
-  expected: ExpectedResult;
+  expected?: ExpectedResult;
+  expectedEvents?: ExpectedEventStub[];
+  minFollowUpQuestions?: number;
 }
 
 interface GoldFile {
@@ -47,26 +53,57 @@ async function runTest(testCase: TestCase): Promise<TestResult> {
       return { name: testCase.name, passed: false, errors };
     }
 
-    const event = result.events[0];
+    // ── Multi-event assertions (expectedEvents) ──
+    if (testCase.expectedEvents) {
+      const actualCount = result.events.length;
+      const expectedCount = testCase.expectedEvents.length;
 
-    // Assert type
-    if (event.type !== testCase.expected.type) {
-      errors.push(`type: expected "${testCase.expected.type}", got "${event.type}"`);
-    }
+      if (actualCount !== expectedCount) {
+        errors.push(`event count: expected ${expectedCount}, got ${actualCount}`);
+      }
 
-    // Assert fields
-    for (const [key, expectedValue] of Object.entries(testCase.expected.fields)) {
-      const actualValue = event.fields?.[key];
-      if (actualValue !== expectedValue) {
-        errors.push(`fields.${key}: expected "${expectedValue}", got "${actualValue}"`);
+      // Assert each expected event type exists in the response
+      const actualTypes = result.events.map((e: any) => e.type);
+      for (const expectedEvent of testCase.expectedEvents) {
+        if (!actualTypes.includes(expectedEvent.type)) {
+          errors.push(`missing expected event type: "${expectedEvent.type}" (got [${actualTypes.join(", ")}])`);
+        }
       }
     }
 
-    // Assert needsClarification
-    if (event.needsClarification !== testCase.expected.needsClarification) {
-      errors.push(
-        `needsClarification: expected ${testCase.expected.needsClarification}, got ${event.needsClarification}`
-      );
+    // ── Follow-up question count assertion ──
+    if (testCase.minFollowUpQuestions != null) {
+      const actualCount = result.followUpQuestions?.length ?? 0;
+      if (actualCount < testCase.minFollowUpQuestions) {
+        errors.push(
+          `followUpQuestions: expected >= ${testCase.minFollowUpQuestions}, got ${actualCount}`
+        );
+      }
+    }
+
+    // ── Single-event assertions (expected) ──
+    if (testCase.expected) {
+      const event = result.events[0];
+
+      // Assert type
+      if (event.type !== testCase.expected.type) {
+        errors.push(`type: expected "${testCase.expected.type}", got "${event.type}"`);
+      }
+
+      // Assert fields
+      for (const [key, expectedValue] of Object.entries(testCase.expected.fields)) {
+        const actualValue = event.fields?.[key];
+        if (actualValue !== expectedValue) {
+          errors.push(`fields.${key}: expected "${expectedValue}", got "${actualValue}"`);
+        }
+      }
+
+      // Assert needsClarification
+      if (event.needsClarification !== testCase.expected.needsClarification) {
+        errors.push(
+          `needsClarification: expected ${testCase.expected.needsClarification}, got ${event.needsClarification}`
+        );
+      }
     }
 
     return { name: testCase.name, passed: errors.length === 0, errors };

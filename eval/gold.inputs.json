@@ -59,6 +59,15 @@
         },
         "needsClarification": false
       }
+    },
+    {
+      "name": "Multi-Event: Meal + Symptom",
+      "input": "I ate a peanut butter sandwich and now my throat feels itchy",
+      "expectedEvents": [
+        { "type": "meal" },
+        { "type": "symptom" }
+      ],
+      "minFollowUpQuestions": 1
     }
   ]
 }

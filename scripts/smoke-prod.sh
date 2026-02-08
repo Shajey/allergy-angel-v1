@@ -47,5 +47,7 @@ post "❓ Test 4: Unknown Symptom (should need clarification)" "I feel weird"
 
 post "🤕 Test 5: Headache (should extract headache)" "I have a headache"
 
+post "🍽️🤧 Test 6: Meal + Symptom (should extract 2 events)" "I ate a peanut butter sandwich for lunch and now my throat feels itchy"
+
 echo -e "\n────────────────────────────────────────────────────────────"
 echo "✅ Smoke test complete"
