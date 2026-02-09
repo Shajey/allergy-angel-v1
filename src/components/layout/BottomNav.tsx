@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Search, History, User } from 'lucide-react';
+import { Search, History, User, Activity } from 'lucide-react';
 
 const navItems = [
   { path: '/ask', label: 'Ask', icon: Search },
   { path: '/history', label: 'History', icon: History },
+  { path: '/insights', label: 'Insights', icon: Activity },
   { path: '/profile', label: 'Profile', icon: User },
 ];
 

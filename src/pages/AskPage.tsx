@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { mockCheck } from '@/lib/api/mockApi';
-import { loadProfile } from '@/lib/profileStore';
-import { saveToHistory } from '@/lib/historyStore';
-import type { CheckInput } from '@/types/spec';
+/**
+ * Phase 9C – Ask Page (wired to real POST /api/extract)
+ *
+ * On submit, calls POST /api/extract → server persists to Supabase →
+ * then fetches the newest check via GET /api/history?limit=1 and
+ * navigates to the Check Detail page.
+ */
 
 export default function AskPage() {
   const navigate = useNavigate();
@@ -12,6 +15,7 @@ export default function AskPage() {
 
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Phase 1: images + barcode present as stubs; keep state ready.
   const [images] = useState<string[]>([]);
@@ -36,21 +40,37 @@ export default function AskPage() {
     if (!canSubmit || isSubmitting) return;
 
     setIsSubmitting(true);
+    setError(null);
+
     try {
-      const profileSnapshot = loadProfile();
+      // ── Call real extraction endpoint (Phase 7+ persistence happens server-side)
+      const extractRes = await fetch('/api/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rawText: text.trim() }),
+      });
 
-      const input: CheckInput = {
-        text: text.trim(),
-        images,
-        barcode: barcode.trim(),
-      };
+      if (!extractRes.ok) {
+        const body = await extractRes.json().catch(() => null);
+        throw new Error(body?.error ?? `Extraction failed (HTTP ${extractRes.status})`);
+      }
 
-      const result = await mockCheck(profileSnapshot, input);
+      // ── Navigate to the newest check detail page
+      // The extraction was persisted server-side; fetch the latest check id.
+      const historyRes = await fetch('/api/history?limit=1');
+      if (historyRes.ok) {
+        const historyJson = await historyRes.json();
+        const newestCheck = historyJson.checks?.[0];
+        if (newestCheck?.id) {
+          navigate(`/history/${newestCheck.id}`);
+          return;
+        }
+      }
 
-      // Phase 4: store input + result together
-      saveToHistory(input, result, profileSnapshot);
-
-      navigate('/result', { state: { result } });
+      // Fallback: go to history list if we can't resolve the newest check
+      navigate('/history');
+    } catch (err: any) {
+      setError(err?.message ?? 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -75,6 +95,12 @@ export default function AskPage() {
           className="w-full rounded-md border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
+
+      {error && (
+        <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
 
       <div className="mt-6">
         <button

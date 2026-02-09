@@ -1,0 +1,49 @@
+{
+  "testCases": [
+    {
+      "name": "Glucose",
+      "input": "My glucose was 120 mg/dL this morning",
+      "expected": {
+        "type": "glucose",
+        "fields": { "value": 120, "unit": "mg/dL" },
+        "needsClarification": false
+      }
+    },
+    {
+      "name": "Meds (string dosage — heuristic format)",
+      "input": "I took 500mg of Tylenol",
+      "expected": {
+        "type": "medication",
+        "fields": { "medication": "Tylenol", "dosage": "500mg" },
+        "needsClarification": false
+      }
+    },
+    {
+      "name": "Meal (determiner stripped)",
+      "input": "I ate a salad for lunch",
+      "expected": {
+        "type": "meal",
+        "fields": { "meal": "salad", "carbs": null },
+        "needsClarification": false
+      }
+    },
+    {
+      "name": "Symptom-Clarify (unknown token)",
+      "input": "I feel weird",
+      "expected": {
+        "type": "symptom",
+        "fields": { "symptom": null, "severity": null },
+        "needsClarification": true
+      }
+    },
+    {
+      "name": "Symptom-Headache (recognized, severity optional)",
+      "input": "I have a headache",
+      "expected": {
+        "type": "symptom",
+        "fields": { "symptom": "headache", "severity": null },
+        "needsClarification": false
+      }
+    }
+  ]
+}

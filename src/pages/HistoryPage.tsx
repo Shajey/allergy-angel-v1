@@ -1,119 +1,124 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-import type { HistoryRecord } from '@/types/history';
-import { loadHistory, clearHistory } from '@/lib/historyStore';
-import { mockCheck } from '@/lib/api/mockApi';
-import { loadProfile } from '@/lib/profileStore';
+/**
+ * Phase 9C – History List (wired to Supabase via GET /api/history)
+ *
+ * Data contract (GET /api/history):
+ * {
+ *   checks: Array<{
+ *     id: string;
+ *     profile_id: string;
+ *     raw_text: string;
+ *     follow_up_questions: string[];
+ *     verdict: { riskLevel: "none"|"medium"|"high"; reasoning: string };
+ *     created_at: string;
+ *     summary: { eventCount: number; eventTypes: string[] };
+ *   }>
+ * }
+ */
 
-function RiskBadge({ label }: { label: HistoryRecord['result']['riskLabel'] }) {
+interface CheckSummary {
+  id: string;
+  raw_text: string;
+  verdict: { riskLevel: 'none' | 'medium' | 'high'; reasoning: string };
+  created_at: string;
+  summary: { eventCount: number; eventTypes: string[] };
+}
+
+function RiskBadge({ level }: { level: string }) {
   const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold';
   const cls =
-    label === 'Safe'
-      ? 'bg-emerald-100 text-emerald-800'
-      : label === 'Caution'
-      ? 'bg-amber-100 text-amber-800'
-      : label === 'Avoid'
+    level === 'high'
       ? 'bg-red-100 text-red-800'
-      : 'bg-slate-100 text-slate-800';
+      : level === 'medium'
+      ? 'bg-amber-100 text-amber-800'
+      : 'bg-emerald-100 text-emerald-800';
+  const label = level === 'high' ? 'High Risk' : level === 'medium' ? 'Caution' : 'Safe';
 
   return <span className={`${base} ${cls}`}>{label}</span>;
 }
 
 export default function HistoryPage() {
-  const navigate = useNavigate();
-
-  const [items, setItems] = useState<HistoryRecord[]>([]);
-  const [isRecheckingId, setIsRecheckingId] = useState<string | null>(null);
+  const [checks, setChecks] = useState<CheckSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const refresh = () => setItems(loadHistory());
-    refresh();
-    window.addEventListener('history-changed', refresh);
-    return () => window.removeEventListener('history-changed', refresh);
-  }, []);
+    let cancelled = false;
 
-  const openResult = (rec: HistoryRecord) => {
-    navigate('/result', { state: { result: rec.result, historyRecord: rec } });
-  };
-
-  const recheck = async (rec: HistoryRecord) => {
-    setIsRecheckingId(rec.id);
-    try {
-      const currentProfile = loadProfile();
-      const next = await mockCheck(currentProfile, rec.input);
-      navigate('/result', { state: { result: next } });
-    } finally {
-      setIsRecheckingId(null);
+    async function fetchHistory() {
+      try {
+        const res = await fetch('/api/history');
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error ?? `HTTP ${res.status}`);
+        }
+        const json = await res.json();
+        if (!cancelled) setChecks(json.checks ?? []);
+      } catch (err: any) {
+        if (!cancelled) setError(err?.message ?? 'Failed to load history');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
-  };
 
-  const handleClear = () => {
-    if (confirm('Clear history?')) clearHistory();
-  };
+    fetchHistory();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="p-6 max-w-xl mx-auto">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">History</h1>
-          <p className="text-sm text-gray-600 mt-1">Your recent checks (stored locally).</p>
-        </div>
-        {items.length > 0 && (
-          <button
-            onClick={handleClear}
-            className="rounded-md px-3 py-2 text-sm font-medium border border-gray-300 text-gray-900 hover:bg-gray-50"
-          >
-            Clear
-          </button>
-        )}
+      <div>
+        <h1 className="text-xl font-semibold">History</h1>
+        <p className="text-sm text-gray-600 mt-1">Your recent checks.</p>
       </div>
 
-      {items.length === 0 ? (
+      {loading ? (
+        <div className="mt-6">
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
+      ) : error ? (
+        <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      ) : checks.length === 0 ? (
         <div className="mt-6 rounded-md border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-700">No checks yet.</p>
         </div>
       ) : (
         <ul className="mt-6 space-y-3">
-          {items.map((rec) => {
-            const title = rec.input.text?.trim() || '(no text)';
+          {checks.map((check) => {
+            const title = check.raw_text?.trim() || '(no text)';
+            const riskLevel = check.verdict?.riskLevel ?? 'none';
+
             return (
-              <li key={rec.id} className="rounded-md border border-gray-200 bg-white p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <RiskBadge label={rec.result.riskLabel} />
-                      <div className="text-xs text-gray-500">
-                        {new Date(rec.createdAt).toLocaleString()}
+              <li key={check.id}>
+                <Link
+                  to={`/history/${check.id}`}
+                  className="block rounded-md border border-gray-200 bg-white p-4 cursor-pointer active:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <RiskBadge level={riskLevel} />
+                        <span className="text-xs text-gray-500">
+                          {new Date(check.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-sm text-gray-900 truncate">{title}</div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        {check.summary.eventCount} event{check.summary.eventCount !== 1 ? 's' : ''}
+                        {' · '}
+                        {check.summary.eventTypes.join(', ')}
                       </div>
                     </div>
-                    <div className="mt-2 text-sm text-gray-900 truncate">{title}</div>
-                    <div className="mt-1 text-xs text-gray-500">
-                      Confidence: {rec.result.confidenceScore} ({rec.result.confidenceLevel})
-                    </div>
-                  </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <button
-                      onClick={() => openResult(rec)}
-                      className="rounded-md px-3 py-2 text-sm font-medium border border-gray-300 text-gray-900 hover:bg-gray-50"
-                    >
-                      Open
-                    </button>
-
-                    <button
-                      onClick={() => recheck(rec)}
-                      disabled={isRecheckingId === rec.id}
-                      className={`rounded-md px-3 py-2 text-sm font-medium ${
-                        isRecheckingId === rec.id
-                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                      }`}
-                    >
-                      {isRecheckingId === rec.id ? 'Re-checking…' : 'Re-check now'}
-                    </button>
+                    <span className="text-sm text-gray-400 mt-1 shrink-0">
+                      View details &rarr;
+                    </span>
                   </div>
-                </div>
+                </Link>
               </li>
             );
           })}

@@ -6,6 +6,8 @@ import AskPage from './pages/AskPage';
 import ResultPage from './pages/ResultPage';
 import AngelProfilePage from './pages/AngelProfilePage';
 import HistoryPage from './pages/HistoryPage';
+import HistoryCheckDetailPage from './pages/HistoryCheckDetailPage';
+import InsightsPage from './pages/InsightsPage';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
             <Route path="result" element={<ResultPage />} />
             <Route path="profile" element={<AngelProfilePage />} />
             <Route path="history" element={<HistoryPage />} />
+            <Route path="history/:id" element={<HistoryCheckDetailPage />} />
+            <Route path="insights" element={<InsightsPage />} />
           </Route>
 
           {/* Catch-all */}

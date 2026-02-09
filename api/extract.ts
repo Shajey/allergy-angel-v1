@@ -3,6 +3,7 @@ dotenv.config({ path: ".env.local", override: true });   // load .env.local → 
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { extractFromText } from "./_lib/extractFromText.js";
+import { saveExtractionRun } from "./_lib/persistence/saveExtractionRun.js";
 
 /**
  * Vercel Serverless Function
@@ -15,6 +16,21 @@ import { extractFromText } from "./_lib/extractFromText.js";
  * Contract:
  * - Always returns { events: HealthEvent[], followUpQuestions: string[], warnings: string[] }
  * - On error, returns { error: string, details: any|null } with proper HTTP status
+ *
+ * Phase 7 – Memory Room:
+ * After extraction succeeds, persists the run to Supabase (additive).
+ * If persistence fails the extraction result is still returned with a warning.
+ *
+ * Phase 9A – Profile Foundation:
+ * Uses DEFAULT_PROFILE_ID (UUID from profiles table) to associate
+ * persisted data with a real profile. If the profile is missing or
+ * invalid, extraction still succeeds but events are not persisted.
+ *
+ * Env vars for persistence (see .env.local):
+ *   SUPABASE_URL              – Supabase project URL
+ *   SUPABASE_SERVICE_ROLE_KEY – service-role key (never expose to browser)
+ *   DEFAULT_PROFILE_ID        – UUID of the profile to persist against
+ *   STORE_RAW_INPUTS          – optional, set to "true" to persist raw text
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -30,6 +46,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const result = await extractFromText(rawText);
+
+    // ── Phase 7 + 9A: persist extraction run (best-effort) ───────────
+    // DEFAULT_PROFILE_ID must be a UUID from the profiles table.
+    const profileId = process.env.DEFAULT_PROFILE_ID;
+    if (profileId) {
+      try {
+        await saveExtractionRun({ profileId, rawText, result });
+      } catch (persistErr: any) {
+        console.error("[Persistence] saveExtractionRun failed:", persistErr?.message);
+        result.warnings = result.warnings ?? [];
+        result.warnings.push(`Persistence failed: ${persistErr?.message ?? "unknown error"}`);
+      }
+    } else {
+      result.warnings = result.warnings ?? [];
+      result.warnings.push("Profile not found; events not persisted");
+    }
+
     return res.status(200).json(result);
   } catch (err: any) {
     const statusCode = err?.statusCode ?? 500;

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { X, History, Search, User, RotateCcw } from 'lucide-react';
+import { X, History, Search, User, Activity, RotateCcw } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ const navLinks = [
   { path: '/ask', label: 'Ask', icon: Search },
   { path: '/profile', label: 'Profile', icon: User },
   { path: '/history', label: 'History', icon: History },
+  { path: '/insights', label: 'Insights', icon: Activity },
 ];
 
 export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {

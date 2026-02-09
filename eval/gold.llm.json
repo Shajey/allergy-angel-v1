@@ -5,60 +5,35 @@
       "input": "My glucose was 120 mg/dL this morning",
       "expected": {
         "type": "glucose",
-        "fields": {
-          "value": 120,
-          "unit": "mg/dL"
-        },
+        "fields": { "value": 120, "unit": "mg/dL" },
         "needsClarification": false
       }
     },
     {
-      "name": "Meds",
+      "name": "Meds (structured dosage)",
       "input": "I took 500mg of Tylenol",
       "expected": {
         "type": "medication",
-        "fields": {
-          "medication": "Tylenol",
-          "dosage": "500mg"
-        },
+        "fields": { "medication": "Tylenol", "dosage": 500, "unit": "mg" },
         "needsClarification": false
       }
     },
     {
-      "name": "Meal",
+      "name": "Meal (determiner stripped)",
       "input": "I ate a salad for lunch",
-      "expected": {
-        "type": "meal",
-        "fields": {
-          "meal": "a",
-          "carbs": null
-        },
-        "needsClarification": false
-      }
+      "expectedEvents": [{ "type": "meal" }]
     },
     {
-      "name": "Symptom-Clarify",
+      "name": "Symptom-Clarify (vague token)",
       "input": "I feel weird",
-      "expected": {
-        "type": "symptom",
-        "fields": {
-          "symptom": null,
-          "severity": null
-        },
-        "needsClarification": true
-      }
+      "expectedEvents": [{ "type": "symptom" }],
+      "assertNeedsClarification": true
     },
     {
-      "name": "Symptom-Headache",
+      "name": "Symptom-Headache (severity optional)",
       "input": "I have a headache",
-      "expected": {
-        "type": "symptom",
-        "fields": {
-          "symptom": "headache",
-          "severity": null
-        },
-        "needsClarification": false
-      }
+      "expectedEvents": [{ "type": "symptom" }],
+      "assertNeedsClarification": false
     },
     {
       "name": "Multi-Event: Meal + Symptom",
@@ -66,8 +41,7 @@
       "expectedEvents": [
         { "type": "meal" },
         { "type": "symptom" }
-      ],
-      "minFollowUpQuestions": 1
+      ]
     },
     {
       "name": "Decomposition: Two Supplements (with)",

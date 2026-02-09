@@ -24,6 +24,7 @@ function AppShell() {
     { path: '/ask', label: 'Ask' },
     { path: '/profile', label: 'Profile' },
     { path: '/history', label: 'History' },
+    { path: '/insights', label: 'Insights' },
   ];
   
 
