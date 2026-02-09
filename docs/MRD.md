@@ -284,7 +284,48 @@ Accepts confirmations and edits.
 Phase 6 implementation details (extraction pipeline, agent boundary, eval harness) live in:
 - `docs/Phase-6-Extraction.md`
 
-## 17. Deferred Depth: Advanced Inference Loops (Individual vs. Collective)
+## 17. Future Consideration — Allergen Taxonomy (Phase 10H)
+
+> **Status:** Product intent recorded; implementation deferred.
+
+### Problem
+
+The system currently tracks allergens as flat strings (e.g., "tree nuts") but does not map parent allergy classes to specific ingredients. A user whose profile indicates a tree nut allergy would not be automatically alerted when a check contains "pistachio" — because the system has no parent→child taxonomy connecting the two.
+
+This matters most for:
+- Tree nuts → pistachio, cashew, walnut, pecan, macadamia, etc.
+- Shellfish → shrimp, crab, lobster, etc.
+- Stone fruits → peach, cherry, plum, apricot, etc.
+
+### Product Intent
+
+Move from **reactive learning** (pattern detection after symptoms) to **protective awareness** (proactive flagging before ingestion). The system should be able to say: "Pistachio is commonly classified as a tree nut" at the moment of check, not after a reaction is logged.
+
+### Future Direction
+
+A deterministic taxonomy registry (parent → child[]), similar to the Phase 10G functional class registry, applied post-extraction:
+- Registry maps allergen classes to specific ingredients
+- Applied during risk evaluation (checkRisk or a successor module)
+- Surfaces as a UI annotation on the check detail page and/or verdict
+
+### Explicit Deferrals
+
+- **No extraction changes** — the LLM prompt and extraction schema remain unchanged.
+- **No LLM guessing** — taxonomy is deterministic, not inferred.
+- **No cross-reactivity or diagnosis** — "commonly classified as" is informational, not clinical.
+- **No schema changes** in current phases — profiles, checks, and health_events tables are untouched.
+
+### Interim Guardrail (Phase 10H-lite)
+
+A minimal copy-level note is surfaced in the History Check Detail UI when:
+1. The user's profile includes a tree nut allergy, AND
+2. The check's raw text or extracted events mention a specific tree nut (e.g., pistachio).
+
+This is a UI-only awareness surface — no inference, scoring, or persistence changes.
+
+---
+
+## 18. Deferred Depth: Advanced Inference Loops (Individual vs. Collective)
 
 > This section captures future-facing inference concepts. These are explicitly **out of scope for v1 execution** and are included to preserve design intent without slowing horizontal delivery.
 

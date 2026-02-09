@@ -79,6 +79,77 @@ interface CheckDetailResponse {
   events: HealthEventRow[];
 }
 
+// ── Phase 10H awareness-surface guardrail; taxonomy logic deferred. ──
+//
+// Minimal, deterministic mapping of parent allergen classes to specific
+// ingredients. When the user's profile includes a parent class AND the
+// check mentions a child ingredient, we surface an informational note.
+// This is copy-only — no inference, scoring, or persistence changes.
+
+const ALLERGEN_TAXONOMY: Record<string, { parent: string; children: string[] }> = {
+  "tree nuts": {
+    parent: "tree nut",
+    children: [
+      "pistachio", "cashew", "walnut", "pecan", "almond",
+      "macadamia", "brazil nut", "hazelnut", "filbert", "chestnut",
+      "pine nut", "praline", "marzipan", "nougat",
+    ],
+  },
+  shellfish: {
+    parent: "shellfish",
+    children: [
+      "shrimp", "crab", "lobster", "crawfish", "crayfish",
+      "prawn", "langoustine", "scallop", "clam", "mussel", "oyster",
+    ],
+  },
+};
+
+interface AllergenAlert {
+  parentAllergy: string;
+  /** Singular, human-readable label for use in copy (e.g., "tree nut"). */
+  parentLabel: string;
+  matchedIngredient: string;
+}
+
+/**
+ * Scan a check's raw text and extracted events against the user's
+ * known allergies to find parent→child allergen matches.
+ */
+function detectAllergenAlerts(
+  knownAllergies: string[],
+  rawText: string,
+  events: { event_type: string; event_data: Record<string, unknown> }[],
+): AllergenAlert[] {
+  const alerts: AllergenAlert[] = [];
+  const lowerRaw = rawText.toLowerCase();
+
+  // Collect all textual content from events
+  const eventTexts: string[] = [];
+  for (const ev of events) {
+    const d = ev.event_data;
+    if (ev.event_type === "meal" && d.meal) eventTexts.push(String(d.meal).toLowerCase());
+    if (ev.event_type === "supplement" && d.supplement) eventTexts.push(String(d.supplement).toLowerCase());
+    if (ev.event_type === "supplement" && d.name) eventTexts.push(String(d.name).toLowerCase());
+    if (ev.event_type === "medication" && d.medication) eventTexts.push(String(d.medication).toLowerCase());
+  }
+
+  const allText = [lowerRaw, ...eventTexts].join(" ");
+
+  for (const allergy of knownAllergies) {
+    const key = allergy.toLowerCase().trim();
+    const taxonomy = ALLERGEN_TAXONOMY[key];
+    if (!taxonomy) continue;
+
+    for (const child of taxonomy.children) {
+      if (allText.includes(child)) {
+        alerts.push({ parentAllergy: allergy, parentLabel: taxonomy.parent, matchedIngredient: child });
+      }
+    }
+  }
+
+  return alerts;
+}
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
 function formatDate(iso: string): string {
@@ -132,7 +203,17 @@ function eventSummary(event: HealthEventRow): string {
       const dosage = d.dosage ? ` ${d.dosage}` : "";
       return `${name}${dosage}`;
     }
+    case "note":
+      return String(d.text ?? d.note ?? "note");
+    case "glucose": {
+      const val = d.value != null ? String(d.value) : "—";
+      const unit = d.unit ? ` ${d.unit}` : "";
+      return `${val}${unit}`;
+    }
     default:
+      // Attempt common keys before falling back to JSON
+      if (d.text) return String(d.text);
+      if (d.name) return String(d.name);
       return JSON.stringify(d);
   }
 }
@@ -319,6 +400,40 @@ function FollowUpQuestions({ questions }: { questions: string[] }) {
   );
 }
 
+// ── Allergen Alert Banner ────────────────────────────────────────────
+// Phase 10H awareness-surface guardrail; taxonomy logic deferred.
+
+function AllergenAlertBanner({ alerts }: { alerts: AllergenAlert[] }) {
+  if (alerts.length === 0) return null;
+
+  // Deduplicate by ingredient
+  const seen = new Set<string>();
+  const unique = alerts.filter((a) => {
+    if (seen.has(a.matchedIngredient)) return false;
+    seen.add(a.matchedIngredient);
+    return true;
+  });
+
+  return (
+    <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      {unique.map((alert, i) => {
+        const ingredient =
+          alert.matchedIngredient.charAt(0).toUpperCase() +
+          alert.matchedIngredient.slice(1);
+        return (
+          <p key={i} className={i > 0 ? "mt-2" : ""}>
+            <span className="font-medium">Note:</span> {ingredient} is
+            commonly classified as a {alert.parentLabel}.
+            For individuals with {alert.parentLabel} allergies,
+            foods containing {alert.matchedIngredient} are often treated as
+            higher risk.
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Page Component ──────────────────────────────────────────────────
 
 export default function HistoryCheckDetailPage() {
@@ -329,6 +444,9 @@ export default function HistoryCheckDetailPage() {
 
   // Phase 10B: check if this check appears in any trajectory insight
   const [patternCount, setPatternCount] = useState(0);
+
+  // Phase 10H: allergen taxonomy alerts (awareness-surface guardrail)
+  const [allergenAlerts, setAllergenAlerts] = useState<AllergenAlert[]>([]);
 
   useEffect(() => {
     if (!id) {
@@ -347,7 +465,29 @@ export default function HistoryCheckDetailPage() {
           throw new Error(body?.error ?? `HTTP ${res.status}`);
         }
         const json: CheckDetailResponse = await res.json();
-        if (!cancelled) setData(json);
+        if (!cancelled) {
+          setData(json);
+
+          // Phase 10H: fetch profile and detect allergen alerts (best-effort)
+          try {
+            const profileRes = await fetch("/api/profile");
+            if (profileRes.ok) {
+              const profileJson = await profileRes.json();
+              const allergies: string[] =
+                profileJson?.profile?.known_allergies ?? [];
+              if (allergies.length > 0) {
+                const alerts = detectAllergenAlerts(
+                  allergies,
+                  json.check.raw_text,
+                  json.events,
+                );
+                if (!cancelled) setAllergenAlerts(alerts);
+              }
+            }
+          } catch {
+            // Allergen alert is best-effort; ignore errors
+          }
+        }
       } catch (err: any) {
         if (!cancelled) setError(err?.message ?? "Failed to load check");
       } finally {
@@ -445,6 +585,9 @@ export default function HistoryCheckDetailPage() {
 
       {/* B) Verdict Banner */}
       <VerdictBanner verdict={verdict} />
+
+      {/* Phase 10H: allergen taxonomy awareness note */}
+      <AllergenAlertBanner alerts={allergenAlerts} />
 
       {/* C) Evidence Trace */}
       <EvidenceTrace matched={matched} />

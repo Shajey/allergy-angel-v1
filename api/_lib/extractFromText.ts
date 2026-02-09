@@ -1,6 +1,6 @@
-import { extractFromTextHeuristic } from "./extractFromTextHeuristic";
-import { extractFromTextLLM } from "./extractFromTextLLM";
-import { getExtractionMode } from "./extractionMode";
+import { extractFromTextHeuristic } from "./extractFromTextHeuristic.js";
+import { extractFromTextLLM } from "./extractFromTextLLM.js";
+import { getExtractionMode } from "./extractionMode.js";
 
 export async function extractFromText(rawText: string) {
   const mode = getExtractionMode();
