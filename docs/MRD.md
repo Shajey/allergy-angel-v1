@@ -323,6 +323,10 @@ A minimal copy-level note is surfaced in the History Check Detail UI when:
 
 This is a UI-only awareness surface — no inference, scoring, or persistence changes.
 
+### Taxonomy Registry (Phase 10H/10I)
+
+The allergen taxonomy (`api/_lib/inference/allergenTaxonomy.ts`) is a deterministic parent→child registry. When a profile lists a parent (e.g., `tree_nut`), the system expands to all children (e.g., pistachio, cashew) and matches meal text via phrase-safe word-boundary logic. No LLM, no embeddings — fully auditable. To update: add tokens to the registry, bump `ALLERGEN_TAXONOMY_VERSION`, add tests in `eval/test-phase-10i-taxonomy-guardrails.ts`, and run `npm run test:phase-10i`.
+
 ---
 
 ## 18. Deferred Depth: Advanced Inference Loops (Individual vs. Collective)
@@ -332,3 +336,45 @@ This is a UI-only awareness surface — no inference, scoring, or persistence ch
 * **Individual Logic:** Layering user profiles (meds, age, known allergies) over extractions to provide risk-aware framing.
 * **Collective Signal:** Aggregating "weak signals" (like May's "feeling yucky") across similar profiles to surface non-diagnostic patterns.
 * **Safety Guardrails:** Strict separation between "Accumulated Evidence" and "Medical Advice," especially for pediatric (Zea/May) vs. adult (Amber) profiles.
+
+---
+
+## Future Architecture — Ontology Gap Discovery (Exploratory)
+
+**Concept:**
+Surface high-frequency or high-lift ingestibles that are extracted successfully but do not match ALLERGEN_TAXONOMY or FUNCTIONAL_CLASS_REGISTRY, so we can curate taxonomy expansions safely.
+
+**Purpose:**
+Reduce "knowledge lag" between real-world ingredient usage and deterministic registry coverage.
+
+**How it works (deterministic + human-in-the-loop):**
+- Flag extracted entities that are unmapped in the registries.
+- Rank clusters by:
+  (a) co-occurrence with known allergy categories (e.g., tree_nut),
+  (b) symptom association lift vs baseline,
+  (c) frequency across checks for the same profile (single-profile only for now).
+- AA Team reviews and seeds new terms into the registries (no auto-updates).
+
+**Non-Goals (avoid local maxima):**
+- No automatic taxonomy expansion
+- No embedding similarity search
+- No cross-profile aggregation
+- No autonomous ontology updates
+- No clinical/diagnostic claims
+
+**Trigger to revisit:**
+- Registry maintenance becomes an operational bottleneck
+- Ingredient diversity outgrows seeded taxonomy coverage
+- Multi-profile + consented collective analytics is introduced
+
+**Status:** Deferred — Conceptual only.
+
+---
+
+## Next Steps (Proposed)
+
+| Option | Scope | MRD Alignment |
+|--------|-------|---------------|
+| **A** | Phase 10J.2: Meal carb decomposition + follow-up refinement (multi-meal carbs assignment, reduce false clarifications) | Extraction + Phase 10J hygiene |
+| **B** | Phase 10K: Observability & guardrails (log verdict + insight counts per request, add minimal debug endpoint or structured logs, no PHI) | NFRs, non-diagnostic |
+| **C** | Phase 10L: Multi-profile groundwork (profile switcher UI + history scoped per profile, still no auth) | Family Caretaker, History |

@@ -3,7 +3,7 @@ import path from "node:path";
 import Ajv from "ajv";
 import { getOpenAIClient, getModelName } from "./openaiClient.js";
 
-const EXTRACTION_VERSION = "v0-llm-v1.1";
+const EXTRACTION_VERSION = "v0-llm-v1.2";
 const MODEL_VERSION = "openai";
 
 type ConfidenceLevel = "Low" | "Medium" | "High";

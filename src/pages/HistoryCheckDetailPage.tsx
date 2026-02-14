@@ -27,6 +27,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { WhyDisclosure } from "@/components/shared/WhyDisclosure.js";
 
 // ── Trajectory insight type (for "Pattern detected" badge) ──────────
 
@@ -47,10 +48,19 @@ interface RuleMatch {
   details: Record<string, unknown>;
 }
 
+interface VerdictMeta {
+  severity?: number;
+  taxonomyVersion?: string;
+  matchedCategory?: string;
+  matchedChild?: string;
+  crossReactive?: boolean;
+}
+
 interface Verdict {
   riskLevel: "none" | "medium" | "high";
   reasoning: string;
   matched?: RuleMatch[];
+  meta?: VerdictMeta;
 }
 
 interface Check {
@@ -250,64 +260,109 @@ function ruleLabel(rule: string): string {
   }
 }
 
-// ── Verdict Banner ──────────────────────────────────────────────────
+// ── Risk Badge + Reasoning (Phase 10K) ─────────────────────────────────
 
-function VerdictBanner({ verdict }: { verdict: Verdict }) {
-  const base = "rounded-lg px-4 py-3 text-sm font-medium";
-
-  if (verdict.riskLevel === "high") {
-    return (
-      <div className={`${base} bg-red-50 border border-red-200 text-red-800`}>
-        <div className="font-semibold text-base">High Risk</div>
-        <div className="mt-1">{verdict.reasoning}</div>
-      </div>
-    );
+function riskBadgeClass(riskLevel: string): string {
+  switch (riskLevel) {
+    case "high":
+      return "bg-red-100 text-red-800 border-red-200";
+    case "medium":
+      return "bg-amber-100 text-amber-800 border-amber-200";
+    default:
+      return "bg-emerald-100 text-emerald-800 border-emerald-200";
   }
-
-  if (verdict.riskLevel === "medium") {
-    return (
-      <div className={`${base} bg-amber-50 border border-amber-200 text-amber-800`}>
-        <div className="font-semibold text-base">Medium Risk</div>
-        <div className="mt-1">{verdict.reasoning}</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`${base} bg-emerald-50 border border-emerald-200 text-emerald-800`}>
-      <div className="font-semibold text-base">No Known Risks</div>
-      <div className="mt-1">{verdict.reasoning}</div>
-    </div>
-  );
 }
 
-// ── Evidence Trace ──────────────────────────────────────────────────
+function riskBadgeLabel(riskLevel: string): string {
+  switch (riskLevel) {
+    case "high":
+      return "High";
+    case "medium":
+      return "Medium";
+    default:
+      return "None";
+  }
+}
 
-function EvidenceTrace({ matched }: { matched: RuleMatch[] }) {
-  if (matched.length === 0) return null;
+/** Renders safe primitive fields from an object; stringifies small objects. */
+function renderDetails(details: Record<string, unknown>): string {
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(details)) {
+    if (v == null) continue;
+    if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+      parts.push(`${k}: ${v}`);
+    } else if (typeof v === "object" && !Array.isArray(v) && Object.keys(v).length <= 4) {
+      parts.push(`${k}: ${JSON.stringify(v)}`);
+    }
+  }
+  return parts.join("; ") || JSON.stringify(details);
+}
+
+function VerdictTrustLayer({ verdict }: { verdict: Verdict }) {
+  const { riskLevel, reasoning, matched = [], meta } = verdict;
+  const hasEvidence = matched.length > 0 || (meta && Object.keys(meta).length > 0);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-gray-900">Why?</h2>
-      <ul className="mt-2 space-y-2">
-        {matched.map((m, i) => (
-          <li key={i} className="text-sm text-gray-700">
-            <span className="font-medium">{ruleLabel(m.rule)}:</span>{" "}
-            {m.rule === "allergy_match" && (
-              <>
-                Meal "{String(m.details.meal)}" contains allergen "
-                {String(m.details.allergen)}"
-              </>
-            )}
-            {m.rule === "medication_interaction" && (
-              <>
-                {String(m.details.extracted)} may interact with{" "}
-                {String(m.details.conflictsWith)}
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+    <div className="space-y-3">
+      {/* Compact Risk Badge + 1–2 line reasoning */}
+      <div className="rounded-lg border px-4 py-3 text-sm">
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${riskBadgeClass(riskLevel)}`}
+          >
+            {riskBadgeLabel(riskLevel)}
+          </span>
+        </div>
+        <p className="mt-2 text-gray-700 line-clamp-2">{reasoning}</p>
+      </div>
+
+      {/* Why? expandable evidence */}
+      {hasEvidence && (
+        <WhyDisclosure title="Why?">
+          {matched.length > 0 && (
+            <ul className="space-y-2">
+              {matched.map((m, i) => (
+                <li key={i} className="text-gray-700">
+                  <span className="font-medium">{ruleLabel(m.rule)}:</span>{" "}
+                  {m.rule === "allergy_match" && (
+                    <>
+                      Meal &quot;{String(m.details?.meal ?? "")}&quot; contains allergen &quot;
+                      {String(m.details?.allergen ?? "")}&quot;
+                    </>
+                  )}
+                  {m.rule === "medication_interaction" && (
+                    <>
+                      {String(m.details?.extracted ?? "")} may interact with{" "}
+                      {String(m.details?.conflictsWith ?? "")}
+                    </>
+                  )}
+                  {!["allergy_match", "medication_interaction"].includes(m.rule) &&
+                    renderDetails(m.details ?? {})}
+                </li>
+              ))}
+            </ul>
+          )}
+          {meta && Object.keys(meta).length > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-600">
+              {meta.severity != null && <span>Severity {meta.severity}</span>}
+              {meta.taxonomyVersion && (
+                <span className={meta.severity != null ? " ml-2" : ""}>
+                  Taxonomy {meta.taxonomyVersion}
+                </span>
+              )}
+              {meta.matchedCategory && (
+                <span className="ml-2">Category: {meta.matchedCategory}</span>
+              )}
+              {meta.matchedChild && (
+                <span className="ml-2">Matched: {meta.matchedChild}</span>
+              )}
+              {meta.crossReactive && (
+                <span className="ml-2">Cross-reactive</span>
+              )}
+            </div>
+          )}
+        </WhyDisclosure>
+      )}
     </div>
   );
 }
@@ -544,11 +599,8 @@ export default function HistoryCheckDetailPage() {
   }
 
   const { check, events } = data;
-  const verdict: Verdict = check.verdict ?? {
-    riskLevel: "none",
-    reasoning: "No verdict available.",
-  };
-  const matched = verdict.matched ?? [];
+  const verdict = check.verdict as Verdict | null | undefined;
+  const matched = verdict?.matched ?? [];
 
   // ── Success state ──────────────────────────────────────────────
   return (
@@ -583,14 +635,13 @@ export default function HistoryCheckDetailPage() {
         </Link>
       )}
 
-      {/* B) Verdict Banner */}
-      <VerdictBanner verdict={verdict} />
+      {/* B) Verdict + Why? (Phase 10K) — only when verdict exists */}
+      {verdict?.riskLevel && (
+        <VerdictTrustLayer verdict={verdict} />
+      )}
 
       {/* Phase 10H: allergen taxonomy awareness note */}
       <AllergenAlertBanner alerts={allergenAlerts} />
-
-      {/* C) Evidence Trace */}
-      <EvidenceTrace matched={matched} />
 
       {/* C) Events List */}
       <EventsList events={events} matched={matched} />

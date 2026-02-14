@@ -3,7 +3,9 @@ dotenv.config({ path: ".env.local", override: true });   // load .env.local → 
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { extractFromText } from "./_lib/extractFromText.js";
+import { postProcessExtractionResult } from "./_lib/inference/postProcessExtractionResult.js";
 import { saveExtractionRun } from "./_lib/persistence/saveExtractionRun.js";
+import { postProcessFollowUps } from "./_lib/inference/postProcessFollowUps.js";
 
 /**
  * Vercel Serverless Function
@@ -47,6 +49,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const result = await extractFromText(rawText);
 
+    // ── Post-process: meal needsClarification + carb follow-up suppression ─
+    postProcessExtractionResult(rawText, result);
+
     // ── Phase 7 + 9A: persist extraction run (best-effort) ───────────
     // DEFAULT_PROFILE_ID must be a UUID from the profiles table.
     const profileId = process.env.DEFAULT_PROFILE_ID;
@@ -61,6 +66,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else {
       result.warnings = result.warnings ?? [];
       result.warnings.push("Profile not found; events not persisted");
+      // Phase 10J: post-process follow-ups even when not persisting (no verdict)
+      const post = postProcessFollowUps({
+        rawText,
+        events: result.events,
+        followUpQuestions: result.followUpQuestions ?? [],
+        verdict: undefined,
+      });
+      result.followUpQuestions = post.followUpQuestions;
     }
 
     return res.status(200).json(result);

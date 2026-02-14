@@ -3,6 +3,7 @@ dotenv.config({ path: ".env.local", override: true });
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { analyzeTrajectory } from "../_lib/inference/analyzeTrajectory.js";
+import type { VerdictMeta } from "../_lib/inference/checkRisk.js";
 import { insightFingerprint } from "../_lib/inference/insightFingerprint.js";
 import { buildEvidenceContext } from "../_lib/inference/negativeEvidence.js";
 import type { EvidenceContext } from "../_lib/inference/negativeEvidence.js";
@@ -54,6 +55,12 @@ import { getSupabaseClient } from "../_lib/supabaseClient.js";
  *   +20 proximity bonus if a symptom occurs within 0–6h after the stacking check.
  *   Final score clamped to [0, 150].
  *   Optional scoreBreakdown when INSIGHTS_DEBUG="true".
+ *
+ * Phase 10H++ – Severity weighting + taxonomy version:
+ *   Meta (severity, taxonomyVersion) persisted in checks.verdict JSONB.
+ *   Feed fetches verdict meta for supporting check IDs; trigger_symptom insights
+ *   whose trigger had allergen match get +round(severity/10) bonus (max +15).
+ *   insight.meta.severity and insight.meta.taxonomyVersion set when available.
  *
  * Sort order:
  *   1. score DESC
@@ -131,8 +138,15 @@ interface FeedInsight {
   fingerprint: string;
   /** Phase 10F: user's existing vote, if any. */
   userVote?: string;
-  /** Phase 10G: functional class metadata (functional_stacking only). */
-  meta?: { classKey: string; items: string[]; matchedBy: string };
+  /** Phase 10G: functional class metadata (functional_stacking). Phase 10H++: severity/taxonomyVersion. Phase 10J: crossReactiveLabel. */
+  meta?: {
+    classKey?: string;
+    items?: string[];
+    matchedBy?: string;
+    severity?: number;
+    taxonomyVersion?: string;
+    crossReactiveLabel?: string;
+  };
   /** Phase 10G: score breakdown (only when INSIGHTS_DEBUG=true). */
   scoreBreakdown?: ScoreBreakdown;
 }
@@ -286,6 +300,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       warnings.push(`Feedback fetch failed: ${voteErr?.message ?? "unknown"}`);
     }
 
+    // ── Phase 10H++: fetch verdict meta for allergen-driven severity bonus ─
+    // Meta (severity, taxonomyVersion, crossReactive) persisted in checks.verdict JSONB.
+    // Phase 10J: crossReactive insights get +10 and label "Cross-Reactive Risk: [source]".
+    const verdictMetaMap = new Map<
+      string,
+      {
+        severity: number;
+        taxonomyVersion: string;
+        crossReactive?: boolean;
+        source?: string;
+      }
+    >();
+    try {
+      const allCheckIds = [
+        ...new Set(
+          trajectoryResult.insights.flatMap((i) => i.supportingEvents)
+        ),
+      ];
+      if (allCheckIds.length > 0) {
+        const supabase = getSupabaseClient();
+        const { data: checkRows } = await supabase
+          .from("checks")
+          .select("id, verdict")
+          .in("id", allCheckIds);
+        for (const row of checkRows ?? []) {
+          const meta = (row as { verdict?: { meta?: VerdictMeta } }).verdict
+            ?.meta;
+          if (meta?.severity != null && meta?.taxonomyVersion) {
+            verdictMetaMap.set(row.id, {
+              severity: meta.severity,
+              taxonomyVersion: meta.taxonomyVersion,
+              ...(meta.crossReactive ? { crossReactive: true, source: meta.source } : {}),
+            });
+          }
+        }
+      }
+    } catch (verdictErr: any) {
+      console.warn(
+        "[InsightsFeed] Verdict meta fetch failed:",
+        verdictErr?.message
+      );
+    }
+
     // ── Determine debug mode ──────────────────────────────────────────
     const isDebug = process.env.INSIGHTS_DEBUG === "true";
 
@@ -350,6 +407,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         score += evidenceAdjust;
       }
 
+      // Phase 10H++: allergen-driven severity bonus (trigger_symptom only)
+      // Phase 10J: cross-reactive verdicts get +10, label "Cross-Reactive Risk: [source]".
+      let severityBonus = 0;
+      let allergenMeta:
+        | {
+            severity: number;
+            taxonomyVersion: string;
+            crossReactive?: boolean;
+            source?: string;
+          }
+        | undefined;
+      if (insight.type === "trigger_symptom") {
+        let maxSeverity = 0;
+        for (const checkId of insight.supportingEvents) {
+          const vm = verdictMetaMap.get(checkId);
+          if (vm && vm.severity > maxSeverity) {
+            maxSeverity = vm.severity;
+            allergenMeta = vm;
+          }
+        }
+        if (maxSeverity > 0) {
+          severityBonus = Math.min(15, Math.round(maxSeverity / 10));
+          score += severityBonus;
+        }
+        if (allergenMeta?.crossReactive && allergenMeta?.source) {
+          score += 10;
+        }
+      }
+
       // Phase 10F: compute fingerprint and apply vote adjustment
       const fp = insightFingerprint({
         type: insight.type,
@@ -389,6 +475,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         evidence,
         fingerprint: fp,
         ...(userVote ? { userVote } : {}),
+        ...(allergenMeta
+          ? {
+              meta: {
+                severity: allergenMeta.severity,
+                taxonomyVersion: allergenMeta.taxonomyVersion,
+                ...(allergenMeta.crossReactive && allergenMeta.source
+                  ? {
+                      crossReactiveLabel: `Cross-Reactive Risk: ${allergenMeta.source}`,
+                    }
+                  : {}),
+              },
+            }
+          : {}),
         ...(isDebug
           ? {
               scoreBreakdown: {

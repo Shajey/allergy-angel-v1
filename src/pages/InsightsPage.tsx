@@ -18,6 +18,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { WhyDisclosure } from "@/components/shared/WhyDisclosure.js";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -46,8 +47,15 @@ interface FeedInsight {
   fingerprint: string;
   /** Phase 10F: user's existing vote, if any. */
   userVote?: string;
-  /** Phase 10G: functional class metadata (functional_stacking only). */
-  meta?: { classKey: string; items: string[]; matchedBy: string };
+  /** Phase 10G: functional class metadata. Phase 10H++: severity/taxonomyVersion. */
+  meta?: {
+    classKey?: string;
+    items?: string[];
+    matchedBy?: string;
+    severity?: number;
+    taxonomyVersion?: string;
+    crossReactiveLabel?: string;
+  };
 }
 
 interface FeedResponse {
@@ -168,6 +176,18 @@ function InsightRow({
       {/* Description */}
       <div className="mt-1 leading-snug text-gray-600">{insight.description}</div>
 
+      {/* Phase 10K: Meta line (severity/taxonomyVersion) */}
+      {insight.meta && (insight.meta.severity != null || insight.meta.taxonomyVersion) && (
+        <div className="mt-2 text-xs text-gray-500">
+          {[
+            insight.meta.severity != null && `Severity ${insight.meta.severity}`,
+            insight.meta.taxonomyVersion && `Taxonomy ${insight.meta.taxonomyVersion}`,
+          ]
+            .filter(Boolean)
+            .join(" • ")}
+        </div>
+      )}
+
       {/* Phase 10E: evidence line (trigger_symptom only) */}
       {insight.evidence && (
         <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
@@ -194,6 +214,55 @@ function InsightRow({
           ))}
         </div>
       )}
+
+      {/* Phase 10K: Why? expandable evidence */}
+      <div className="mt-3">
+        <WhyDisclosure
+          title="Why?"
+          summaryLines={[
+            !insight.description
+              ? insight.label
+              : !insight.label
+                ? insight.description
+                : insight.description.length <= insight.label.length
+                  ? insight.description
+                  : insight.label,
+          ].filter(Boolean)}
+        >
+          {insight.evidence && (
+            <div className="text-xs text-gray-600">
+              Evidence: {insight.evidence.hits}/{insight.evidence.exposures} hit/exposure, lift{" "}
+              {insight.evidence.lift.toFixed(1)}x
+            </div>
+          )}
+          {(insight.userVote || insight.fingerprint) && (
+            <div className="mt-1 text-xs text-gray-600">
+              {insight.userVote && <span>Vote: {insight.userVote}</span>}
+              {insight.fingerprint && (
+                <span className={insight.userVote ? " ml-2" : ""}>
+                  ID: {insight.fingerprint.slice(0, 8)}…
+                </span>
+              )}
+            </div>
+          )}
+          {insight.supportingEvents && insight.supportingEvents.length > 0 && (
+            <div className="mt-2">
+              <span className="text-xs font-medium text-gray-700">Evidence checks:</span>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {insight.supportingEvents.slice(0, 3).map((checkId) => (
+                  <Link
+                    key={checkId}
+                    to={`/history/${checkId}`}
+                    className="text-xs font-medium text-emerald-700 hover:underline"
+                  >
+                    {checkId.slice(0, 8)}…
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </WhyDisclosure>
+      </div>
 
       {/* Footer: evidence count + link */}
       <div className="mt-3 flex items-center justify-between">

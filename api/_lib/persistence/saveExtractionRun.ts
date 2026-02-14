@@ -1,5 +1,6 @@
 import { getSupabaseClient } from "../supabaseClient.js";
 import { checkRisk, type Verdict } from "../inference/checkRisk.js";
+import { postProcessFollowUps } from "../inference/postProcessFollowUps.js";
 
 /**
  * Persist an extraction run to Supabase Postgres.
@@ -8,6 +9,7 @@ import { checkRisk, type Verdict } from "../inference/checkRisk.js";
  *   0. profiles      – fetch profile (known_allergies, current_medications)
  *   0b. verdict      – deterministic risk check (Phase 9B)
  *   1. checks        – one row per extraction run, includes verdict
+ *       Phase 10H++: verdict.meta (severity, taxonomyVersion) persisted in checks.verdict JSONB
  *   2. raw_inputs    – optional (only when STORE_RAW_INPUTS === "true")
  *   3. health_events – one row per event, all linked to the same check_id
  *
@@ -57,6 +59,19 @@ export async function saveExtractionRun(args: {
   } catch {
     // If verdict computation fails, persist a safe default
     verdict = { riskLevel: "none", reasoning: "Verdict computation failed" };
+  }
+
+  // ── Phase 10J: Risk-driven follow-up hygiene ────────────────────────
+  // Replace follow-ups based on verdict (high allergen → evidence) and intent (no glucose → no carbs).
+  const postProcessed = postProcessFollowUps({
+    rawText,
+    events: result.events,
+    followUpQuestions: result.followUpQuestions ?? [],
+    verdict,
+  });
+  result.followUpQuestions = postProcessed.followUpQuestions;
+  if (postProcessed.warnings?.length) {
+    result.warnings = [...(result.warnings ?? []), ...postProcessed.warnings];
   }
 
   // ── 1. Insert the parent "check" row (includes verdict) ───────────
