@@ -1,0 +1,24 @@
+{
+  "fingerprints": [
+    {
+      "scenarioId": "scn_new_child_02",
+      "expected": {
+        "riskLevelFrom": "none",
+        "riskLevelTo": "high",
+        "addedMatches": ["tiger nut"],
+        "removedMatches": [],
+        "candidateTaxonomyVersion": "10i.2"
+      }
+    },
+    {
+      "scenarioId": "scn_cross_reactive_04",
+      "expected": {
+        "riskLevelFrom": "none",
+        "riskLevelTo": "medium",
+        "addedMatches": ["mango"],
+        "removedMatches": [],
+        "candidateTaxonomyVersion": "10i.2"
+      }
+    }
+  ]
+}

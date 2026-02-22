@@ -5,6 +5,7 @@ import { Menu } from 'lucide-react';
 import NotificationsPanel from './NotificationsPanel';
 import MobileDrawer from './MobileDrawer';
 import BottomNav from './BottomNav';
+import VigilanceBanner from './VigilanceBanner';
 
 
 function AppShell() {
@@ -95,6 +96,8 @@ function AppShell() {
 
       {/* Mobile Drawer */}
       <MobileDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
+
+      <VigilanceBanner />
 
       {/* Main Content */}
       <main className="min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-73px)]">

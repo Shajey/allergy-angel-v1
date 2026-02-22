@@ -26,7 +26,7 @@
 
 // ── Taxonomy version (10H++) ─────────────────────────────────────────
 /** Micro-version stamp for verdict meta and insight scoring. Bump when taxonomy changes. */
-export const ALLERGEN_TAXONOMY_VERSION = "10i.1";
+export const ALLERGEN_TAXONOMY_VERSION = "10i.2";
 
 // ── Severity weights (10H+) ───────────────────────────────────────────
 /** Deterministic severity per allergen category (0–100). Higher = higher risk. */
@@ -152,7 +152,7 @@ export type CrossReactiveRelation = {
 
 /** v10j.1 seed data. Deterministic cross-reactive associations. */
 export const CROSS_REACTIVE_REGISTRY: CrossReactiveRelation[] = [
-  { source: "tree_nut", related: ["mango", "pink peppercorn", "coconut"], riskModifier: 10 },
+  { source: "tree_nut", related: ["coconut", "mango", "pink peppercorn"], riskModifier: 10 },
   { source: "latex", related: ["banana", "avocado", "kiwi"], riskModifier: 15 },
   { source: "birch_pollen", related: ["apple", "carrot"], riskModifier: 10 },
 ];

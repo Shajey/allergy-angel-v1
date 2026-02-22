@@ -27,6 +27,11 @@ import {
   ALLERGEN_TAXONOMY_VERSION,
   type AllergenParentKey,
 } from "./allergenTaxonomy.js";
+import {
+  RULE_ALLERGEN_MATCH,
+  RULE_CROSS_REACTIVE,
+  RULE_MED_INTERACTION,
+} from "./ruleCodes.js";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -37,6 +42,7 @@ interface ProfileInput {
 
 interface RuleMatch {
   rule: string;
+  ruleCode: string;
   details: Record<string, unknown>;
 }
 
@@ -52,6 +58,8 @@ export interface VerdictMeta {
   source?: string;
   /** Phase 10J: matched cross-reactive term */
   matchedTerm?: string;
+  /** Phase 13.4: deterministic trace identifier = checkId:taxonomyVersion */
+  traceId?: string;
 }
 
 export interface Verdict {
@@ -145,6 +153,7 @@ export function checkRisk(args: {
           }
           matched.push({
             rule: "allergy_match",
+            ruleCode: RULE_ALLERGEN_MATCH,
             details: {
               meal: mealText,
               allergen: matchedTerm,
@@ -179,6 +188,7 @@ export function checkRisk(args: {
             }
             matched.push({
               rule: "cross_reactive",
+              ruleCode: RULE_CROSS_REACTIVE,
               details: {
                 meal: mealText,
                 source: crossMatch.source,
@@ -200,6 +210,7 @@ export function checkRisk(args: {
           if (highestRisk !== "high") highestRisk = "medium";
           matched.push({
             rule: "medication_interaction",
+            ruleCode: RULE_MED_INTERACTION,
             details: conflict,
           });
         }
@@ -209,7 +220,12 @@ export function checkRisk(args: {
 
   // ── Build reasoning string ───────────────────────────────────────
   if (matched.length === 0) {
-    return { riskLevel: "none", reasoning: "No known risks detected." };
+    return {
+      riskLevel: "none",
+      reasoning: "No known risks detected.",
+      matched: [],
+      meta: { taxonomyVersion: ALLERGEN_TAXONOMY_VERSION, severity: 0 },
+    };
   }
 
   const parts = matched.map((m) => {
@@ -238,10 +254,15 @@ export function checkRisk(args: {
   // Ensure exactly one trailing period (parts may already end with period)
   const reasoning = parts.join("; ").replace(/\.+$/, "") + ".";
 
+  const meta: VerdictMeta = bestAllergyMeta ?? {
+    taxonomyVersion: ALLERGEN_TAXONOMY_VERSION,
+    severity: 0,
+  };
+
   return {
     riskLevel: highestRisk,
     reasoning,
     matched,
-    ...(bestAllergyMeta ? { meta: bestAllergyMeta } : {}),
+    meta,
   };
 }

@@ -8,6 +8,7 @@ import AngelProfilePage from './pages/AngelProfilePage';
 import HistoryPage from './pages/HistoryPage';
 import HistoryCheckDetailPage from './pages/HistoryCheckDetailPage';
 import InsightsPage from './pages/InsightsPage';
+import AdminUnmappedPage from './pages/AdminUnmappedPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="history" element={<HistoryPage />} />
             <Route path="history/:id" element={<HistoryCheckDetailPage />} />
             <Route path="insights" element={<InsightsPage />} />
+            <Route path="admin/unmapped" element={<AdminUnmappedPage />} />
           </Route>
 
           {/* Catch-all */}

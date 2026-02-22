@@ -1,0 +1,58 @@
+[
+  {
+    "scenarioId": "scn_control_01",
+    "profile": {
+      "profileId": "00000000-0000-0000-0000-000000000001",
+      "known_allergies": ["tree_nut"],
+      "current_medications": []
+    },
+    "events": [
+      { "type": "meal", "created_at": "2025-01-15T10:00:00.000Z", "event_data": { "meal": "cashew chicken" } }
+    ]
+  },
+  {
+    "scenarioId": "scn_new_child_02",
+    "profile": {
+      "profileId": "00000000-0000-0000-0000-000000000001",
+      "known_allergies": ["tree_nut"],
+      "current_medications": []
+    },
+    "events": [
+      { "type": "meal", "created_at": "2025-01-15T10:00:00.000Z", "event_data": { "meal": "tiger nut milk" } }
+    ]
+  },
+  {
+    "scenarioId": "scn_medication_03",
+    "profile": {
+      "profileId": "00000000-0000-0000-0000-000000000002",
+      "known_allergies": [],
+      "current_medications": [{ "name": "aspirin", "dosage": "81mg" }]
+    },
+    "events": [
+      { "type": "medication", "created_at": "2025-01-15T10:00:00.000Z", "event_data": { "medication": "ibuprofen", "dosage": 200, "unit": "mg" } }
+    ]
+  },
+  {
+    "scenarioId": "scn_cross_reactive_04",
+    "profile": {
+      "profileId": "00000000-0000-0000-0000-000000000001",
+      "known_allergies": ["tree_nut"],
+      "current_medications": []
+    },
+    "events": [
+      { "type": "meal", "created_at": "2025-01-15T10:00:00.000Z", "event_data": { "meal": "mango smoothie" } },
+      { "type": "symptom", "created_at": "2025-01-15T12:00:00.000Z", "event_data": { "symptom": "hives" } }
+    ]
+  },
+  {
+    "scenarioId": "scn_no_match_05",
+    "profile": {
+      "profileId": "00000000-0000-0000-0000-000000000001",
+      "known_allergies": ["tree_nut"],
+      "current_medications": []
+    },
+    "events": [
+      { "type": "meal", "created_at": "2025-01-15T10:00:00.000Z", "event_data": { "meal": "rice and vegetables" } }
+    ]
+  }
+]

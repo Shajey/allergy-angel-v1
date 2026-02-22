@@ -1,0 +1,58 @@
+{
+  "version": "10i.2",
+  "taxonomy": {
+    "tree_nut": {
+      "label": "Tree Nut",
+      "children": ["almond", "walnut", "cashew", "pistachio", "pecan", "hazelnut", "brazil nut", "pine nut", "macadamia", "tiger nut"]
+    },
+    "shellfish": {
+      "label": "Shellfish",
+      "children": ["shrimp", "crab", "lobster", "scallop", "oyster", "mussel"]
+    },
+    "legume": {
+      "label": "Legume",
+      "children": ["peanut", "soy", "lentil", "chickpea", "pea"]
+    },
+    "fish": {
+      "label": "Fish",
+      "children": ["salmon", "tuna", "cod", "tilapia", "haddock", "anchovy", "sardine"]
+    },
+    "sesame": {
+      "label": "Sesame",
+      "children": ["sesame", "tahini"]
+    },
+    "egg": {
+      "label": "Egg",
+      "children": ["egg", "eggs", "egg white", "egg yolk"]
+    },
+    "dairy": {
+      "label": "Dairy",
+      "children": ["milk", "cheese", "butter", "yogurt", "whey", "casein"]
+    },
+    "wheat": {
+      "label": "Wheat",
+      "children": ["wheat", "flour", "bread", "pasta", "gluten"]
+    },
+    "soy": {
+      "label": "Soy",
+      "children": ["soy", "soya", "soybean", "tofu", "edamame", "tempeh", "soy sauce"]
+    }
+  },
+  "severity": {
+    "tree_nut": 90,
+    "peanut": 95,
+    "shellfish": 95,
+    "fish": 90,
+    "egg": 85,
+    "dairy": 80,
+    "legume": 60,
+    "sesame": 85,
+    "wheat": 70,
+    "soy": 65
+  },
+  "crossReactive": [
+    { "source": "tree_nut", "related": ["coconut", "mango", "pink peppercorn"], "riskModifier": 10 },
+    { "source": "latex", "related": ["banana", "avocado", "kiwi"], "riskModifier": 15 },
+    { "source": "birch_pollen", "related": ["apple", "carrot"], "riskModifier": 10 }
+  ]
+}

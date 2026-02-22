@@ -25,9 +25,14 @@
  * }
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { WhyDisclosure } from "@/components/shared/WhyDisclosure.js";
+import { Button } from "@/components/ui/button.js";
+import {
+  buildExplanationFromCheck,
+  type ExplanationRuleType,
+} from "@/lib/buildExplanation.js";
 
 // ── Trajectory insight type (for "Pattern detected" badge) ──────────
 
@@ -45,6 +50,7 @@ interface TrajectoryResponse {
 
 interface RuleMatch {
   rule: string;
+  ruleCode?: string;
   details: Record<string, unknown>;
 }
 
@@ -54,6 +60,7 @@ interface VerdictMeta {
   matchedCategory?: string;
   matchedChild?: string;
   crossReactive?: boolean;
+  traceId?: string;
 }
 
 interface Verdict {
@@ -249,17 +256,6 @@ function eventTypeBadge(eventType: string): { label: string; className: string }
   }
 }
 
-function ruleLabel(rule: string): string {
-  switch (rule) {
-    case "allergy_match":
-      return "Allergy Match";
-    case "medication_interaction":
-      return "Medication Interaction";
-    default:
-      return rule;
-  }
-}
-
 // ── Risk Badge + Reasoning (Phase 10K) ─────────────────────────────────
 
 function riskBadgeClass(riskLevel: string): string {
@@ -284,27 +280,37 @@ function riskBadgeLabel(riskLevel: string): string {
   }
 }
 
-/** Renders safe primitive fields from an object; stringifies small objects. */
-function renderDetails(details: Record<string, unknown>): string {
-  const parts: string[] = [];
-  for (const [k, v] of Object.entries(details)) {
-    if (v == null) continue;
-    if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
-      parts.push(`${k}: ${v}`);
-    } else if (typeof v === "object" && !Array.isArray(v) && Object.keys(v).length <= 4) {
-      parts.push(`${k}: ${JSON.stringify(v)}`);
-    }
+function ruleTypeBadge(rt: ExplanationRuleType): { label: string; className: string } {
+  switch (rt) {
+    case "directMatch":
+      return { label: "Direct Match", className: "bg-red-100 text-red-700" };
+    case "crossReactive":
+      return { label: "Cross-Reactive", className: "bg-amber-100 text-amber-700" };
+    case "interaction":
+      return { label: "Interaction", className: "bg-blue-100 text-blue-700" };
   }
-  return parts.join("; ") || JSON.stringify(details);
 }
 
-function VerdictTrustLayer({ verdict }: { verdict: Verdict }) {
-  const { riskLevel, reasoning, matched = [], meta } = verdict;
-  const hasEvidence = matched.length > 0 || (meta && Object.keys(meta).length > 0);
+function VerdictTrustLayer({
+  verdict,
+  checkId,
+  includeRawText = false,
+}: {
+  verdict: Verdict;
+  checkId?: string;
+  includeRawText?: boolean;
+}) {
+  const { riskLevel, reasoning } = verdict;
+
+  const explanation = useMemo(
+    () => buildExplanationFromCheck({ verdict }, verdict.meta?.taxonomyVersion ?? "unknown"),
+    [verdict]
+  );
+
+  const hasEntries = explanation.entries.length > 0;
 
   return (
     <div className="space-y-3">
-      {/* Compact Risk Badge + 1–2 line reasoning */}
       <div className="rounded-lg border px-4 py-3 text-sm">
         <div className="flex items-center gap-2">
           <span
@@ -316,51 +322,78 @@ function VerdictTrustLayer({ verdict }: { verdict: Verdict }) {
         <p className="mt-2 text-gray-700 line-clamp-2">{reasoning}</p>
       </div>
 
-      {/* Why? expandable evidence */}
-      {hasEvidence && (
+      {hasEntries && (
         <WhyDisclosure title="Why?">
-          {matched.length > 0 && (
-            <ul className="space-y-2">
-              {matched.map((m, i) => (
-                <li key={i} className="text-gray-700">
-                  <span className="font-medium">{ruleLabel(m.rule)}:</span>{" "}
-                  {m.rule === "allergy_match" && (
-                    <>
-                      Meal &quot;{String(m.details?.meal ?? "")}&quot; contains allergen &quot;
-                      {String(m.details?.allergen ?? "")}&quot;
-                    </>
+          <div className="space-y-4">
+            {explanation.entries.map((entry, i) => {
+              const badge = ruleTypeBadge(entry.ruleType);
+              return (
+                <div key={i} className="space-y-1.5">
+                  {/* Section 1 — Risk Source */}
+                  <p className="text-sm text-gray-900 font-medium">
+                    {entry.summary}
+                  </p>
+
+                  {/* Section 2 — Rule Type + Rule Code + Parent Category */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`inline-flex rounded px-1.5 py-0.5 text-xs font-medium ${badge.className}`}
+                    >
+                      {badge.label}
+                    </span>
+                    {entry.ruleCode && (
+                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono text-gray-600">
+                        {entry.ruleCode}
+                      </code>
+                    )}
+                    {entry.parentCategory && (
+                      <span className="text-xs text-gray-500">
+                        Category: {entry.parentCategory}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Section 3 — Evidence */}
+                  {entry.evidence && (
+                    <div className="text-xs text-gray-500">
+                      {entry.evidence.riskRate != null && (
+                        <span>Severity: {Math.round(entry.evidence.riskRate * 100)}/100</span>
+                      )}
+                      {entry.evidence.count != null && (
+                        <span className="ml-2">Count: {entry.evidence.count}</span>
+                      )}
+                      {entry.evidence.highRiskCount != null && (
+                        <span className="ml-2">High-risk: {entry.evidence.highRiskCount}</span>
+                      )}
+                    </div>
                   )}
-                  {m.rule === "medication_interaction" && (
-                    <>
-                      {String(m.details?.extracted ?? "")} may interact with{" "}
-                      {String(m.details?.conflictsWith ?? "")}
-                    </>
-                  )}
-                  {!["allergy_match", "medication_interaction"].includes(m.rule) &&
-                    renderDetails(m.details ?? {})}
-                </li>
-              ))}
-            </ul>
-          )}
-          {meta && Object.keys(meta).length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-600">
-              {meta.severity != null && <span>Severity {meta.severity}</span>}
-              {meta.taxonomyVersion && (
-                <span className={meta.severity != null ? " ml-2" : ""}>
-                  Taxonomy {meta.taxonomyVersion}
-                </span>
+                </div>
+              );
+            })}
+
+            {/* Section 4 — Taxonomy version + Trace ID + Download link */}
+            <div className="pt-2 border-t border-gray-100 text-xs text-gray-500 space-y-1">
+              <div>Taxonomy version: {explanation.taxonomyVersion}</div>
+              {explanation.traceId && (
+                <div className="flex items-center gap-1.5">
+                  <span>Trace:</span>
+                  <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-gray-600 select-all">
+                    {explanation.traceId}
+                  </code>
+                </div>
               )}
-              {meta.matchedCategory && (
-                <span className="ml-2">Category: {meta.matchedCategory}</span>
-              )}
-              {meta.matchedChild && (
-                <span className="ml-2">Matched: {meta.matchedChild}</span>
-              )}
-              {meta.crossReactive && (
-                <span className="ml-2">Cross-reactive</span>
+              {checkId && (
+                <div className="pt-1">
+                  <a
+                    href={`/api/report/check/download?checkId=${checkId}&includeRawText=${includeRawText}`}
+                    className="text-emerald-600 hover:underline"
+                  >
+                    Download safety report
+                  </a>
+                </div>
               )}
             </div>
-          )}
+          </div>
         </WhyDisclosure>
       )}
     </div>
@@ -503,6 +536,9 @@ export default function HistoryCheckDetailPage() {
   // Phase 10H: allergen taxonomy alerts (awareness-surface guardrail)
   const [allergenAlerts, setAllergenAlerts] = useState<AllergenAlert[]>([]);
 
+  // Phase 13.6: include raw text in safety report download (default OFF)
+  const [includeRawText, setIncludeRawText] = useState(false);
+
   useEffect(() => {
     if (!id) {
       setError("No check id provided.");
@@ -637,7 +673,7 @@ export default function HistoryCheckDetailPage() {
 
       {/* B) Verdict + Why? (Phase 10K) — only when verdict exists */}
       {verdict?.riskLevel && (
-        <VerdictTrustLayer verdict={verdict} />
+        <VerdictTrustLayer verdict={verdict} checkId={check.id} includeRawText={includeRawText} />
       )}
 
       {/* Phase 10H: allergen taxonomy awareness note */}
@@ -651,6 +687,27 @@ export default function HistoryCheckDetailPage() {
 
       {/* E) Follow-up Questions */}
       <FollowUpQuestions questions={check.follow_up_questions ?? []} />
+
+      {/* F) Download Safety Report (Phase 13.6) */}
+      <div className="pt-2 space-y-2">
+        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includeRawText}
+            onChange={(e) => setIncludeRawText(e.target.checked)}
+            className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+          />
+          <span>Include original text (may contain sensitive info)</span>
+        </label>
+        <a
+          href={`/api/report/check/download?checkId=${check.id}&includeRawText=${includeRawText}`}
+          className="inline-block"
+        >
+          <Button variant="secondary" size="sm">
+            Download report
+          </Button>
+        </a>
+      </div>
     </div>
   );
 }

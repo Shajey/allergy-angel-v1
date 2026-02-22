@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "exportVersion": "v0-promo-12.1",
+    "generatedAt": "2026-01-15T10:00:00.000Z",
+    "profileId": "a0000000-0000-0000-0000-000000000001",
+    "windowHours": 168,
+    "limit": 20,
+    "candidateCount": 2,
+    "taxonomyVersion": "10i.2",
+    "registryVersion": null
+  },
+  "candidates": [
+    {
+      "candidate": "mango",
+      "kind": "meal_token",
+      "count": 5,
+      "highRiskCount": 2,
+      "riskRate": 0.4,
+      "firstSeenAt": "2025-01-10T00:00:00Z",
+      "lastSeenAt": "2025-01-15T00:00:00Z",
+      "examples": ["mango smoothie", "fresh mango"],
+      "sources": {}
+    }
+  ],
+  "proposals": {
+    "taxonomyAdditions": [
+      {
+        "term": "mango",
+        "suggestedParent": "tree_nut",
+        "confidence": "blank",
+        "evidence": { "highRiskCount": 2, "count": 5, "riskRate": 0.4, "examples": [] },
+        "notes": "Human review required"
+      }
+    ],
+    "registryAdditions": []
+  }
+}

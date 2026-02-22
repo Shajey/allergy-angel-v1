@@ -1,5 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { getSupabaseClient } from "../supabaseClient.js";
 import { checkRisk, type Verdict } from "../inference/checkRisk.js";
+import { ALLERGEN_TAXONOMY_VERSION } from "../inference/allergenTaxonomy.js";
 import { postProcessFollowUps } from "../inference/postProcessFollowUps.js";
 
 /**
@@ -57,12 +59,27 @@ export async function saveExtractionRun(args: {
       events: result.events,
     });
   } catch {
-    // If verdict computation fails, persist a safe default
-    verdict = { riskLevel: "none", reasoning: "Verdict computation failed" };
+    verdict = {
+      riskLevel: "none",
+      reasoning: "Verdict computation failed",
+      matched: [],
+      meta: { taxonomyVersion: ALLERGEN_TAXONOMY_VERSION, severity: 0 },
+    };
+  }
+
+  // ── Phase 13.4: Generate check ID upfront for traceId ──────────────
+  const checkId = randomUUID();
+  const taxonomyVersion = verdict.meta?.taxonomyVersion ?? ALLERGEN_TAXONOMY_VERSION;
+  const traceId = `${checkId}:${taxonomyVersion}`;
+  if (!verdict.meta) {
+    verdict.meta = { taxonomyVersion, severity: 0 };
+  }
+  verdict.meta.traceId = traceId;
+  if (!verdict.matched) {
+    verdict.matched = [];
   }
 
   // ── Phase 10J: Risk-driven follow-up hygiene ────────────────────────
-  // Replace follow-ups based on verdict (high allergen → evidence) and intent (no glucose → no carbs).
   const postProcessed = postProcessFollowUps({
     rawText,
     events: result.events,
@@ -78,6 +95,7 @@ export async function saveExtractionRun(args: {
   const { data: checkData, error: checkError } = await supabase
     .from("checks")
     .insert({
+      id: checkId,
       profile_id: profileId,
       raw_text: rawText,
       follow_up_questions: result.followUpQuestions ?? [],
@@ -89,8 +107,6 @@ export async function saveExtractionRun(args: {
   if (checkError) {
     throw new Error(`checks insert failed: ${checkError.message}`);
   }
-
-  const checkId: string = checkData.id;
 
   // ── 2. Optional: persist raw input text ───────────────────────────
   let rawInputId: string | null = null;

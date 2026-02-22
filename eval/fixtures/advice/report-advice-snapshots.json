@@ -1,0 +1,55 @@
+{
+  "version": "14.3a",
+  "description": "Deterministic advice snapshots. Project only stable fields: version, topTarget, items[].{id,level,target,title}.",
+  "snapshots": [
+    {
+      "id": "scn_advice_mango_01",
+      "description": "Override: Mango cross-reactive → term:mango",
+      "input": {
+        "riskLevel": "medium",
+        "reasoning": "Cross-reactive.",
+        "matchedTerms": ["mango"],
+        "matchedCategories": ["tree_nut"],
+        "ruleKinds": ["cross_reactive"]
+      },
+      "expected": {
+        "version": "14a.1",
+        "topTarget": "mango",
+        "items": [
+          { "id": "term:mango", "level": "term", "target": "mango", "title": "Mango (Cross-Reactive with Latex/Tree Nut)" }
+        ]
+      }
+    },
+    {
+      "id": "scn_advice_pistachio_02",
+      "description": "Fallback: Pistachio → parent:tree_nut",
+      "input": {
+        "riskLevel": "high",
+        "reasoning": "Allergy match.",
+        "matchedTerms": ["pistachio"],
+        "matchedCategories": ["tree_nut"],
+        "ruleKinds": ["allergy_match"]
+      },
+      "expected": {
+        "version": "14a.1",
+        "topTarget": "tree_nut",
+        "items": [
+          { "id": "parent:tree_nut", "level": "parent", "target": "tree_nut", "title": "Tree Nut Allergy" }
+        ]
+      }
+    },
+    {
+      "id": "scn_advice_none_03",
+      "description": "None: Medication interaction only → advice absent",
+      "input": {
+        "riskLevel": "medium",
+        "reasoning": "Medication interaction.",
+        "matchedTerms": [],
+        "matchedCategories": [],
+        "ruleKinds": ["medication_interaction"],
+        "medicationDetails": { "extracted": "ibuprofen", "conflictsWith": "aspirin" }
+      },
+      "expected": { "adviceAbsent": true }
+    }
+  ]
+}
