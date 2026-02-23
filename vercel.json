@@ -1,12 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "functions": {
-    "api/vigilance/index.ts": {},
-    "api/report/check/index.ts": {}
-  },
   "rewrites": [
-    { "source": "/api/vigilance", "destination": "/api/vigilance" },
-    { "source": "/api/report/check", "destination": "/api/report/check" }
+    { "source": "/api/vigilance", "destination": "/api/vigilance-state" },
+    { "source": "/api/report/check", "destination": "/api/report-check" }
   ]
 }

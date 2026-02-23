@@ -2,10 +2,11 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.local", override: true });
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { fetchVigilance } from "../_lib/vigilance/computeVigilance.js";
+import { fetchVigilance } from "./_lib/vigilance/computeVigilance.js";
 
 /**
  * Phase 13 – Vigilance State API
+ * Served at /api/vigilance via vercel.json rewrite.
  *
  * GET /api/vigilance
  *

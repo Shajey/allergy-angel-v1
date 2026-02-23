@@ -2,23 +2,20 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.local", override: true });
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient } from "../../_lib/supabaseClient.js";
-import { isUuidLike } from "../../_lib/validation/isUuidLike.js";
-import { buildCheckReport } from "../../_lib/report/buildCheckReport.js";
+import { getSupabaseClient } from "./_lib/supabaseClient.js";
+import { isUuidLike } from "./_lib/validation/isUuidLike.js";
+import { buildCheckReport } from "./_lib/report/buildCheckReport.js";
 
 /**
  * Phase 13.5 – Safety Report Export
  * Phase 13.6 – includeRawText query flag (default false, redacts raw text)
+ * Served at /api/report/check via vercel.json rewrite.
  *
  * GET /api/report/check?checkId=<uuid>[&profileId=<uuid>][&includeRawText=true]
  *
  * Returns a deterministic JSON safety report for a single check.
  * Read-only — no DB writes, no inference changes.
- *
- * Event linkage: uses explicit check_id FK on health_events table.
- * Fallback (if check_id absent): profileId match + created_at within +/- 5 min of check.created_at.
  */
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method Not Allowed" });
@@ -39,7 +36,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const supabase = getSupabaseClient();
 
-    // Fetch check
     const { data: check, error: checkError } = await supabase
       .from("checks")
       .select("*")
@@ -57,7 +53,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(404).json({ error: "Check not found" });
     }
 
-    // Fetch linked events via explicit check_id FK
     const { data: events, error: eventsError } = await supabase
       .from("health_events")
       .select("id, created_at, event_type, event_data")
