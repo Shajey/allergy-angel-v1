@@ -93,6 +93,53 @@ export function applyTaxonomyEdits(input: TaxonomyTransformInput): LoadedTaxonom
   return result;
 }
 
+/**
+ * Phase 12.6: Append aliases to a target node. Validates target exists.
+ * Dedupes, normalizes (lowercase), sorts alphabetically. Bumps version.
+ */
+export function applyAliasEdits(input: {
+  currentTaxonomy: LoadedTaxonomy;
+  targetNodeId: string;
+  newAliases: string[];
+  newVersion?: string;
+}): LoadedTaxonomy {
+  const { currentTaxonomy, targetNodeId, newAliases, newVersion } = input;
+  const targetNorm = targetNodeId.toLowerCase().trim();
+
+  const allTermIds = new Set<string>();
+  for (const entry of Object.values(currentTaxonomy.taxonomy)) {
+    for (const c of entry.children) allTermIds.add(c.toLowerCase().trim());
+  }
+  for (const cr of currentTaxonomy.crossReactive) {
+    for (const r of cr.related) allTermIds.add(r.toLowerCase().trim());
+  }
+  if (!allTermIds.has(targetNorm)) {
+    throw new Error(`Target node "${targetNodeId}" not found in taxonomy.`);
+  }
+
+  const normalized = newAliases
+    .map((a) => a.toLowerCase().trim())
+    .filter((a) => a && a !== targetNorm);
+  const existing = currentTaxonomy.aliases?.[targetNorm] ?? [];
+  const combined = [...new Set([...existing, ...normalized])].sort((a, b) =>
+    a.localeCompare(b)
+  );
+
+  const result: LoadedTaxonomy = {
+    version: newVersion ?? currentTaxonomy.version,
+    taxonomy: JSON.parse(JSON.stringify(currentTaxonomy.taxonomy)),
+    severity: { ...currentTaxonomy.severity },
+    crossReactive: currentTaxonomy.crossReactive.map((cr) => ({
+      ...cr,
+      related: [...cr.related],
+    })),
+    aliases: { ...(currentTaxonomy.aliases ?? {}) },
+  };
+  result.aliases![targetNorm] = combined;
+
+  return result;
+}
+
 const UNCATEGORIZED_KEY = "_promoted";
 
 /**

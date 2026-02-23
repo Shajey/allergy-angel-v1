@@ -36,7 +36,7 @@ function assert(condition: boolean, label: string): void {
   }
 }
 
-const TAXONOMY_VERSION = "10i.2";
+const TAXONOMY_VERSION = "10i.3";
 
 // ── Test 1: Rule code constants ─────────────────────────────────────
 
@@ -118,7 +118,7 @@ console.log("\nTest 5: medication_interaction includes ruleCode");
 console.log("\nTest 6: traceId format validation");
 {
   const checkId = "abc-123-def";
-  const version = "10i.2";
+  const version = "10i.3";
   const expected = `${checkId}:${version}`;
   assert(expected === "abc-123-def:10i.2", "traceId format is checkId:version");
 

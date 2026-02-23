@@ -19,10 +19,11 @@ import { readFileSync, mkdirSync, writeFileSync, existsSync } from "fs";
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { spawnSync } from "child_process";
-import { loadAllergenTaxonomy } from "../api/_lib/knowledge/loadAllergenTaxonomy.js";
+import { loadAllergenTaxonomy, type LoadedTaxonomy } from "../api/_lib/knowledge/loadAllergenTaxonomy.js";
 import { loadFunctionalRegistry } from "../api/_lib/knowledge/loadFunctionalRegistry.js";
 import { buildPromotionExport } from "../api/_lib/admin/promotionExport.js";
 import { buildPRPackagerOutput, type PRPackagerInput } from "../api/_lib/admin/prPackager/index.js";
+import { suggestAliasesForUnmapped } from "../api/_lib/admin/aliasSuggester.js";
 import type { TaxonomyEditMode } from "../api/_lib/admin/prPackager/transforms.js";
 import type { PromotionExportResult } from "../api/_lib/admin/promotionExport.js";
 
@@ -117,6 +118,7 @@ function parseArgs(): {
   selectTaxonomy: string[];
   selectRegistry: string[];
   parent: string;
+  aliasFor?: string;
   bumpTaxonomyVersionTo?: string;
   replayCandidateVersion?: string;
   runReplay: boolean;
@@ -132,6 +134,7 @@ function parseArgs(): {
   let selectTaxonomy: string[] = [];
   let selectRegistry: string[] = [];
   let parent = "";
+  let aliasFor: string | undefined;
   let bumpTaxonomyVersionTo: string | undefined;
   let replayCandidateVersion: string | undefined;
   let runReplay = false;
@@ -156,6 +159,8 @@ function parseArgs(): {
       selectRegistry = val.split(",").map((s) => s.trim()).filter(Boolean);
     } else if (arg.startsWith("--parent=")) {
       parent = val.trim();
+    } else if (arg.startsWith("--aliasFor=")) {
+      aliasFor = val.trim();
     } else if (arg.startsWith("--bumpTaxonomyVersionTo=")) {
       bumpTaxonomyVersionTo = val.trim();
     } else if (arg.startsWith("--replayCandidateVersion=")) {
@@ -181,6 +186,7 @@ function parseArgs(): {
     selectTaxonomy,
     selectRegistry,
     parent,
+    aliasFor,
     bumpTaxonomyVersionTo,
     replayCandidateVersion,
     runReplay,
@@ -233,9 +239,12 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  if (opts.selectTaxonomy.length > 0 && !opts.parent) {
-    console.error("Taxonomy selection requires --parent=<parent_key>");
+  if (opts.selectTaxonomy.length > 0 && !opts.aliasFor && !opts.parent) {
+    console.error("Taxonomy selection requires --parent=<parent_key> or --aliasFor=<targetNodeId>");
     process.exit(1);
+  }
+  if (opts.aliasFor && !opts.parent) {
+    opts.parent = "_alias"; // placeholder when aliasFor is used
   }
 
   const currentTaxonomy = loadAllergenTaxonomy();
@@ -251,6 +260,7 @@ async function main(): Promise<void> {
     taxonomyParent: opts.parent,
     currentTaxonomy,
     currentRegistry,
+    aliasFor: opts.aliasFor,
     options: {
       bumpTaxonomyVersionTo: opts.bumpTaxonomyVersionTo,
     },
@@ -340,7 +350,7 @@ async function main(): Promise<void> {
   );
   writeFileSync(resolve(bundleDir, "patches/registry.diff"), registryDiff, "utf-8");
 
-  const packagerMd = buildPackagerMd(output, opts, {
+  const packagerMd = buildPackagerMd(output, opts, promotion, currentTaxonomy, {
     proposedVersion,
     replayResult,
   });
@@ -423,9 +433,22 @@ function diffUnified(label: string, from: string, to: string): string {
   return lines.join("\n");
 }
 
+function collectTaxonomyIds(taxonomy: { taxonomy: Record<string, { children: string[] }>; crossReactive: Array<{ related: string[] }> }): string[] {
+  const ids = new Set<string>();
+  for (const entry of Object.values(taxonomy.taxonomy)) {
+    for (const c of entry.children) ids.add(c.toLowerCase().trim());
+  }
+  for (const cr of taxonomy.crossReactive) {
+    for (const r of cr.related) ids.add(r.toLowerCase().trim());
+  }
+  return [...ids];
+}
+
 function buildPackagerMd(
   output: { manifest: { selectedTerms: string[]; selectedRegistry: string[]; suggestedAllowlistScenarioIds: string[] }; proposedTaxonomy: { version: string } },
-  opts: { mode: TaxonomyEditMode; parent: string },
+  opts: { mode: TaxonomyEditMode; parent: string; aliasFor?: string },
+  promotion: PromotionExportResult,
+  currentTaxonomy: LoadedTaxonomy,
   versions: { proposedVersion: string; replayResult: ReplayCandidateVersionResult }
 ): string {
   const terms = output.manifest.selectedTerms.map((t) => `\`${t}\``).join(", ");
@@ -438,6 +461,13 @@ function buildPackagerMd(
     versions.replayResult.source === "fixture" && versions.replayResult.fixturePath
       ? `Replay candidate version: ${versions.replayResult.version} (source: fixture, path: ${versions.replayResult.fixturePath})`
       : `Replay candidate version: ${versions.replayResult.version} (source: ${versions.replayResult.source})`;
+
+  const unmappedTerms = (promotion.proposals?.taxonomyAdditions ?? []).map((t) => t.term);
+  const existingIds = collectTaxonomyIds(currentTaxonomy);
+  const linguisticSuggestions = unmappedTerms.length > 0
+    ? suggestAliasesForUnmapped(unmappedTerms, existingIds)
+    : [];
+
   const lines: string[] = [
     "# PR Packager Runbook (Phase 12.3)",
     "",
@@ -449,6 +479,18 @@ function buildPackagerMd(
     replaySourceLine,
     versionNote,
     "",
+    ...(linguisticSuggestions.length > 0
+      ? [
+          "",
+          "## Linguistic Insights (Phase 12.6)",
+          "Suggested Alias Candidates (advisory only; human review required):",
+          "",
+          ...linguisticSuggestions.map(
+            (s) => `- \`${s.candidate}\` → \`${s.suggestedTarget}\` (${(s.similarity * 100).toFixed(0)}% similarity${s.stemMatch ? ", stem match" : ""})`
+          ),
+          "",
+        ]
+      : []),
     "## Pressure Evidence",
     "Before promoting, capture vigilance pressure for these terms:",
     "```bash",
@@ -458,7 +500,8 @@ function buildPackagerMd(
     "",
     "## Apply Patches",
     "1. Copy `proposed-taxonomy.json` to `eval/fixtures/replay/knowledge/candidate-taxonomy.json`",
-    "2. Update `api/_lib/inference/allergenTaxonomy.ts` (ALLERGEN_TAXONOMY_VERSION, taxonomy, CROSS_REACTIVE_REGISTRY)",
+    "2. Update `api/_lib/inference/allergenTaxonomy.ts` (ALLERGEN_TAXONOMY_VERSION, taxonomy, CROSS_REACTIVE_REGISTRY" +
+      (opts.aliasFor ? ", ALIASES)" : ")"),
     "3. Update registry if needed (see proposed-registry.json)",
     "",
     "## Suggested Allowlist Scenario IDs",

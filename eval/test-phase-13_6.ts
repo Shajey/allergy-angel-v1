@@ -30,7 +30,7 @@ function assert(condition: boolean, label: string): void {
 
 const CHECK_ID = "a0000000-0000-0000-0000-000000000001";
 const PROFILE_ID = "b0000000-0000-0000-0000-000000000002";
-const TAXONOMY_VERSION = "10i.2";
+const TAXONOMY_VERSION = "10i.3";
 const RAW_TEXT = "I ate cashew curry and took ibuprofen";
 
 const sampleCheck: ReportCheckInput = {

@@ -25,7 +25,7 @@ const checks: VigilanceCheck[] = [
       matched: [
         { rule: "allergy_match", details: { allergen: "cashew", matchedCategory: "tree_nut", severity: 90 } },
       ],
-      meta: { taxonomyVersion: "10i.2", severity: 90 },
+      meta: { taxonomyVersion: "10i.3", severity: 90 },
     },
     created_at: hoursAgo(24),
   },
@@ -37,7 +37,7 @@ const checks: VigilanceCheck[] = [
         { rule: "cross_reactive", details: { matchedTerm: "mango", source: "tree_nut", severity: 100 } },
         { rule: "medication_interaction", details: { extracted: "ibuprofen", conflictsWith: "aspirin" } },
       ],
-      meta: { taxonomyVersion: "10i.2", severity: 100 },
+      meta: { taxonomyVersion: "10i.3", severity: 100 },
     },
     created_at: hoursAgo(2),
   },
@@ -115,7 +115,7 @@ function runTests(): void {
     if (r1.trigger.severity !== 100) {
       failed++;
       console.error(`✗ severity should be 100, got ${r1.trigger.severity}`);
-    } else if (r1.trigger.taxonomyVersion !== "10i.2") {
+    } else if (r1.trigger.taxonomyVersion !== "10i.3") {
       failed++;
       console.error(`✗ taxonomyVersion should be 10i.2, got ${r1.trigger.taxonomyVersion}`);
     } else {

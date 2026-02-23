@@ -24,7 +24,7 @@ const mockPromotion = {
     windowHours: 168,
     limit: 20,
     candidateCount: 1,
-    taxonomyVersion: "10i.2",
+    taxonomyVersion: "10i.3",
     registryVersion: null,
   },
   candidates: [{ candidate: "mango", kind: "meal_token" as const, count: 1, highRiskCount: 0, riskRate: 0, firstSeenAt: "", lastSeenAt: "", examples: [], sources: {} }],

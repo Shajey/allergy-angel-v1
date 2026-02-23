@@ -159,11 +159,11 @@ function runBehaviorTests(): { passed: number; failed: number } {
 function main(): void {
   console.log("Phase 10I – Taxonomy Guardrails + Behavior\n");
 
-  if (ALLERGEN_TAXONOMY_VERSION !== "10i.2") {
-    console.error(`✗ Version: expected "10i.2", got "${ALLERGEN_TAXONOMY_VERSION}"`);
+  if (ALLERGEN_TAXONOMY_VERSION !== "10i.3") {
+    console.error(`✗ Version: expected "10i.3", got "${ALLERGEN_TAXONOMY_VERSION}"`);
     process.exit(1);
   }
-  console.log(`✓ ALLERGEN_TAXONOMY_VERSION === "10i.2"\n`);
+  console.log(`✓ ALLERGEN_TAXONOMY_VERSION === "10i.3"\n`);
 
   console.log("Guardrail tests:");
   const g = runGuardrailTests();

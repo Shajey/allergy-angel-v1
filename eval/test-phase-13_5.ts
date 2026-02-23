@@ -42,7 +42,7 @@ function assert(condition: boolean, label: string): void {
 // ── Fixtures ────────────────────────────────────────────────────────
 
 const TRACE_ID = "a0000000-0000-0000-0000-000000000001:10i.2";
-const TAXONOMY_VERSION = "10i.2";
+const TAXONOMY_VERSION = "10i.3";
 const CHECK_ID = "a0000000-0000-0000-0000-000000000001";
 const PROFILE_ID = "b0000000-0000-0000-0000-000000000002";
 const GENERATED_AT = "2026-02-21T12:00:00.000Z";

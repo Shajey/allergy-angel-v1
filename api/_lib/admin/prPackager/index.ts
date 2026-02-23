@@ -9,7 +9,7 @@ import { createHash } from "crypto";
 import type { LoadedTaxonomy } from "../../knowledge/loadAllergenTaxonomy.js";
 import type { LoadedRegistry } from "../../knowledge/loadFunctionalRegistry.js";
 import type { PromotionExportResult } from "../promotionExport.js";
-import { applyTaxonomyEdits, applyRegistryEdits, type TaxonomyEditMode } from "./transforms.js";
+import { applyTaxonomyEdits, applyAliasEdits, applyRegistryEdits, type TaxonomyEditMode } from "./transforms.js";
 
 export interface PRPackagerInput {
   promotion: PromotionExportResult;
@@ -21,6 +21,8 @@ export interface PRPackagerInput {
   taxonomyParent: string;
   currentTaxonomy: LoadedTaxonomy;
   currentRegistry: LoadedRegistry;
+  /** Phase 12.6: When set, selected taxonomy terms become aliases for this target node. */
+  aliasFor?: string;
   options?: {
     bumpTaxonomyVersionTo?: string;
     bumpRegistryVersionTo?: string;
@@ -74,11 +76,25 @@ export function validatePRPackagerInput(input: PRPackagerInput): string[] {
     }
   }
 
-  const parentExists =
-    input.taxonomyParent in input.currentTaxonomy.taxonomy ||
-    input.currentTaxonomy.crossReactive.some((cr) => cr.source === input.taxonomyParent);
-  if (!parentExists) {
-    errors.push(`Parent "${input.taxonomyParent}" not found in taxonomy.`);
+  if (input.aliasFor) {
+    const targetNorm = input.aliasFor.toLowerCase().trim();
+    const allIds = new Set<string>();
+    for (const e of Object.values(input.currentTaxonomy.taxonomy)) {
+      for (const c of e.children) allIds.add(c.toLowerCase().trim());
+    }
+    for (const cr of input.currentTaxonomy.crossReactive) {
+      for (const r of cr.related) allIds.add(r.toLowerCase().trim());
+    }
+    if (!allIds.has(targetNorm)) {
+      errors.push(`Target node "${input.aliasFor}" not found in taxonomy.`);
+    }
+  } else {
+    const parentExists =
+      input.taxonomyParent in input.currentTaxonomy.taxonomy ||
+      input.currentTaxonomy.crossReactive.some((cr) => cr.source === input.taxonomyParent);
+    if (!parentExists) {
+      errors.push(`Parent "${input.taxonomyParent}" not found in taxonomy.`);
+    }
   }
 
   if (input.options?.bumpTaxonomyVersionTo && !VERSION_REGEX.test(input.options.bumpTaxonomyVersionTo)) {
@@ -112,13 +128,20 @@ export function buildPRPackagerOutput(input: PRPackagerInput): PRPackagerOutput 
   const newVersion =
     input.options?.bumpTaxonomyVersionTo ?? input.currentTaxonomy.version;
 
-  const proposedTaxonomy = applyTaxonomyEdits({
-    currentTaxonomy: input.currentTaxonomy,
-    terms: sortedTaxonomy,
-    mode: input.taxonomyMode,
-    parent: input.taxonomyParent,
-    newVersion,
-  });
+  const proposedTaxonomy = input.aliasFor
+    ? applyAliasEdits({
+        currentTaxonomy: input.currentTaxonomy,
+        targetNodeId: input.aliasFor,
+        newAliases: sortedTaxonomy,
+        newVersion,
+      })
+    : applyTaxonomyEdits({
+        currentTaxonomy: input.currentTaxonomy,
+        terms: sortedTaxonomy,
+        mode: input.taxonomyMode,
+        parent: input.taxonomyParent,
+        newVersion,
+      });
 
   const proposedRegistry = applyRegistryEdits({
     currentRegistry: input.currentRegistry,

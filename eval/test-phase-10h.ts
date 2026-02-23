@@ -39,7 +39,7 @@ const CASES: TestCase[] = [
     mealText: "I ate pistachio ice cream",
     expectHigh: true,
     expectReasoningContains: "tree_nut",
-    expectMeta: { severity: 90, taxonomyVersion: "10i.2" },
+    expectMeta: { severity: 90, taxonomyVersion: "10i.3" },
   },
   {
     name: "peanut allergy does NOT match pistachio",
@@ -73,7 +73,7 @@ const CASES: TestCase[] = [
     mealText: "grilled shrimp",
     expectHigh: true,
     expectReasoningContains: "shellfish",
-    expectMeta: { severity: 95, taxonomyVersion: "10i.2" },
+    expectMeta: { severity: 95, taxonomyVersion: "10i.3" },
   },
   {
     name: "legume expansion: lentil",
@@ -140,13 +140,13 @@ function runTests(): void {
   }
 
   // ── Phase 10H++: taxonomy version + getAllergenSeverity ─────────────
-  if (ALLERGEN_TAXONOMY_VERSION === "10i.2") {
+  if (ALLERGEN_TAXONOMY_VERSION === "10i.3") {
     passed++;
-    console.log(`✓ ALLERGEN_TAXONOMY_VERSION === "10i.2"`);
+    console.log(`✓ ALLERGEN_TAXONOMY_VERSION === "10i.3"`);
   } else {
     failed++;
     console.error(
-      `✗ ALLERGEN_TAXONOMY_VERSION: expected "10i.2", got "${ALLERGEN_TAXONOMY_VERSION}"`
+      `✗ ALLERGEN_TAXONOMY_VERSION: expected "10i.3", got "${ALLERGEN_TAXONOMY_VERSION}"`
     );
   }
 

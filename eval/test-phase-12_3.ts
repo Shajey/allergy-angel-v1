@@ -33,7 +33,7 @@ const mockPromotion = {
     windowHours: 168,
     limit: 20,
     candidateCount: 5,
-    taxonomyVersion: "10i.2",
+    taxonomyVersion: "10i.3",
     registryVersion: null,
   },
   candidates: [

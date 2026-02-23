@@ -28,7 +28,7 @@ const CHECKS: RecentTriggerCheck[] = [
         { rule: "allergy_match", details: { allergen: "cashew", matchedCategory: "tree_nut", severity: 90 } },
         { rule: "allergy_match", details: { allergen: "walnut", matchedCategory: "tree_nut", severity: 90 } },
       ],
-      meta: { taxonomyVersion: "10i.2", severity: 90 },
+      meta: { taxonomyVersion: "10i.3", severity: 90 },
     },
     created_at: "2026-02-21T10:00:00.000Z",
   },
@@ -39,7 +39,7 @@ const CHECKS: RecentTriggerCheck[] = [
       matched: [
         { rule: "cross_reactive", details: { matchedTerm: "mango", source: "tree_nut", severity: 100 } },
       ],
-      meta: { taxonomyVersion: "10i.2", severity: 100 },
+      meta: { taxonomyVersion: "10i.3", severity: 100 },
     },
     created_at: "2026-02-21T11:00:00.000Z",
   },
@@ -170,9 +170,9 @@ function runTests(): void {
   if (highTrigger!.severity !== 90) {
     failed++;
     console.error(`✗ severity should be 90, got ${highTrigger!.severity}`);
-  } else if (highTrigger!.taxonomyVersion !== "10i.2") {
+  } else if (highTrigger!.taxonomyVersion !== "10i.3") {
     failed++;
-    console.error(`✗ taxonomyVersion should be "10i.2", got "${highTrigger!.taxonomyVersion}"`);
+    console.error(`✗ taxonomyVersion should be "10i.3", got "${highTrigger!.taxonomyVersion}"`);
   } else {
     passed++;
     console.log("✓ severity and taxonomyVersion carried through");

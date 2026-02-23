@@ -11,6 +11,7 @@ import { resolve } from "path";
 import {
   ALLERGEN_TAXONOMY,
   ALLERGEN_TAXONOMY_VERSION,
+  ALIASES,
   CROSS_REACTIVE_REGISTRY,
   type AllergenParentKey,
 } from "../inference/allergenTaxonomy.js";
@@ -20,6 +21,8 @@ export interface LoadedTaxonomy {
   taxonomy: Record<string, { label: string; children: string[] }>;
   severity: Record<string, number>;
   crossReactive: Array<{ source: string; related: string[]; riskModifier: number }>;
+  /** Phase 12.6: canonical id → sorted aliases. Lowercase, unique, alphabetically sorted. */
+  aliases?: Record<string, string[]>;
 }
 
 const DEFAULT_SEVERITY: Record<string, number> = {
@@ -46,6 +49,7 @@ function getDefaultTaxonomy(): LoadedTaxonomy {
     taxonomy: ALLERGEN_TAXONOMY as Record<string, { label: string; children: string[] }>,
     severity,
     crossReactive: [...CROSS_REACTIVE_REGISTRY],
+    aliases: { ...ALIASES },
   };
 }
 
@@ -93,6 +97,10 @@ export function loadAllergenTaxonomy(overridePath?: string): LoadedTaxonomy {
   const crossReactive = Array.isArray(obj.crossReactive)
     ? (obj.crossReactive as Array<{ source: string; related: string[]; riskModifier: number }>)
     : [];
+  const aliases =
+    obj.aliases && typeof obj.aliases === "object"
+      ? (obj.aliases as Record<string, string[]>)
+      : undefined;
 
-  return { version, taxonomy, severity, crossReactive };
+  return { version, taxonomy, severity, crossReactive, aliases };
 }

@@ -21,12 +21,34 @@
  *   - getCrossReactiveMatch(): deterministic cross-reactive lookup
  *   - Surfaces medium risk (not high) with explainable reasoning
  *
+ * Phase 12.6 – Linguistic Bridge (Aliases):
+ *   - TaxonomyNode: id, parent?, aliases? (optional, deterministic, sorted)
+ *   - CANONICAL_MAP: O(1) alias → canonical resolution at load time
+ *   - No fuzzy logic in runtime. Aliases must be explicitly stored.
+ *
  * Zero LLM. Zero embeddings. Auditable and reproducible.
  */
 
 // ── Taxonomy version (10H++) ─────────────────────────────────────────
 /** Micro-version stamp for verdict meta and insight scoring. Bump when taxonomy changes. */
-export const ALLERGEN_TAXONOMY_VERSION = "10i.2";
+export const ALLERGEN_TAXONOMY_VERSION = "10i.3";
+
+// ── Phase 12.6: TaxonomyNode & Aliases ────────────────────────────────
+
+/** Phase 12.6: Node shape for taxonomy. Aliases optional, deterministic, alphabetically sorted. */
+export interface TaxonomyNode {
+  id: string;
+  parent?: string;
+  aliases?: string[];
+}
+
+/**
+ * Phase 12.6: Deterministic alias registry. Canonical id → sorted aliases.
+ * Aliases must be lowercase, unique, alphabetically sorted before export.
+ */
+export const ALIASES: Record<string, string[]> = {
+  mango: ["mangoes", "mangos"],
+};
 
 // ── Severity weights (10H+) ───────────────────────────────────────────
 /** Deterministic severity per allergen category (0–100). Higher = higher risk. */
@@ -183,13 +205,17 @@ export function getCrossReactiveMatch(
 
     const sorted = [...rel.related].sort((a, b) => b.length - a.length);
     for (const term of sorted) {
-      const regex = buildTermRegex(term);
-      if (regex.test(normalizedIngestible)) {
-        return {
-          source: rel.source,
-          matchedTerm: term,
-          modifier: rel.riskModifier,
-        };
+      const variants = getTermsForMatching(term);
+      const isCanonical = (t: string) => normalizeToken(t) === normalizeToken(term);
+      for (const variant of variants) {
+        const regex = isCanonical(variant) ? buildTermRegex(variant) : buildExactTermRegex(variant);
+        if (regex.test(normalizedIngestible)) {
+          return {
+            source: rel.source,
+            matchedTerm: term,
+            modifier: rel.riskModifier,
+          };
+        }
       }
     }
   }
@@ -210,6 +236,55 @@ export function normalizeToken(s: string): string {
   t = t.replace(/\s+/g, " ");
   t = t.replace(/^['"(\[\{]+|['")\]\}]+$/g, "").trim();
   return t;
+}
+
+// ── Phase 12.6: Canonical map (built after normalizeToken) ─────────────
+
+function collectAllCanonicalTerms(): Set<string> {
+  const terms = new Set<string>();
+  for (const entry of Object.values(ALLERGEN_TAXONOMY)) {
+    for (const child of entry.children) {
+      terms.add(normalizeToken(child));
+    }
+  }
+  for (const rel of CROSS_REACTIVE_REGISTRY) {
+    for (const term of rel.related) {
+      terms.add(normalizeToken(term));
+    }
+  }
+  return terms;
+}
+
+function buildCanonicalMap(): Map<string, string> {
+  const map = new Map<string, string>();
+  const canonicals = collectAllCanonicalTerms();
+  for (const id of canonicals) {
+    map.set(id, id);
+  }
+  for (const [canonical, aliases] of Object.entries(ALIASES)) {
+    const canonNorm = canonical.toLowerCase().trim();
+    if (!map.has(canonNorm)) map.set(canonNorm, canonNorm);
+    for (const a of aliases) {
+      const aNorm = a.toLowerCase().trim();
+      if (aNorm && !map.has(aNorm)) map.set(aNorm, canonNorm);
+    }
+  }
+  return map;
+}
+
+const CANONICAL_MAP = buildCanonicalMap();
+
+/** Phase 12.6: Resolve token to canonical id via precompiled map. O(1). */
+export function resolveToCanonical(token: string): string | undefined {
+  const norm = normalizeToken(token);
+  return CANONICAL_MAP.get(norm);
+}
+
+/** Phase 12.6: Get all match strings for a canonical (canonical + aliases). */
+function getTermsForMatching(canonical: string): string[] {
+  const canonNorm = canonical.toLowerCase().trim();
+  const aliases = ALIASES[canonNorm] ?? [];
+  return [canonNorm, ...aliases];
 }
 
 /** Escape regex special characters for use in \b...\b pattern. */
@@ -243,11 +318,17 @@ function buildTermRegex(term: string): RegExp {
   return new RegExp(pattern, "i");
 }
 
+/** Phase 12.6: Exact match only. No plural expansion. Prevents "mangoe" matching "mangoes". */
+function buildExactTermRegex(term: string): RegExp {
+  const escaped = escapeRegex(term);
+  return new RegExp(`\\b${escaped}\\b`, "i");
+}
+
 /**
  * Check whether meal text contains any allergen from the expanded set.
- * Uses phrase-safe word-boundary matching. Does NOT match partial words
- * (e.g., "nutritional" does NOT match "nut"). Phase 10I: meal text is
- * normalized via normalizeToken before matching.
+ * Phase 12.6: For each canonical, matches canonical + aliases via getTermsForMatching.
+ * Returns canonical id on match. O(1) resolution via precompiled map.
+ * Does NOT match partial words (e.g., "nutritional" does NOT match "nut").
  */
 export function isAllergenMatch(
   mealText: string,
@@ -258,14 +339,21 @@ export function isAllergenMatch(
     return { matched: false };
   }
 
-  // Sort by length descending so multi-word terms (e.g., "brazil nut", "soy sauce")
-  // are checked before single-word substrings (e.g., "nut", "soy").
-  const sorted = [...expandedAllergens].sort((a, b) => b.length - a.length);
+  // Sort canonicals by max term length descending (multi-word first).
+  const sorted = [...expandedAllergens].sort((a, b) => {
+    const aMax = Math.max(a.length, ...(getTermsForMatching(a).map((t) => t.length)));
+    const bMax = Math.max(b.length, ...(getTermsForMatching(b).map((t) => t.length)));
+    return bMax - aMax;
+  });
 
-  for (const term of sorted) {
-    const regex = buildTermRegex(term);
-    if (regex.test(normalized)) {
-      return { matched: true, matchedTerm: term };
+  for (const canonical of sorted) {
+    const terms = getTermsForMatching(canonical);
+    const isCanonical = (t: string) => normalizeToken(t) === normalizeToken(canonical);
+    for (const term of terms) {
+      const regex = isCanonical(term) ? buildTermRegex(term) : buildExactTermRegex(term);
+      if (regex.test(normalized)) {
+        return { matched: true, matchedTerm: canonical };
+      }
     }
   }
 
@@ -274,12 +362,18 @@ export function isAllergenMatch(
 
 /**
  * Get the parent taxonomy key for a child term, if it belongs to one.
+ * Phase 12.6: Resolves alias to canonical first. Also checks crossReactive related.
  */
 export function getParentKeyForTerm(term: string): AllergenParentKey | null {
-  const normalized = normalizeToken(term);
+  const canonical = resolveToCanonical(term) ?? normalizeToken(term);
   for (const [key, entry] of Object.entries(ALLERGEN_TAXONOMY)) {
-    if (entry.children.some((c) => normalizeToken(c) === normalized)) {
+    if (entry.children.some((c) => normalizeToken(c) === canonical)) {
       return key as AllergenParentKey;
+    }
+  }
+  for (const rel of CROSS_REACTIVE_REGISTRY) {
+    if (rel.related.some((r) => normalizeToken(r) === canonical)) {
+      return rel.source as AllergenParentKey;
     }
   }
   return null;
@@ -288,13 +382,14 @@ export function getParentKeyForTerm(term: string): AllergenParentKey | null {
 /**
  * Resolve the category key for severity lookup. Prefers explicit severity
  * map entry (e.g. peanut), else taxonomy parent (e.g. tree_nut for pistachio).
+ * Phase 12.6: Resolves alias to canonical first.
  */
 export function resolveCategoryForSeverity(matchedTerm: string): string {
-  const normalized = normalizeToken(matchedTerm);
-  if (normalized in ALLERGEN_SEVERITY) return normalized;
+  const canonical = resolveToCanonical(matchedTerm) ?? normalizeToken(matchedTerm);
+  if (canonical in ALLERGEN_SEVERITY) return canonical;
   const parent = getParentKeyForTerm(matchedTerm);
   if (parent) return parent;
-  return normalized;
+  return canonical;
 }
 
 /**

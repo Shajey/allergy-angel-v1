@@ -31,7 +31,7 @@ function runTests(): void {
       verdict: {
         riskLevel: "medium",
         matched: [{ rule: "allergy_match", details: { allergen: "mango" } }],
-        meta: { taxonomyVersion: "10i.2", severity: 80 },
+        meta: { taxonomyVersion: "10i.3", severity: 80 },
       },
       created_at: hoursAgo(0.5),
     },
@@ -63,7 +63,7 @@ function runTests(): void {
       verdict: {
         riskLevel: "medium",
         matched: [{ rule: "allergy_match", details: { allergen: "cashew" } }],
-        meta: { taxonomyVersion: "10i.2", severity: 80 },
+        meta: { taxonomyVersion: "10i.3", severity: 80 },
       },
       created_at: hoursAgo(24),
     },

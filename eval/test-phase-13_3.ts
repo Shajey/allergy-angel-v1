@@ -31,7 +31,7 @@ function assert(condition: boolean, label: string): void {
 
 // ── Fixtures ────────────────────────────────────────────────────────
 
-const TAXONOMY_VERSION = "10i.2";
+const TAXONOMY_VERSION = "10i.3";
 
 const directMatchCheck: ExplainableCheck = {
   verdict: {

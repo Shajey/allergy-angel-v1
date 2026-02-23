@@ -104,7 +104,7 @@ function runTests(): void {
           riskLevel: snap.input.riskLevel,
           reasoning: snap.input.reasoning,
           matched: buildMatchedFromInput(snap.input),
-          meta: { taxonomyVersion: "10i.2", severity: 90 },
+          meta: { taxonomyVersion: "10i.3", severity: 90 },
         },
       };
 

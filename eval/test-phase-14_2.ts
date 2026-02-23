@@ -62,7 +62,7 @@ function runTests(): void {
           },
         },
       ],
-      meta: { taxonomyVersion: "10i.2", crossReactive: true },
+      meta: { taxonomyVersion: "10i.3", crossReactive: true },
     });
 
     const report = buildCheckReport({
@@ -106,7 +106,7 @@ function runTests(): void {
           },
         },
       ],
-      meta: { taxonomyVersion: "10i.2" },
+      meta: { taxonomyVersion: "10i.3" },
     });
 
     const r1 = buildCheckReport({ check, events: [], generatedAt: CREATED_AT });
@@ -150,7 +150,7 @@ function runTests(): void {
           },
         },
       ],
-      meta: { taxonomyVersion: "10i.2" },
+      meta: { taxonomyVersion: "10i.3" },
     });
 
     const report = buildCheckReport({
@@ -189,7 +189,7 @@ function runTests(): void {
         { rule: "cross_reactive", details: { matchedTerm: "mango", source: "tree_nut", meal: "c", severity: 100 } },
         { rule: "allergy_match", details: { allergen: "shrimp", matchedCategory: "shellfish", meal: "d", severity: 95 } },
       ],
-      meta: { taxonomyVersion: "10i.2" },
+      meta: { taxonomyVersion: "10i.3" },
     });
 
     const report = buildCheckReport({
@@ -220,7 +220,7 @@ function runTests(): void {
           },
         },
       ],
-      meta: { taxonomyVersion: "10i.2" },
+      meta: { taxonomyVersion: "10i.3" },
     });
 
     const report = buildCheckReport({
@@ -244,7 +244,7 @@ function runTests(): void {
       riskLevel: "none",
       reasoning: "No known risks detected.",
       matched: [],
-      meta: { taxonomyVersion: "10i.2", severity: 0 },
+      meta: { taxonomyVersion: "10i.3", severity: 0 },
     });
 
     const report = buildCheckReport({
@@ -266,7 +266,7 @@ function runTests(): void {
           details: { extracted: "ibuprofen", conflictsWith: "aspirin" },
         },
       ],
-      meta: { taxonomyVersion: "10i.2" },
+      meta: { taxonomyVersion: "10i.3" },
     });
 
     const report = buildCheckReport({
