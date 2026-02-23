@@ -2,14 +2,13 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.local", override: true });
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient } from "./_lib/supabaseClient.js";
-import { isUuidLike } from "./_lib/validation/isUuidLike.js";
-import { buildCheckReport } from "./_lib/report/buildCheckReport.js";
+import { getSupabaseClient } from "../../_lib/supabaseClient.js";
+import { isUuidLike } from "../../_lib/validation/isUuidLike.js";
+import { buildCheckReport } from "../../_lib/report/buildCheckReport.js";
 
 /**
  * Phase 13.5 – Safety Report Export
  * Phase 13.6 – includeRawText query flag (default false, redacts raw text)
- * Served at /api/report/check via vercel.json rewrite.
  *
  * GET /api/report/check?checkId=<uuid>[&profileId=<uuid>][&includeRawText=true]
  *
