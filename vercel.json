@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "functions": {
-    "api/vigilance.ts": {},
+    "api/vigilance/index.ts": {},
     "api/report/check/index.ts": {}
   },
   "rewrites": [
