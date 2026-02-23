@@ -175,7 +175,7 @@ function loadSchema() {
   return JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
 }
 
-const ajv = new Ajv({ allErrors: true, allowUnionTypes: true });
+const ajv = new (Ajv as any)({ allErrors: true, allowUnionTypes: true });
 const validateHealthEvent = ajv.compile(loadSchema());
 
 function confidenceLevelFrom(confidence: number): "Low" | "Medium" | "High" {

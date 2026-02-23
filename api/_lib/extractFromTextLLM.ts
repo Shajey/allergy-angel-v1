@@ -37,8 +37,8 @@ function getCurrentDate(): string {
   return `${year}-${month}-${day}`;
 }
 
-// Initialize AJV
-const ajv = new Ajv({
+// Initialize AJV (cast for ESM/TS module resolution)
+const ajv = new (Ajv as any)({
   allErrors: true,
   allowUnionTypes: true
 });

@@ -1,4 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/admin/unmapped", "destination": "/api/admin?action=unmapped" },
+    { "source": "/api/admin/pr-packager", "destination": "/api/admin?action=pr-packager" },
+    { "source": "/api/admin/promotion-export", "destination": "/api/admin?action=promotion-export" }
+  ]
 }
