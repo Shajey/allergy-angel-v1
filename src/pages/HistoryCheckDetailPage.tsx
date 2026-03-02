@@ -27,6 +27,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useProfileContext } from "../context/ProfileContext";
 import { WhyDisclosure } from "@/components/shared/WhyDisclosure.js";
 import { Button } from "@/components/ui/button.js";
 import {
@@ -198,6 +199,23 @@ function isHighlighted(event: HealthEventRow, matched: RuleMatch[]): boolean {
     ) {
       return true;
     }
+    if (
+      m.rule === "supplement_medication_interaction" &&
+      event.event_type === "supplement"
+    ) {
+      const evSupplement = event.event_data.supplement ?? event.event_data.name;
+      if (String(m.details.supplement).toLowerCase() === String(evSupplement).toLowerCase()) {
+        return true;
+      }
+    }
+    if (
+      m.rule === "food_medication_interaction" &&
+      event.event_type === "meal"
+    ) {
+      const mealText = String(event.event_data.meal ?? "").toLowerCase();
+      const food = String(m.details.food ?? "").toLowerCase();
+      if (food && mealText.includes(food)) return true;
+    }
   }
   return false;
 }
@@ -216,7 +234,7 @@ function eventSummary(event: HealthEventRow): string {
     case "symptom":
       return String(d.symptom ?? "unknown symptom");
     case "supplement": {
-      const name = String(d.supplement ?? "unknown supplement");
+      const name = String(d.supplement ?? d.name ?? "unknown supplement");
       const dosage = d.dosage ? ` ${d.dosage}` : "";
       return `${name}${dosage}`;
     }
@@ -256,12 +274,13 @@ function eventTypeBadge(eventType: string): { label: string; className: string }
   }
 }
 
-// ── Risk Badge + Reasoning (Phase 10K) ─────────────────────────────────
+// ── Risk Badge + Reasoning (Phase 10K, 18.6) ─────────────────────────────
+// Phase 18: HIGH RISK urgent (red, bold), SAFE reassuring (green)
 
 function riskBadgeClass(riskLevel: string): string {
   switch (riskLevel) {
     case "high":
-      return "bg-red-100 text-red-800 border-red-200";
+      return "bg-red-600 text-white border-red-700 font-bold";
     case "medium":
       return "bg-amber-100 text-amber-800 border-amber-200";
     default:
@@ -272,11 +291,11 @@ function riskBadgeClass(riskLevel: string): string {
 function riskBadgeLabel(riskLevel: string): string {
   switch (riskLevel) {
     case "high":
-      return "High";
+      return "HIGH RISK";
     case "medium":
-      return "Medium";
+      return "CAUTION";
     default:
-      return "None";
+      return "SAFE";
   }
 }
 
@@ -314,7 +333,7 @@ function VerdictTrustLayer({
       <div className="rounded-lg border px-4 py-3 text-sm">
         <div className="flex items-center gap-2">
           <span
-            className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${riskBadgeClass(riskLevel)}`}
+            className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold min-h-[44px] items-center ${riskBadgeClass(riskLevel)}`}
           >
             {riskBadgeLabel(riskLevel)}
           </span>
@@ -526,6 +545,7 @@ function AllergenAlertBanner({ alerts }: { alerts: AllergenAlert[] }) {
 
 export default function HistoryCheckDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { selectedProfileId } = useProfileContext();
   const [data, setData] = useState<CheckDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -550,7 +570,10 @@ export default function HistoryCheckDetailPage() {
 
     async function fetchCheck() {
       try {
-        const res = await fetch(`/api/history/${id}`);
+        const url = selectedProfileId
+          ? `/api/history/${id}?profileId=${encodeURIComponent(selectedProfileId)}`
+          : `/api/history/${id}`;
+        const res = await fetch(url);
         if (!res.ok) {
           const body = await res.json().catch(() => null);
           throw new Error(body?.error ?? `HTTP ${res.status}`);
@@ -561,7 +584,10 @@ export default function HistoryCheckDetailPage() {
 
           // Phase 10H: fetch profile and detect allergen alerts (best-effort)
           try {
-            const profileRes = await fetch("/api/profile");
+            const profileUrl = selectedProfileId
+              ? `/api/profile?profileId=${encodeURIComponent(selectedProfileId)}`
+              : "/api/profile";
+            const profileRes = await fetch(profileUrl);
             if (profileRes.ok) {
               const profileJson = await profileRes.json();
               const allergies: string[] =
@@ -606,7 +632,7 @@ export default function HistoryCheckDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, selectedProfileId]);
 
   // ── Loading state ──────────────────────────────────────────────
   if (loading) {
@@ -640,7 +666,7 @@ export default function HistoryCheckDetailPage() {
 
   // ── Success state ──────────────────────────────────────────────
   return (
-    <div className="p-6 max-w-xl mx-auto space-y-4">
+    <div className="p-4 sm:p-6 max-w-xl mx-auto space-y-4 overflow-x-hidden">
       {/* Back link */}
       <Link
         to="/history"

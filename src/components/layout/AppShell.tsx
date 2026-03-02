@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import NotificationsPanel from './NotificationsPanel';
 import MobileDrawer from './MobileDrawer';
+import ProfileSwitcher from './ProfileSwitcher';
 import BottomNav from './BottomNav';
 import VigilanceBanner from './VigilanceBanner';
 
@@ -52,8 +53,11 @@ function AppShell() {
             Allergy Angel
           </Link>
 
-          {/* Notifications Bell - RIGHT */}
-          <NotificationsPanel />
+          {/* Profile switcher + Notifications - RIGHT */}
+          <div className="flex items-center gap-2">
+            <ProfileSwitcher />
+            <NotificationsPanel />
+          </div>
         </div>
       </header>
 
@@ -87,6 +91,7 @@ function AppShell() {
 
             {/* Right side actions */}
             <div className="flex items-center gap-2 sm:gap-4">
+              <ProfileSwitcher />
               <NotificationsPanel />
               
             </div>

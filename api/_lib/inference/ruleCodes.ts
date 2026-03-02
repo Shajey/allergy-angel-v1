@@ -8,6 +8,8 @@
 export const RULE_ALLERGEN_MATCH = "AA-RULE-AL-001";
 export const RULE_CROSS_REACTIVE = "AA-RULE-CR-001";
 export const RULE_MED_INTERACTION = "AA-RULE-MI-001";
+export const RULE_SUPPLEMENT_MED_INTERACTION = "AA-RULE-SM-001";
+export const RULE_FOOD_MED_INTERACTION = "AA-RULE-FM-001";
 
 export function ruleCodeFor(rule: string): string | null {
   switch (rule) {
@@ -17,6 +19,10 @@ export function ruleCodeFor(rule: string): string | null {
       return RULE_CROSS_REACTIVE;
     case "medication_interaction":
       return RULE_MED_INTERACTION;
+    case "supplement_medication_interaction":
+      return RULE_SUPPLEMENT_MED_INTERACTION;
+    case "food_medication_interaction":
+      return RULE_FOOD_MED_INTERACTION;
     default:
       return null;
   }

@@ -3,3 +3,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Phase 18: Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+}

@@ -3,6 +3,9 @@ dotenv.config({ path: ".env.local", override: true });   // load .env.local → 
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { extractFromText } from "./_lib/extractFromText.js";
+import { extractFromTextHeuristic } from "./_lib/extractFromTextHeuristic.js";
+import { extractFromTextLLM } from "./_lib/extractFromTextLLM.js";
+import { extractTextFromImage } from "./_lib/extractFromImage.js";
 import { postProcessExtractionResult } from "./_lib/inference/postProcessExtractionResult.js";
 import { saveExtractionRun } from "./_lib/persistence/saveExtractionRun.js";
 import { postProcessFollowUps } from "./_lib/inference/postProcessFollowUps.js";
@@ -14,6 +17,10 @@ import { postProcessFollowUps } from "./_lib/inference/postProcessFollowUps.js";
  * Behavior:
  * - Default: heuristic extraction (deterministic)
  * - If EXTRACTION_MODE=llm: LLM extraction (OpenAI) via boundary module
+ * - Phase 17: If image provided, extract text from image first, then use LLM extraction
+ *   (ensures supplement events for label scanning)
+ *
+ * Request body: { rawText?: string, image?: string (base64), profile_id?: string }
  *
  * Contract:
  * - Always returns { events: HealthEvent[], followUpQuestions: string[], warnings: string[] }
@@ -40,21 +47,84 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const rawText =
-      typeof (req.body as any)?.rawText === "string" ? (req.body as any).rawText.trim() : "";
+    const body = req.body as Record<string, unknown> | null;
+    let rawText = typeof body?.rawText === "string" ? body.rawText.trim() : "";
+    const imageBase64 = typeof body?.image === "string" ? body.image.trim() : "";
+    const imageType = typeof body?.imageType === "string" ? body.imageType.trim() : "";
+    const previewOnly = body?.preview === true;
+    const fromImage = body?.fromImage === true;
 
-    if (!rawText) {
-      return res.status(400).json({ error: "Missing rawText in request body", details: null });
+    // Phase 17: preview=true → image-to-text only, no persist
+    if (previewOnly && imageBase64) {
+      try {
+        const { text } = await extractTextFromImage(imageBase64, imageType || undefined);
+        return res.status(200).json({ text });
+      } catch (imgErr: any) {
+        return res.status(400).json({
+          error: imgErr?.message ?? "Image text extraction failed",
+          details: null,
+        });
+      }
     }
 
-    const result = await extractFromText(rawText);
+    // Phase 17: If image provided (full extract), extract text from image first
+    if (imageBase64 && !rawText) {
+      try {
+        const { text } = await extractTextFromImage(imageBase64, imageType || undefined);
+        rawText = text;
+      } catch (imgErr: any) {
+        return res.status(400).json({
+          error: imgErr?.message ?? "Image text extraction failed",
+          details: null,
+        });
+      }
+    }
+
+    if (!rawText) {
+      return res.status(400).json({
+        error: "Missing rawText or image in request body",
+        details: null,
+      });
+    }
+
+    // Phase 17: When image was used (or fromImage flag), use LLM for supplement events
+    let result =
+      imageBase64 || fromImage
+        ? await extractFromTextLLM(rawText)
+        : await extractFromText(rawText);
+
+    // Fallback: "Mango", "peanut butter" — when extraction returns no meal, try heuristic
+    const hasMeal = result.events?.some((e: any) => e.type === "meal" && e.fields?.meal);
+    if (!hasMeal) {
+      const trimmed = rawText.trim();
+      const words = trimmed.split(/\s+/).filter(Boolean);
+      const looksLikeNumber = /^\d+(\.\d+)?\s*(mg|mcg|g|ml|mg\/dl)?$/i.test(trimmed);
+      const looksLikeMedication = /\b\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml)\b/i.test(rawText);
+      const looksLikeSymptom = /\b(headache|rash|nausea|vomiting|diarrhea|cough|fever|itching|hives|sneezing|congestion)\b/i.test(rawText);
+      if (
+        words.length >= 1 &&
+        words.length <= 6 &&
+        trimmed.length <= 80 &&
+        !looksLikeNumber &&
+        !looksLikeMedication &&
+        !looksLikeSymptom
+      ) {
+        const heuristicResult = await extractFromTextHeuristic(rawText);
+        if (heuristicResult.events?.some((e: any) => e.type === "meal" && e.fields?.meal)) {
+          result = heuristicResult;
+        }
+      }
+    }
 
     // ── Post-process: meal needsClarification + carb follow-up suppression ─
     postProcessExtractionResult(rawText, result);
 
-    // ── Phase 7 + 9A: persist extraction run (best-effort) ───────────
-    // DEFAULT_PROFILE_ID must be a UUID from the profiles table.
-    const profileId = process.env.DEFAULT_PROFILE_ID;
+    // ── Phase 7 + 9A + 16: persist extraction run (best-effort) ───────────
+    // profile_id from request body, else DEFAULT_PROFILE_ID.
+    const profileId =
+      (typeof body?.profile_id === "string" ? body.profile_id.trim() : "") ||
+      process.env.DEFAULT_PROFILE_ID ||
+      "";
     if (profileId) {
       try {
         await saveExtractionRun({ profileId, rawText, result });

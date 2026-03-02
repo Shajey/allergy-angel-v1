@@ -12,7 +12,8 @@
  *              to children, e.g., tree_nut → pistachio, cashew).
  *   B) MEDIUM – A medication event conflicts with a current medication
  *              (checked against a small hardcoded interaction map).
- *   C) NONE  – No rules triggered.
+ *   C) Phase 17 – Supplement event interacts with profile medications.
+ *   D) Phase 17 – Meal event contains food that interacts with profile medications.
  *
  * The highest-severity match wins (high > medium > none).
  */
@@ -31,7 +32,14 @@ import {
   RULE_ALLERGEN_MATCH,
   RULE_CROSS_REACTIVE,
   RULE_MED_INTERACTION,
+  RULE_SUPPLEMENT_MED_INTERACTION,
+  RULE_FOOD_MED_INTERACTION,
 } from "./ruleCodes.js";
+import {
+  SUPPLEMENT_INTERACTION_MAP,
+  normalizeSupplementName,
+  normalizeMedicationName,
+} from "./supplementInteractions.js";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -80,6 +88,42 @@ const INTERACTION_MAP: Record<string, string[]> = {
   aspirin: ["ibuprofen", "warfarin"],
   warfarin: ["ibuprofen", "aspirin"],
   naproxen: ["ibuprofen"],
+};
+
+// ── Phase 17: Food ↔ medication interaction keywords ─────────────────
+const FOOD_MEDICATION_KEYWORDS: Record<
+  string,
+  { meds: string[]; risk: "medium" | "high"; reason: string }
+> = {
+  grapefruit: {
+    meds: [
+      "atorvastatin",
+      "lipitor",
+      "simvastatin",
+      "zocor",
+      "amlodipine",
+      "norvasc",
+    ],
+    risk: "medium",
+    reason: "Grapefruit can increase drug levels, potentially causing side effects",
+  },
+  spinach: {
+    meds: ["warfarin", "coumadin"],
+    risk: "medium",
+    reason:
+      "High vitamin K content may reduce warfarin effectiveness; maintain consistent intake",
+  },
+  kale: {
+    meds: ["warfarin", "coumadin"],
+    risk: "medium",
+    reason:
+      "High vitamin K content may reduce warfarin effectiveness; maintain consistent intake",
+  },
+  broccoli: {
+    meds: ["warfarin", "coumadin"],
+    risk: "medium",
+    reason: "Vitamin K content may affect warfarin; maintain consistent intake",
+  },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -198,6 +242,39 @@ export function checkRisk(args: {
             });
           }
         }
+
+        // ── Rule D: Food → medication interaction (Phase 17) ─────────
+        const mealLower = mealText.toLowerCase();
+        for (const [food, interaction] of Object.entries(FOOD_MEDICATION_KEYWORDS)) {
+          if (mealLower.includes(food)) {
+            for (const profileMed of profile.current_medications) {
+              const normalizedMed = normalizeMedicationName(profileMed.name);
+              if (interaction.meds.includes(normalizedMed)) {
+                matched.push({
+                  rule: "food_medication_interaction",
+                  ruleCode: RULE_FOOD_MED_INTERACTION,
+                  details: {
+                    food,
+                    medication: profileMed.name,
+                    risk: interaction.risk,
+                    reason: interaction.reason,
+                  },
+                });
+                if (
+                  interaction.risk === "high" &&
+                  highestRisk !== "high"
+                ) {
+                  highestRisk = "high";
+                } else if (
+                  interaction.risk === "medium" &&
+                  highestRisk === "none"
+                ) {
+                  highestRisk = "medium";
+                }
+              }
+            }
+          }
+        }
       }
     }
 
@@ -213,6 +290,37 @@ export function checkRisk(args: {
             ruleCode: RULE_MED_INTERACTION,
             details: conflict,
           });
+        }
+      }
+    }
+
+    // ── Rule C: Supplement → medication interaction (Phase 17) ───────
+    if (event.type === "supplement") {
+      const supplementName = normalizeSupplementName(
+        (event.fields?.supplement ?? event.fields?.name ?? "") as string
+      );
+      if (!supplementName) continue;
+      const interaction = SUPPLEMENT_INTERACTION_MAP[supplementName];
+      if (interaction && profile.current_medications.length > 0) {
+        for (const profileMed of profile.current_medications) {
+          const normalizedMed = normalizeMedicationName(profileMed.name);
+          if (interaction.interactsWith.includes(normalizedMed)) {
+            matched.push({
+              rule: "supplement_medication_interaction",
+              ruleCode: RULE_SUPPLEMENT_MED_INTERACTION,
+              details: {
+                supplement: supplementName,
+                medication: profileMed.name,
+                risk: interaction.risk,
+                reason: interaction.reason,
+              },
+            });
+            if (interaction.risk === "high" && highestRisk !== "high") {
+              highestRisk = "high";
+            } else if (interaction.risk === "medium" && highestRisk === "none") {
+              highestRisk = "medium";
+            }
+          }
         }
       }
     }
@@ -247,6 +355,12 @@ export function checkRisk(args: {
     }
     if (m.rule === "medication_interaction") {
       return `${m.details.extracted} may interact with current medication ${m.details.conflictsWith}`;
+    }
+    if (m.rule === "supplement_medication_interaction") {
+      return (m.details.reason as string) ?? `${m.details.supplement} may interact with ${m.details.medication}`;
+    }
+    if (m.rule === "food_medication_interaction") {
+      return (m.details.reason as string) ?? `${m.details.food} may interact with ${m.details.medication}`;
     }
     return JSON.stringify(m);
   });

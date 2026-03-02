@@ -108,7 +108,7 @@ function parseMedication(rawText: string) {
 
 /**
  * Meal parsing rules (hardened):
- * - capture phrase after ate/had
+ * - capture phrase after ate/had/eating/eat (e.g. "I am eating mango", "ate a salad")
  * - cut off at "for/with/at/and" to isolate food name chunk
  * - skip determiners (a/an/the)
  * - return up to 3 tokens as the meal name
@@ -117,8 +117,8 @@ function parseMedication(rawText: string) {
 function parseMeal(rawText: string) {
   const lower = rawText.toLowerCase();
 
-  // Capture everything after ate/had for a limited window
-  const m = rawText.match(/\b(?:ate|had)\s+(.{1,80})/i);
+  // Capture everything after ate/had/eating/eat for a limited window
+  const m = rawText.match(/\b(?:ate|had|eating|eat)\s+(.{1,80})/i);
 
   let mealName: string | null = null;
   const spans: Array<{ field: string; startChar: number; endChar: number }> = [];
@@ -163,6 +163,26 @@ function parseMeal(rawText: string) {
     spans.push({ field: "fields.meal", startChar: m.index, endChar: Math.min(rawText.length, m.index + 120) });
   }
 
+  // Plain food fallback: "mango", "mango salsa", "peanut butter" — short phrase, no verb
+  if (mealName === null && !m) {
+    const trimmed = rawText.trim();
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    const looksLikeNumber = /^\d+(\.\d+)?\s*(mg|mcg|g|ml|mg\/dl)?$/i.test(trimmed);
+    const looksLikeMedication = /\b\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml)\b/i.test(rawText);
+    const looksLikeSymptom = /\b(headache|rash|nausea|vomiting|diarrhea|cough|fever|itching|hives|sneezing|congestion)\b/i.test(rawText);
+    if (
+      words.length >= 1 &&
+      words.length <= 6 &&
+      trimmed.length <= 80 &&
+      !looksLikeNumber &&
+      !looksLikeMedication &&
+      !looksLikeSymptom
+    ) {
+      mealName = trimmed;
+      spans.push({ field: "fields.meal", startChar: 0, endChar: trimmed.length });
+    }
+  }
+
   return { name: mealName, carbs, spans };
 }
 
@@ -195,7 +215,10 @@ export async function extractFromTextHeuristic(rawText: string) {
   const sym = parseSymptom(rawText);
 
   const hasMedicationIntent = /\b(took|take|taken|swallowed|pill|tablet|capsule|medicine|medication)\b/i.test(rawText);
-  const hasMealIntent = /\b(ate|had|lunch|dinner|breakfast|snack)\b/i.test(rawText);
+  const hasMealIntent =
+    /\b(ate|had|lunch|dinner|breakfast|snack|eating|eat)\b/i.test(rawText) ||
+    // Plain food: "mango", "mango salsa" — short phrase when no other intent
+    (meal.name != null && meal.name.length > 0);
 
   // Routing precedence: Glucose -> Meal -> Meds (only if intent) -> Symptom
   let type: "glucose" | "medication" | "meal" | "symptom" = "symptom";

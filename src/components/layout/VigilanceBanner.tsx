@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useProfileContext } from "../../context/ProfileContext";
 import { ShieldAlert } from "lucide-react";
 import {
   shouldShowBanner,
@@ -45,32 +46,26 @@ function formatExpiresIn(e: { hours: number; minutes: number }): string {
 }
 
 export default function VigilanceBanner() {
+  const { selectedProfileId } = useProfileContext();
   const [data, setData] = useState<VigilanceResponse | null>(null);
   const [ackMap, setAckMap] = useState<AckMap>({});
-  const [profileId, setProfileId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [safetyProtocolOpen, setSafetyProtocolOpen] = useState(false);
 
   useEffect(() => {
+    if (!selectedProfileId) return;
     let cancelled = false;
 
     async function load() {
       try {
-        const profileRes = await fetch("/api/profile");
-        if (!profileRes.ok) return;
-        const profileJson = await profileRes.json();
-        const pid = profileJson?.profile?.id;
-        if (!pid) return;
-
         const res = await fetch(
-          `/api/vigilance?profileId=${encodeURIComponent(pid)}&windowHours=12`
+          `/api/vigilance?profileId=${encodeURIComponent(selectedProfileId)}&windowHours=12`
         );
         if (!res.ok) return;
         const json: VigilanceResponse = await res.json();
         if (!cancelled) {
           setData(json);
-          setProfileId(pid);
-          setAckMap(readAckMap(pid));
+          setAckMap(readAckMap(selectedProfileId));
         }
       } catch (err) {
         if (process.env.NODE_ENV !== "production") {
@@ -83,17 +78,17 @@ export default function VigilanceBanner() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedProfileId]);
 
   const handleAcknowledge = useCallback(() => {
-    if (!data?.trigger || !profileId) return;
+    if (!data?.trigger || !selectedProfileId) return;
     const until = nextAckUntil(Date.now(), data.windowHours);
-    writeAck(profileId, data.trigger.checkId, until);
+    writeAck(selectedProfileId, data.trigger.checkId, until);
     setAckMap((prev) => ({
       ...prev,
       [data.trigger!.checkId]: { acknowledgedUntil: until },
     }));
-  }, [data, profileId]);
+  }, [data, selectedProfileId]);
 
   if (!data?.vigilanceActive || !data.trigger) return null;
   if (!shouldShowBanner(data.trigger, Date.now(), ackMap)) return null;
@@ -194,11 +189,11 @@ export default function VigilanceBanner() {
         </div>
       </div>
 
-      {profileId && (
+      {selectedProfileId && (
         <VigilanceDrawer
           open={drawerOpen}
           onOpenChange={setDrawerOpen}
-          profileId={profileId}
+          profileId={selectedProfileId}
           windowHours={windowHours}
         />
       )}

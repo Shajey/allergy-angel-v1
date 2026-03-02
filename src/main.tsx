@@ -7,6 +7,15 @@ import { checkAndMigrateDataVersion } from './lib/dataVersion'
 // Check data version and clear stale mock data if needed
 checkAndMigrateDataVersion()
 
+// Phase 18: Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.log('SW registration failed:', err)
+    })
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

@@ -245,6 +245,12 @@ function extractMatchedTerm(m: { rule: string; details: Record<string, unknown> 
       .sort((a, b) => a.localeCompare(b));
     return pair.join(", ");
   }
+  if (m.rule === "supplement_medication_interaction") {
+    return [str(m.details.supplement), str(m.details.medication)].filter(Boolean).join(", ");
+  }
+  if (m.rule === "food_medication_interaction") {
+    return [str(m.details.food), str(m.details.medication)].filter(Boolean).join(", ");
+  }
   return "";
 }
 
@@ -256,7 +262,17 @@ function extractCategory(m: { rule: string; details: Record<string, unknown> }):
 
 /** Strip fields already surfaced as top-level report fields to avoid duplication. */
 function filterDetails(d: Record<string, unknown>): Record<string, unknown> {
-  const skip = new Set(["allergen", "matchedTerm", "matchedCategory", "source", "extracted", "conflictsWith"]);
+  const skip = new Set([
+    "allergen",
+    "matchedTerm",
+    "matchedCategory",
+    "source",
+    "extracted",
+    "conflictsWith",
+    "supplement",
+    "medication",
+    "food",
+  ]);
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(d)) {
     if (!skip.has(k) && v !== undefined) out[k] = v;

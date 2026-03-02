@@ -37,10 +37,10 @@ export function WhyDisclosure({
         aria-expanded={open}
         aria-controls={contentId}
         className={cn(
-          "w-full px-4 py-3 text-left text-sm font-semibold text-gray-900",
+          "w-full min-h-[44px] px-4 py-3 text-left text-sm font-semibold text-gray-900",
           "flex items-center justify-between gap-2",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2",
-          "rounded-lg transition-colors hover:bg-gray-50"
+          "rounded-lg transition-colors hover:bg-gray-50 active:bg-gray-100"
         )}
       >
         <span>{title}</span>

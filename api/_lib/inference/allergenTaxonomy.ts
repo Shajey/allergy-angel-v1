@@ -180,6 +180,26 @@ export const CROSS_REACTIVE_REGISTRY: CrossReactiveRelation[] = [
 ];
 
 /**
+ * Map user-facing allergy labels to canonical CROSS_REACTIVE_REGISTRY source keys.
+ * "Tree Nuts", "tree nuts", "Tree Nut" etc. → "tree_nut"
+ */
+const USER_ALLERGY_TO_SOURCE: Record<string, string> = {
+  tree_nut: "tree_nut",
+  tree_nuts: "tree_nut",
+  "tree nut": "tree_nut",
+  "tree nuts": "tree_nut",
+  latex: "latex",
+  "birch pollen": "birch_pollen",
+  birch_pollen: "birch_pollen",
+};
+
+function resolveUserAllergyToSource(userAllergy: string): string | null {
+  const norm = normalizeToken(userAllergy).replace(/\s+/g, "_");
+  const withSpace = normalizeToken(userAllergy);
+  return USER_ALLERGY_TO_SOURCE[norm] ?? USER_ALLERGY_TO_SOURCE[withSpace] ?? null;
+}
+
+/**
  * Phase 10J: Check if ingestible contains a cross-reactive term for any user allergy.
  * Returns match info or null. Uses phrase-safe matching (reuses 10H normalization).
  */
@@ -190,16 +210,23 @@ export function getCrossReactiveMatch(
   const normalizedIngestible = stripPunctuation(normalizeToken(ingestibleName));
   if (!normalizedIngestible) return null;
 
-  const userAllergySet = new Set(
-    userAllergies.map((a) => normalizeToken(a).replace(/\s+/g, "_"))
-  );
+  // Build set of canonical source keys the user has (handles "Tree Nuts" → tree_nut)
+  const userSourceSet = new Set<string>();
+  for (const a of userAllergies) {
+    const resolved = resolveUserAllergyToSource(a);
+    if (resolved) userSourceSet.add(resolved);
+    // Also keep raw normalized form for backward compat
+    const raw = normalizeToken(a).replace(/\s+/g, "_");
+    userSourceSet.add(raw);
+    if (raw.endsWith("s")) userSourceSet.add(raw.slice(0, -1));
+  }
 
   for (const rel of CROSS_REACTIVE_REGISTRY) {
     const sourceNorm = rel.source.toLowerCase();
     const sourceMatches =
-      userAllergySet.has(sourceNorm) ||
-      userAllergySet.has(sourceNorm + "s") ||
-      [...userAllergySet].some((u) => u.replace(/s$/, "") === sourceNorm);
+      userSourceSet.has(sourceNorm) ||
+      userSourceSet.has(sourceNorm + "s") ||
+      [...userSourceSet].some((u) => u.replace(/s$/, "") === sourceNorm);
 
     if (!sourceMatches) continue;
 

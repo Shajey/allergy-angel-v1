@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { useProfileContext } from '../context/ProfileContext';
 
 type ItemType = 'medication' | 'supplement' | 'allergy';
 
@@ -27,6 +28,7 @@ interface ProfileData {
 }
 
 export default function AngelProfilePage() {
+  const { selectedProfileId } = useProfileContext();
   const [type, setType] = useState<ItemType>('medication');
   const [value, setValue] = useState('');
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -34,12 +36,13 @@ export default function AngelProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // ── Fetch profile on mount ─────────────────────────────────────
+  // ── Fetch profile on mount (scoped to selected profile) ─────────
   useEffect(() => {
+    if (!selectedProfileId) return;
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch('/api/profile');
+        const res = await fetch(`/api/profile?profileId=${encodeURIComponent(selectedProfileId)}`);
         if (!res.ok) {
           const body = await res.json().catch(() => null);
           throw new Error(body?.error ?? `HTTP ${res.status}`);
@@ -60,14 +63,15 @@ export default function AngelProfilePage() {
     }
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [selectedProfileId]);
 
   // ── Save helper (PATCH to Supabase) ────────────────────────────
   const saveProfile = useCallback(async (updates: Partial<ProfileData>) => {
+    if (!selectedProfileId) return;
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch('/api/profile', {
+      const res = await fetch(`/api/profile?profileId=${encodeURIComponent(selectedProfileId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
@@ -87,7 +91,7 @@ export default function AngelProfilePage() {
     } finally {
       setSaving(false);
     }
-  }, []);
+  }, [selectedProfileId]);
 
   // ── Add item ───────────────────────────────────────────────────
   const handleAdd = async () => {
@@ -145,6 +149,13 @@ export default function AngelProfilePage() {
   const canAdd = value.trim().length > 0 && !saving;
 
   // ── Render ─────────────────────────────────────────────────────
+  if (!selectedProfileId) {
+    return (
+      <div className="p-6 max-w-xl mx-auto">
+        <p className="text-sm text-gray-500">Select a profile to manage.</p>
+      </div>
+    );
+  }
   if (loading) {
     return (
       <div className="p-6 max-w-xl mx-auto">

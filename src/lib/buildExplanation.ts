@@ -108,6 +108,10 @@ function buildEntry(
     entry = buildCrossReactiveEntry(m, taxonomyVersion);
   } else if (m.rule === "medication_interaction") {
     entry = buildInteractionEntry(m, taxonomyVersion);
+  } else if (m.rule === "supplement_medication_interaction") {
+    entry = buildSupplementMedInteractionEntry(m, taxonomyVersion);
+  } else if (m.rule === "food_medication_interaction") {
+    entry = buildFoodMedInteractionEntry(m, taxonomyVersion);
   }
   if (entry && m.ruleCode) {
     entry.ruleCode = m.ruleCode;
@@ -164,6 +168,38 @@ function buildInteractionEntry(
     summary: `${pair[0]} may interact with ${pair[1] ?? "unknown"}`,
     ruleType: "interaction",
     matchedTerm,
+    taxonomyVersion,
+  };
+}
+
+function buildSupplementMedInteractionEntry(
+  m: ExplainableMatch,
+  taxonomyVersion: string
+): ExplanationEntry {
+  const supplement = str(m.details.supplement);
+  const medication = str(m.details.medication);
+  const reason = str(m.details.reason);
+
+  return {
+    summary: reason || `${supplement} may interact with ${medication}`,
+    ruleType: "interaction",
+    matchedTerm: [supplement, medication].filter(Boolean).join(", "),
+    taxonomyVersion,
+  };
+}
+
+function buildFoodMedInteractionEntry(
+  m: ExplainableMatch,
+  taxonomyVersion: string
+): ExplanationEntry {
+  const food = str(m.details.food);
+  const medication = str(m.details.medication);
+  const reason = str(m.details.reason);
+
+  return {
+    summary: reason || `${food} may interact with ${medication}`,
+    ruleType: "interaction",
+    matchedTerm: [food, medication].filter(Boolean).join(", "),
     taxonomyVersion,
   };
 }

@@ -18,6 +18,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useProfileContext } from "../context/ProfileContext";
 import { WhyDisclosure } from "@/components/shared/WhyDisclosure.js";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -308,6 +309,7 @@ function InsightRow({
 export default function InsightsPage() {
   const [searchParams] = useSearchParams();
   const highlightCheckId = searchParams.get("highlightCheckId");
+  const { selectedProfileId } = useProfileContext();
 
   const [data, setData] = useState<FeedResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -315,34 +317,24 @@ export default function InsightsPage() {
 
   // Phase 10F: local vote state (fingerprint → vote) for optimistic UI
   const [votes, setVotes] = useState<Record<string, VoteValue>>({});
-  const profileIdRef = useRef<string>("");
 
   // Ref for auto-scrolling to the first highlighted insight
   const highlightRef = useRef<HTMLLIElement | null>(null);
   const didScroll = useRef(false);
 
   useEffect(() => {
+    if (!selectedProfileId) {
+      setLoading(false);
+      setData(null);
+      return;
+    }
+    setLoading(true);
     let cancelled = false;
 
     async function fetchFeed() {
       try {
-        // Step 1: get profile to obtain profileId
-        const profileRes = await fetch("/api/profile");
-        if (!profileRes.ok) {
-          const body = await profileRes.json().catch(() => null);
-          throw new Error(body?.error ?? `Could not load profile (HTTP ${profileRes.status})`);
-        }
-        const profileJson = await profileRes.json();
-        const profileId = profileJson?.profile?.id;
-
-        if (!profileId) {
-          throw new Error("Profile ID not found");
-        }
-        profileIdRef.current = profileId;
-
-        // Step 2: fetch the insights feed
         const feedRes = await fetch(
-          `/api/insights/feed?profileId=${encodeURIComponent(profileId)}&windowHours=48&limit=20`,
+          `/api/insights/feed?profileId=${encodeURIComponent(selectedProfileId)}&windowHours=48&limit=20`,
         );
         if (!feedRes.ok) {
           const body = await feedRes.json().catch(() => null);
@@ -372,11 +364,12 @@ export default function InsightsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedProfileId]);
 
   // Phase 10F: optimistic vote handler
   const handleVote = useCallback(
     (fingerprint: string, insight: FeedInsight, vote: VoteValue) => {
+      if (!selectedProfileId) return;
       // Optimistic update
       setVotes((prev) => ({ ...prev, [fingerprint]: vote }));
 
@@ -385,7 +378,7 @@ export default function InsightsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          profileId: profileIdRef.current,
+          profileId: selectedProfileId,
           insight: {
             type: insight.type,
             priorityHints: insight.priorityHints,
@@ -403,7 +396,7 @@ export default function InsightsPage() {
         });
       });
     },
-    [],
+    [selectedProfileId],
   );
 
   // Auto-scroll to the first highlighted insight once data loads
@@ -422,6 +415,15 @@ export default function InsightsPage() {
     return (
       <div className="p-6 max-w-xl mx-auto">
         <p className="text-sm text-gray-500">Analyzing patterns...</p>
+      </div>
+    );
+  }
+
+  // ── No profile selected ──
+  if (!selectedProfileId) {
+    return (
+      <div className="p-6 max-w-xl mx-auto">
+        <p className="text-sm text-gray-500">Select a profile to view insights.</p>
       </div>
     );
   }

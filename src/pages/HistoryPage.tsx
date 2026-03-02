@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useProfileContext } from '../context/ProfileContext';
 
 /**
  * Phase 9C – History List (wired to Supabase via GET /api/history)
@@ -40,16 +41,18 @@ function RiskBadge({ level }: { level: string }) {
 }
 
 export default function HistoryPage() {
+  const { selectedProfileId } = useProfileContext();
   const [checks, setChecks] = useState<CheckSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!selectedProfileId) return;
     let cancelled = false;
 
     async function fetchHistory() {
       try {
-        const res = await fetch('/api/history');
+        const res = await fetch(`/api/history?profileId=${encodeURIComponent(selectedProfileId)}`);
         if (!res.ok) {
           const body = await res.json().catch(() => null);
           throw new Error(body?.error ?? `HTTP ${res.status}`);
@@ -65,7 +68,7 @@ export default function HistoryPage() {
 
     fetchHistory();
     return () => { cancelled = true; };
-  }, []);
+  }, [selectedProfileId]);
 
   return (
     <div className="p-6 max-w-xl mx-auto">
@@ -74,7 +77,11 @@ export default function HistoryPage() {
         <p className="text-sm text-gray-600 mt-1">Your recent checks.</p>
       </div>
 
-      {loading ? (
+      {!selectedProfileId ? (
+        <div className="mt-6">
+          <p className="text-sm text-gray-500">Select a profile to view history.</p>
+        </div>
+      ) : loading ? (
         <div className="mt-6">
           <p className="text-sm text-gray-500">Loading...</p>
         </div>

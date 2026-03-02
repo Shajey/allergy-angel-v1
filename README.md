@@ -83,7 +83,26 @@ Then restart the dev server.
 - **Vite** (frontend) runs on `http://localhost:5173`
 - **Vercel dev** (API server) runs on `http://localhost:3000`
 
+When running both, Vite proxies `/api` to Vercel dev so the app works from 5173.
+
 Admin API calls must go to the **API server** port (3000), not the Vite port.
+
+### Phase 0.9 – Env Parity Diagnostics
+
+Single-command harness to validate consistency across Vite dev, Vercel dev, and production:
+
+```bash
+# Terminal A: Vite
+npm run dev -- --port 5173
+
+# Terminal B: Vercel dev
+npx vercel dev
+
+# Terminal C: Run harness
+npm run diagnose:env
+```
+
+Probes profile, vigilance, and history APIs; diagnoses `vigilanceActive: false` / empty `pressureSources` (no checks? wrong window? profile drift?).
 
 ### Smoke Test
 
