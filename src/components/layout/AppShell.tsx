@@ -32,32 +32,34 @@ function AppShell() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header - hamburger LEFT, logo CENTER, bell RIGHT */}
+      {/* Mobile Header - Phase 18.3: Two-line layout to avoid truncation */}
       <header className="md:hidden bg-white border-b border-gray-200 shadow-sm relative z-50">
-        <div className="flex items-center justify-between h-16 px-4">
-          {/* Hamburger - LEFT */}
+        {/* Row 1: Hamburger | Logo | Notifications */}
+        <div className="flex items-center justify-between h-14 px-4">
           <button
             onClick={() => setDrawerOpen(true)}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors -ml-2"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
           </button>
 
-          {/* Logo - CENTER (absolutely positioned for true center) */}
           <Link
             to="/"
-            className="absolute left-1/2 -translate-x-1/2 text-xl font-bold text-gray-900 hover:text-emerald-700 transition-colors"
+            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-lg font-bold text-gray-900 hover:text-emerald-700 transition-colors"
             aria-label="Go to Allergy Angel home"
           >
+            <img src="/icons/icon.svg" alt="" className="h-7 w-7 flex-shrink-0" aria-hidden />
             Allergy Angel
           </Link>
 
-          {/* Profile switcher + Notifications - RIGHT */}
-          <div className="flex items-center gap-2">
-            <ProfileSwitcher />
+          <div className="min-w-[44px] flex justify-end">
             <NotificationsPanel />
           </div>
+        </div>
+        {/* Row 2: Profile switcher full-width */}
+        <div className="px-4 pb-2">
+          <ProfileSwitcher variant="full-width" />
         </div>
       </header>
 
@@ -68,9 +70,10 @@ function AppShell() {
             {/* Logo */}
             <Link
               to="/"
-              className="text-lg sm:text-xl font-bold text-gray-900 hover:text-emerald-700 transition-colors"
+              className="flex items-center gap-2 text-lg sm:text-xl font-bold text-gray-900 hover:text-emerald-700 transition-colors"
               aria-label="Go to Allergy Angel home"
             >
+              <img src="/icons/icon.svg" alt="" className="h-8 w-8 flex-shrink-0" aria-hidden />
               Allergy Angel
             </Link>
 
@@ -104,8 +107,8 @@ function AppShell() {
 
       <VigilanceBanner />
 
-      {/* Main Content */}
-      <main className="min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-73px)]">
+      {/* Main Content - mobile header is ~2 rows, desktop single row */}
+      <main className="min-h-[calc(100vh-120px)] md:min-h-[calc(100vh-73px)]">
         <Outlet />
       </main>
 
