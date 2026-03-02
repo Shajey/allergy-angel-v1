@@ -52,6 +52,7 @@
     "replay:validate:ci": "STRICT=true tsx eval/replay-validate.ts",
     "smoke:loop": "bash scripts/smoke-promotion-loop.sh",
     "diagnose:env": "tsx scripts/diagnose-env-parity.ts",
+    "icons:generate": "tsx scripts/generate-pwa-icons.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -88,6 +89,7 @@
     "globals": "^16.5.0",
     "jsdom": "^27.0.1",
     "postcss": "^8.5.6",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^3.4.19",
     "to-ico": "^1.1.5",
