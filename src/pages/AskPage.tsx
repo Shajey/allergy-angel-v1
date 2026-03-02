@@ -72,7 +72,9 @@ export default function AskPage() {
     setText('');
   }, []);
 
-  const canSubmit = text.trim().length > 0;
+  const hasInput = text.trim().length > 0;
+  const hasImage = !!imageBase64;
+  const canSubmit = hasInput || hasImage;
 
   const handleSubmit = async () => {
     if (!canSubmit || isSubmitting) return;
@@ -82,11 +84,13 @@ export default function AskPage() {
 
     try {
       // ── Call real extraction endpoint (Phase 7+ persistence happens server-side)
-      const extractBody: { rawText: string; fromImage?: boolean; profile_id?: string } = {
+      const extractBody: { rawText: string; fromImage?: boolean; image?: string; imageType?: string; profile_id?: string } = {
         rawText: text.trim(),
       };
       if (imageBase64) {
         extractBody.fromImage = true;
+        extractBody.image = imageBase64;
+        extractBody.imageType = imageType;
       }
       if (selectedProfileId) extractBody.profile_id = selectedProfileId;
       const extractRes = await fetch('/api/extract', {
@@ -171,11 +175,11 @@ export default function AskPage() {
         <button
           onClick={handleSubmit}
           disabled={!canSubmit || isSubmitting}
-          className={`w-full rounded-md px-4 py-3 text-sm font-medium transition-colors
+          className={`w-full rounded-lg px-4 py-3 text-lg font-medium transition-all min-h-[48px]
             ${
-              canSubmit
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              canSubmit && !isSubmitting
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }
           `}
         >

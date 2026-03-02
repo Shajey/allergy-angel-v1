@@ -11,11 +11,56 @@ import { ImagePreview } from "./ImagePreview";
 const SUPPORTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"] as const;
 const ACCEPT_IMAGES = "image/png,image/jpeg,image/gif,image/webp";
 
+/** Max dimension (px) — keeps under Vercel 4.5MB body limit */
+const MAX_DIMENSION = 1024;
+const JPEG_QUALITY = 0.82;
+
 interface PhotoCaptureProps {
   onCapture: (imageBase64: string, mimeType?: string) => void;
   isExtracting?: boolean;
   previewDataUrl?: string | null;
   onClear?: () => void;
+}
+
+/**
+ * Compress image via canvas to stay under Vercel 4.5MB body limit.
+ * Resizes to max 1024px, outputs JPEG at 0.82 quality.
+ */
+function compressImage(file: File): Promise<{ base64: string; mimeType: string }> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement("canvas");
+      let { width, height } = img;
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        if (width > height) {
+          height = Math.round((height * MAX_DIMENSION) / width);
+          width = MAX_DIMENSION;
+        } else {
+          width = Math.round((width * MAX_DIMENSION) / height);
+          height = MAX_DIMENSION;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas context unavailable"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+      const base64 = dataUrl.split(",")[1] ?? "";
+      resolve({ base64, mimeType: "image/jpeg" });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image"));
+    };
+    img.src = url;
+  });
 }
 
 function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }> {
@@ -64,7 +109,8 @@ export function PhotoCapture({
       }
       setCameraError(null);
       try {
-        const { base64, mimeType } = await fileToBase64(file);
+        // Compress to stay under Vercel 4.5MB body limit (HTTP 413)
+        const { base64, mimeType } = await compressImage(file);
         onCapture(base64, mimeType);
       } catch (err) {
         console.error("[PhotoCapture] File read failed:", err);
