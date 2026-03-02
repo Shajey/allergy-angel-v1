@@ -665,58 +665,67 @@ export default function HistoryCheckDetailPage() {
   const matched = verdict?.matched ?? [];
 
   // ── Success state ──────────────────────────────────────────────
+  // Phase 18.3.1: min-h-[100dvh] + sticky footer for mobile viewport (iOS safe area)
   return (
-    <div className="p-4 sm:p-6 max-w-xl mx-auto space-y-4 overflow-x-hidden">
-      {/* Back link */}
-      <Link
-        to="/history"
-        className="text-sm font-medium text-emerald-700 hover:underline"
-      >
-        Back to history
-      </Link>
-
-      {/* A) Header */}
-      <div>
-        <h1 className="text-xl font-semibold text-gray-900">Check</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {formatDate(check.created_at)}
-        </p>
-      </div>
-
-      {/* Phase 10B: Pattern detected badge */}
-      {patternCount > 0 && (
+    <div className="min-h-[100dvh] flex flex-col max-w-xl mx-auto">
+      {/* Scrollable content */}
+      <main className="flex-1 overflow-auto px-4 sm:px-6 pt-4 sm:pt-6 space-y-4 overflow-x-hidden">
+        {/* Back link */}
         <Link
-          to={`/insights?highlightCheckId=${check.id}`}
-          className="block rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800 hover:bg-indigo-100 transition-colors"
+          to="/history"
+          className="text-sm font-medium text-emerald-700 hover:underline"
         >
-          <span className="font-medium">Pattern detected</span>
-          <span className="ml-1 text-indigo-600">
-            — this check appears in {patternCount} insight
-            {patternCount !== 1 ? "s" : ""}. View all patterns.
-          </span>
+          Back to history
         </Link>
-      )}
 
-      {/* B) Verdict + Why? (Phase 10K) — only when verdict exists */}
-      {verdict?.riskLevel && (
-        <VerdictTrustLayer verdict={verdict} checkId={check.id} includeRawText={includeRawText} />
-      )}
+        {/* A) Header */}
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">Check</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {formatDate(check.created_at)}
+          </p>
+        </div>
 
-      {/* Phase 10H: allergen taxonomy awareness note */}
-      <AllergenAlertBanner alerts={allergenAlerts} />
+        {/* Phase 10B: Pattern detected badge */}
+        {patternCount > 0 && (
+          <Link
+            to={`/insights?highlightCheckId=${check.id}`}
+            className="block rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800 hover:bg-indigo-100 transition-colors"
+          >
+            <span className="font-medium">Pattern detected</span>
+            <span className="ml-1 text-indigo-600">
+              — this check appears in {patternCount} insight
+              {patternCount !== 1 ? "s" : ""}. View all patterns.
+            </span>
+          </Link>
+        )}
 
-      {/* C) Events List */}
-      <EventsList events={events} matched={matched} />
+        {/* B) Verdict + Why? (Phase 10K) — only when verdict exists */}
+        {verdict?.riskLevel && (
+          <VerdictTrustLayer verdict={verdict} checkId={check.id} includeRawText={includeRawText} />
+        )}
 
-      {/* D) Raw Input (collapsible) */}
-      <RawInput text={check.raw_text} />
+        {/* Phase 10H: allergen taxonomy awareness note */}
+        <AllergenAlertBanner alerts={allergenAlerts} />
 
-      {/* E) Follow-up Questions */}
-      <FollowUpQuestions questions={check.follow_up_questions ?? []} />
+        {/* C) Events List */}
+        <EventsList events={events} matched={matched} />
 
-      {/* F) Download Safety Report (Phase 13.6) */}
-      <div className="pt-2 space-y-2">
-        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+        {/* D) Raw Input (collapsible) */}
+        <RawInput text={check.raw_text} />
+
+        {/* E) Follow-up Questions */}
+        <FollowUpQuestions questions={check.follow_up_questions ?? []} />
+
+        {/* Spacer for sticky footer */}
+        <div className="h-24" />
+      </main>
+
+      {/* F) Sticky footer — Download Safety Report (Phase 13.6, 18.3.1) */}
+      <div
+        className="sticky bottom-0 shrink-0 bg-white border-t border-gray-200 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
+      >
+        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer mb-3">
           <input
             type="checkbox"
             checked={includeRawText}
@@ -727,9 +736,13 @@ export default function HistoryCheckDetailPage() {
         </label>
         <a
           href={`/api/report/check/download?checkId=${check.id}&includeRawText=${includeRawText}&format=text`}
-          className="inline-block"
+          className="block"
         >
-          <Button variant="secondary" size="sm">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-full py-3 font-medium"
+          >
             Download report
           </Button>
         </a>

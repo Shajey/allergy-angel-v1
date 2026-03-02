@@ -86,17 +86,19 @@ export default function VigilanceDrawer({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
+        {/* Phase 18.3.2: Full-screen opaque backdrop — no content peeking through */}
         <DialogPrimitive.Overlay
           className={cn(
-            "fixed inset-0 z-50 bg-black/50",
+            "fixed inset-0 z-[100] bg-black/60",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
           )}
         />
 
+        {/* Full width on mobile, max 420px on larger screens */}
         <DialogPrimitive.Content
           className={cn(
-            "fixed right-0 top-0 z-50 h-full w-[90vw] max-w-[420px] bg-white shadow-xl",
+            "fixed right-0 top-0 bottom-0 z-[101] h-full w-full max-w-[420px] sm:w-[90vw] bg-white shadow-xl",
             "flex flex-col",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
