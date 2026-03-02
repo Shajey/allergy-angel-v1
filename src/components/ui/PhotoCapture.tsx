@@ -37,22 +37,6 @@ function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }>
   });
 }
 
-/** Best-effort camera permission check. Permissions API may not be supported. */
-async function checkCameraPermission(): Promise<{ granted: boolean; message?: string }> {
-  try {
-    const result = await navigator.permissions.query({ name: "camera" as PermissionName });
-    if (result.state === "denied") {
-      return {
-        granted: false,
-        message: "Camera access denied. Check your browser settings.",
-      };
-    }
-    return { granted: true };
-  } catch {
-    return { granted: true };
-  }
-}
-
 const CAMERA_DENIED_HELP =
   "On iOS: Settings → Safari → Camera. On Android: Settings → Apps → Browser → Permissions.";
 
@@ -91,16 +75,6 @@ export function PhotoCapture({
     [onCapture]
   );
 
-  const handleTakePhotoClick = useCallback(async () => {
-    setCameraError(null);
-    const perm = await checkCameraPermission();
-    if (!perm.granted && perm.message) {
-      setCameraError(perm.message);
-      return;
-    }
-    cameraInputRef.current?.click();
-  }, []);
-
   return (
     <div className="space-y-3">
       {previewDataUrl ? (
@@ -123,39 +97,42 @@ export function PhotoCapture({
         </div>
       ) : (
         <div className="flex gap-2">
-          {/* Direct camera – opens camera immediately on mobile (capture="environment") */}
-          <button
-            type="button"
-            onClick={handleTakePhotoClick}
-            disabled={isExtracting}
-            className="flex-1 flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] rounded-md border-2 border-emerald-600 bg-emerald-600 px-4 py-3 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+          {/* Direct camera – iOS requires: accept="image/*", no display:none, label triggers input */}
+          <label
+            htmlFor="photo-capture-camera"
+            className={`relative flex-1 flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] rounded-md border-2 border-emerald-600 bg-emerald-600 px-4 py-3 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors cursor-pointer ${
+              isExtracting ? "opacity-50 pointer-events-none" : ""
+            }`}
           >
             <Camera className="h-5 w-5 shrink-0" />
             Take Photo
-          </button>
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept={ACCEPT_IMAGES}
-            capture="environment"
-            onChange={handleFileChange}
-            className="hidden"
-            aria-label="Take photo with camera"
-          />
-          {/* File picker – for existing photos */}
+            <input
+              id="photo-capture-camera"
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              aria-label="Take photo with camera"
+            />
+          </label>
+          {/* File picker – for existing photos (opacity-0 overlay for iOS) */}
           <label
-            className={`flex-1 flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer ${
+            htmlFor="photo-capture-upload"
+            className={`relative flex-1 flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer ${
               isExtracting ? "opacity-50 pointer-events-none" : ""
             }`}
           >
             <Upload className="h-5 w-5 shrink-0" />
             Upload
             <input
+              id="photo-capture-upload"
               ref={uploadInputRef}
               type="file"
               accept={ACCEPT_IMAGES}
               onChange={handleFileChange}
-              className="hidden"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               aria-label="Upload image from device"
             />
           </label>
