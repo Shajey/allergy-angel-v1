@@ -1,4 +1,4 @@
-const CACHE_NAME = 'allergy-angel-v1';
+const CACHE_NAME = 'allergy-angel-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -31,6 +31,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Skip non-GET and API requests
   if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+    return;
+  }
+  // Don't cache icons/favicon — always fetch fresh so app icon updates deploy correctly
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith('/icons/') || url.pathname === '/favicon.ico') {
+    event.respondWith(fetch(event.request));
     return;
   }
 
