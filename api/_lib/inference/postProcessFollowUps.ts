@@ -39,13 +39,15 @@ export function hasGlucoseIntent(rawText: string): boolean {
 }
 
 /**
- * True if verdict is high risk due to direct allergen taxonomy match.
+ * True if verdict is high risk due to direct allergen match or dish-allergen match.
  * Cross-reactive (medium) does NOT trigger evidence follow-ups.
  */
 export function hasHighAllergenVerdict(verdict: { riskLevel?: string; matched?: { rule: string }[] } | null | undefined): boolean {
   if (!verdict) return false;
   if (verdict.riskLevel !== "high") return false;
-  const hasAllergyMatch = (verdict.matched ?? []).some((m) => m.rule === "allergy_match");
+  const hasAllergyMatch = (verdict.matched ?? []).some(
+    (m) => m.rule === "allergy_match" || m.rule === "dish_allergen"
+  );
   return hasAllergyMatch;
 }
 
@@ -81,7 +83,9 @@ export function postProcessFollowUps(args: {
     // Safety-first: evidence/label questions, no carbs
     const meta = verdict.meta ?? {};
     const matchedChild = (meta.matchedChild as string) ?? (meta.matchedCategory as string) ?? "the listed allergens";
-    const allergyMatch = (verdict.matched ?? []).find((m) => m.rule === "allergy_match");
+    const allergyMatch = (verdict.matched ?? []).find(
+      (m) => m.rule === "allergy_match" || m.rule === "dish_allergen"
+    );
     const details = allergyMatch?.details ?? {};
     const allergen = (details.allergen as string) ?? matchedChild;
     const matchedCategory = (details.matchedCategory as string) ?? (meta.matchedCategory as string);

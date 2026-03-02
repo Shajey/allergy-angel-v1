@@ -172,6 +172,86 @@ export type CrossReactiveRelation = {
   riskModifier: number;
 };
 
+/**
+ * Phase 18.1.1 – Dishes that commonly contain allergens (not explicit in dish name).
+ * When meal matches a dish, treat as HIGH risk and ask for confirmation.
+ * Keys: normalized dish name (lowercase). Values: canonical allergen terms.
+ */
+export const DISH_COMMON_ALLERGENS: Record<string, string[]> = {
+  "pad thai": ["peanut"],
+  "pad thai noodles": ["peanut"],
+  "thai noodles": ["peanut"],
+  "kung pao": ["peanut"],
+  "kung pao chicken": ["peanut"],
+  satay: ["peanut"],
+  "chicken satay": ["peanut"],
+  "peanut sauce": ["peanut"],
+  "spring roll": ["peanut"],
+  "spring rolls": ["peanut"],
+  "vietnamese spring roll": ["peanut"],
+  "vietnamese spring rolls": ["peanut"],
+  "asian noodle": ["peanut"],
+  "asian noodles": ["peanut"],
+  mole: ["tree_nut"],
+  "mole sauce": ["tree_nut"],
+  pesto: ["tree_nut"],
+  "pesto sauce": ["tree_nut"],
+  baklava: ["tree_nut"],
+  "baklava pastry": ["tree_nut"],
+  marzipan: ["tree_nut"],
+  frangipane: ["tree_nut"],
+};
+
+/** Build set of allergen category keys the user has (peanut, tree_nut, etc.). */
+function buildUserAllergenCategories(profileAllergies: string[]): Set<string> {
+  const categories = new Set<string>();
+  for (const a of profileAllergies) {
+    const norm = normalizeToken(a).replace(/\s+/g, "_");
+    const withSpace = normalizeToken(a);
+    const resolved = USER_ALLERGY_TO_SOURCE[norm] ?? USER_ALLERGY_TO_SOURCE[withSpace];
+    if (resolved) {
+      categories.add(resolved);
+    } else {
+      const parent = getParentKeyForTerm(a);
+      if (parent) categories.add(parent);
+      categories.add(normalizePlural(norm));
+    }
+  }
+  return categories;
+}
+
+/**
+ * Check if meal text matches a dish that commonly contains an allergen the user has.
+ * Returns { allergen, matchedDish } or null.
+ */
+export function getDishAllergenMatch(
+  mealText: string,
+  profileAllergies: string[]
+): { allergen: string; matchedDish: string } | null {
+  const normalized = stripPunctuation(normalizeToken(mealText));
+  if (!normalized) return null;
+
+  const userCategories = buildUserAllergenCategories(profileAllergies);
+
+  // Sort dish names by length descending (longer first)
+  const dishes = Object.keys(DISH_COMMON_ALLERGENS).sort((a, b) => b.length - a.length);
+
+  for (const dish of dishes) {
+    const dishNorm = normalizeToken(dish);
+    if (!dishNorm) continue;
+    if (normalized.includes(dishNorm)) {
+      const allergens = DISH_COMMON_ALLERGENS[dish];
+      for (const allergen of allergens) {
+        const allergenNorm = normalizeToken(allergen);
+        if (userCategories.has(allergenNorm)) {
+          return { allergen: allergenNorm, matchedDish: dish };
+        }
+      }
+    }
+  }
+  return null;
+}
+
 /** v10j.1 seed data. Deterministic cross-reactive associations. */
 export const CROSS_REACTIVE_REGISTRY: CrossReactiveRelation[] = [
   { source: "tree_nut", related: ["coconut", "mango", "pink peppercorn"], riskModifier: 10 },

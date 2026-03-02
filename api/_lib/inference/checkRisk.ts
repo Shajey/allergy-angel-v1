@@ -25,11 +25,13 @@ import {
   getAllergenSeverity,
   resolveCategoryForSeverity,
   getCrossReactiveMatch,
+  getDishAllergenMatch,
   ALLERGEN_TAXONOMY_VERSION,
   type AllergenParentKey,
 } from "./allergenTaxonomy.js";
 import {
   RULE_ALLERGEN_MATCH,
+  RULE_DISH_ALLERGEN,
   RULE_CROSS_REACTIVE,
   RULE_MED_INTERACTION,
   RULE_SUPPLEMENT_MED_INTERACTION,
@@ -207,9 +209,38 @@ export function checkRisk(args: {
             },
           });
         } else {
-          // ── Phase 10J: Cross-reactive check (MEDIUM) ─────────────
-          // Only when no direct taxonomy match. Do NOT override High.
-          const crossMatch = getCrossReactiveMatch(
+          // ── Phase 18.1.1: Dish commonly contains allergen (HIGH) ─
+          // e.g. pad thai → peanut. Ask for confirmation.
+          const dishMatch = getDishAllergenMatch(mealText, profile.known_allergies);
+          if (dishMatch && highestRisk !== "high") {
+            highestRisk = "high";
+            const matchedCategory = resolveCategoryForSeverity(dishMatch.allergen);
+            const severity = getAllergenSeverity(matchedCategory);
+            const meta: VerdictMeta = {
+              taxonomyVersion: ALLERGEN_TAXONOMY_VERSION,
+              matchedCategory,
+              matchedChild: dishMatch.allergen,
+              severity,
+              crossReactive: false,
+            };
+            if (!bestAllergyMeta || severity > (bestAllergyMeta.severity ?? 0)) {
+              bestAllergyMeta = meta;
+            }
+            matched.push({
+              rule: "dish_allergen",
+              ruleCode: RULE_DISH_ALLERGEN,
+              details: {
+                meal: mealText,
+                allergen: dishMatch.allergen,
+                matchedDish: dishMatch.matchedDish,
+                matchedCategory,
+                severity,
+              },
+            });
+          } else if (!dishMatch) {
+            // ── Phase 10J: Cross-reactive check (MEDIUM) ─────────────
+            // Only when no direct taxonomy match. Do NOT override High.
+            const crossMatch = getCrossReactiveMatch(
             profile.known_allergies,
             mealText
           );
@@ -240,6 +271,7 @@ export function checkRisk(args: {
                 severity,
               },
             });
+          }
           }
         }
 
@@ -349,6 +381,9 @@ export function checkRisk(args: {
         return `Meal "${m.details.meal}" matches ${parentKey} allergy via child token "${m.details.allergen}" (severity ${severity}/100).`;
       }
       return `Meal "${m.details.meal}" matches known allergen "${m.details.allergen}" (severity ${severity}/100).`;
+    }
+    if (m.rule === "dish_allergen") {
+      return `"${m.details.matchedDish}" commonly contains ${m.details.allergen} (severity ${m.details.severity ?? 50}/100).`;
     }
     if (m.rule === "cross_reactive") {
       return `"${m.details.matchedTerm}" is associated with ${m.details.source} allergies (cross-reactive).`;

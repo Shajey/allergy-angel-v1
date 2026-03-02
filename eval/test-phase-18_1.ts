@@ -5,6 +5,7 @@
  * - Cross-reactive: when food (e.g. mango) is explicit, ask awareness question
  */
 
+import { checkRisk } from "../api/_lib/inference/checkRisk.js";
 import { isAllergenExplicitInInput } from "../api/_lib/inference/explicitMentionCheck.js";
 import { postProcessFollowUps } from "../api/_lib/inference/postProcessFollowUps.js";
 
@@ -149,6 +150,30 @@ function runTests(): void {
     if (assert(out.followUpQuestions.length === 0, "cross-reactive (no meta source/matchedTerm) → []")) passed++;
     else failed++;
   }
+
+  console.log("\n--- 18.1 Dish→Allergen (pad thai + peanut) ---");
+
+  const verdict = checkRisk({
+    profile: { known_allergies: ["peanut", "Peanuts"], current_medications: [] },
+    events: [{ type: "meal", fields: { meal: "pad thai" } }],
+  });
+  const post = postProcessFollowUps({
+    rawText: "pad thai",
+    events: [{ type: "meal", fields: { meal: "pad thai" } }],
+    followUpQuestions: [],
+    verdict,
+  });
+
+  if (assert(verdict.riskLevel === "high", "pad thai + peanut → HIGH risk")) passed++;
+  else failed++;
+  if (
+    assert(
+      post.followUpQuestions.length >= 1 && post.followUpQuestions.some((q) => /might contain|label|ingredient/i.test(q)),
+      "pad thai + peanut → follow-up questions"
+    )
+  )
+    passed++;
+  else failed++;
 
   console.log(`\n=== Phase 18.1 Results: ${passed} passed, ${failed} failed ===`);
   process.exit(failed > 0 ? 1 : 0);
