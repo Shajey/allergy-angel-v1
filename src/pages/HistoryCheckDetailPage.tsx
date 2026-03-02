@@ -404,7 +404,7 @@ function VerdictTrustLayer({
               {checkId && (
                 <div className="pt-1">
                   <a
-                    href={`/api/report/check/download?checkId=${checkId}&includeRawText=${includeRawText}`}
+                    href={`/api/report/check/download?checkId=${checkId}&includeRawText=${includeRawText}&format=text`}
                     className="text-emerald-600 hover:underline"
                   >
                     Download safety report
@@ -726,7 +726,7 @@ export default function HistoryCheckDetailPage() {
           <span>Include original text (may contain sensitive info)</span>
         </label>
         <a
-          href={`/api/report/check/download?checkId=${check.id}&includeRawText=${includeRawText}`}
+          href={`/api/report/check/download?checkId=${check.id}&includeRawText=${includeRawText}&format=text`}
           className="inline-block"
         >
           <Button variant="secondary" size="sm">

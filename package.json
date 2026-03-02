@@ -43,6 +43,7 @@
     "test:phase-16": "tsx eval/test-phase-16.ts",
     "test:phase-17": "tsx eval/test-phase-17.ts",
     "test:phase-18_1": "tsx eval/test-phase-18_1.ts",
+    "test:phase-18_2": "tsx eval/test-phase-18_2.ts",
     "promo:pack": "tsx eval/promo-packager.ts",
     "pr:pack": "tsx eval/pr-packager.ts",
     "pr:apply": "tsx eval/apply-pr-package.ts",

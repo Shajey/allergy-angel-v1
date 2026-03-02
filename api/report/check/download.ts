@@ -5,14 +5,19 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getSupabaseClient } from "../../_lib/supabaseClient.js";
 import { isUuidLike } from "../../_lib/validation/isUuidLike.js";
 import { buildCheckReport, reportFilename } from "../../_lib/report/buildCheckReport.js";
+import {
+  formatReportAsText,
+  textReportFilename,
+} from "../../_lib/report/formatReportAsText.js";
 
 /**
  * Phase 13.6 – Safety Report Download
+ * Phase 18.2 – Human-readable text format
  *
- * GET /api/report/check/download?checkId=<uuid>[&profileId=<uuid>][&includeRawText=true]
+ * GET /api/report/check/download?checkId=<uuid>[&profileId=<uuid>][&includeRawText=true][&format=text]
  *
- * Same payload as /api/report/check but with Content-Disposition for browser download.
- * Filename: AA_SafetyReport_<profileId>_<checkId>_<taxonomyVersionOrUnknown>.json
+ * format=text  → plain text (.txt) for parents
+ * format=json  or omit → JSON (legacy)
  */
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -32,6 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const includeRawText = req.query.includeRawText === "true" || req.query.includeRawText === "1";
+    const formatText = req.query.format === "text" || req.query.format === "txt";
 
     const supabase = getSupabaseClient();
 
@@ -71,8 +77,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         verdict: check.verdict,
       },
       events: events ?? [],
-      includeRawText,
+      includeRawText: includeRawText || formatText,
     });
+
+    if (formatText) {
+      // Phase 18.2: Human-readable text report
+      let profile: { name: string; allergies: string[]; medications: string[]; supplements: string[] } | undefined;
+      try {
+        const { data: profileRow } = await supabase
+          .from("profiles")
+          .select("display_name, known_allergies, current_medications, supplements")
+          .eq("id", check.profile_id)
+          .maybeSingle();
+        if (profileRow) {
+          const meds = (profileRow.current_medications ?? []) as { name?: string }[];
+          profile = {
+            name: String(profileRow.display_name ?? "Unknown"),
+            allergies: (profileRow.known_allergies ?? []) as string[],
+            medications: meds.map((m) => String(m?.name ?? m)).filter(Boolean),
+            supplements: (profileRow.supplements ?? []) as string[],
+          };
+        }
+      } catch {
+        // Profile fetch best-effort
+      }
+
+      const reportData = {
+        meta: report.meta,
+        input: {
+          events: report.input.events.map((e) => ({
+            event_type: e.event_type,
+            event_data: e.event_data,
+          })),
+          rawText: report.input.rawText ?? check.raw_text,
+        },
+        output: report.output,
+        profile,
+      };
+
+      const rawMatched = (check.verdict?.matched ?? []) as Array<{
+        rule: string;
+        ruleCode?: string;
+        details: Record<string, unknown>;
+      }>;
+
+      const textReport = formatReportAsText(reportData, {
+        includeOriginalText: includeRawText,
+        rawMatched: rawMatched.length > 0 ? rawMatched : undefined,
+      });
+
+      const filename = textReportFilename(check.created_at);
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      return res.status(200).send(textReport);
+    }
 
     const taxonomyVersion = report.meta.taxonomyVersion;
     const filename = reportFilename(report.meta.profileId, report.meta.checkId, taxonomyVersion);
