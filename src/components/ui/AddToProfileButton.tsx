@@ -114,12 +114,12 @@ export function AddToProfileButton({
       type="button"
       onClick={handleAdd}
       className={cn(
-        "text-sm text-gray-600 hover:text-gray-900 hover:underline flex items-center gap-1",
+        "text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-1.5 py-1 -ml-1 rounded-md hover:bg-gray-50 px-1 transition-colors",
         className
       )}
     >
-      <Plus className="w-4 h-4 flex-shrink-0" aria-hidden />
-      Add to profile
+      <Plus className="w-4 h-4 flex-shrink-0 text-gray-500" aria-hidden />
+      + Add to profile
     </button>
   );
 }

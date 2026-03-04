@@ -423,7 +423,7 @@ function VerdictTrustLayer({
 }
 
 // ── Events List ─────────────────────────────────────────────────────
-// Phase 19: Add to profile for medication/supplement with confidence >= 70%
+// Phase 19: Add to profile for medication/supplement with confidence >= 50%
 
 function EventsList({
   events,
@@ -445,7 +445,7 @@ function EventsList({
           const canAddToProfile =
             selectedProfileId &&
             (ev.event_type === "medication" || ev.event_type === "supplement") &&
-            ev.confidence_score >= 70 &&
+            ev.confidence_score >= 50 &&
             getEventItemName(ev);
           return (
             <li
