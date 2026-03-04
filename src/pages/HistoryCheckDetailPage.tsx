@@ -665,11 +665,11 @@ export default function HistoryCheckDetailPage() {
   const matched = verdict?.matched ?? [];
 
   // ── Success state ──────────────────────────────────────────────
-  // Phase 18.3.1: min-h-[100dvh] + sticky footer for mobile viewport (iOS safe area)
+  // Phase 18.3.1/18.4: flex-1 min-h-0 fills AppShell main; sticky footer, no-bounce
   return (
-    <div className="min-h-[100dvh] flex flex-col max-w-xl mx-auto">
-      {/* Scrollable content */}
-      <main className="flex-1 overflow-auto px-4 sm:px-6 pt-4 sm:pt-6 space-y-4 overflow-x-hidden">
+    <div className="flex-1 min-h-0 flex flex-col max-w-xl mx-auto">
+      {/* Scrollable content - Phase 18.4: no-bounce for iOS */}
+      <main className="flex-1 overflow-auto no-bounce px-4 sm:px-6 pt-4 sm:pt-6 space-y-4 overflow-x-hidden">
         {/* Back link */}
         <Link
           to="/history"

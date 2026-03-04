@@ -31,9 +31,9 @@ function AppShell() {
   
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header - Phase 18.3: Two-line layout to avoid truncation */}
-      <header className="md:hidden bg-white border-b border-gray-200 shadow-sm relative z-50">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gray-50">
+      {/* Mobile Header - Phase 18.3/18.4: Two-line layout, top safe area */}
+      <header className="md:hidden bg-white border-b border-gray-200 shadow-sm relative z-50 pt-safe">
         {/* Row 1: Hamburger | Logo | Notifications */}
         <div className="flex items-center justify-between h-14 px-4">
           <button
@@ -63,8 +63,8 @@ function AppShell() {
         </div>
       </header>
 
-      {/* Desktop Header */}
-      <header className="hidden md:block bg-white border-b border-gray-200 shadow-sm relative z-50">
+      {/* Desktop Header - pt-safe for notch devices */}
+      <header className="hidden md:block bg-white border-b border-gray-200 shadow-sm relative z-50 pt-safe">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -107,8 +107,8 @@ function AppShell() {
 
       <VigilanceBanner />
 
-      {/* Main Content - mobile header is ~2 rows, desktop single row */}
-      <main className="min-h-[calc(100vh-120px)] md:min-h-[calc(100vh-73px)]">
+      {/* Main Content - Phase 18.4: 100dvh, no-bounce, bottom padding for fixed nav */}
+      <main className="flex-1 min-h-0 overflow-auto no-bounce pb-20 md:pb-0 md:min-h-[calc(100dvh-73px)]">
         <Outlet />
       </main>
 

@@ -98,7 +98,7 @@ export default function VigilanceDrawer({
         {/* Full width on mobile, max 420px on larger screens */}
         <DialogPrimitive.Content
           className={cn(
-            "fixed right-0 top-0 bottom-0 z-[101] h-full w-full max-w-[420px] sm:w-[90vw] bg-white shadow-xl",
+            "fixed right-0 top-0 bottom-0 z-[101] h-full w-full max-w-[420px] sm:w-[90vw] bg-white shadow-xl pt-safe",
             "flex flex-col",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
@@ -124,8 +124,8 @@ export default function VigilanceDrawer({
             </DialogPrimitive.Close>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Content - pb-safe for iOS home indicator */}
+          <div className="flex-1 overflow-y-auto pb-safe">
             {loading && (
               <div className="flex items-center justify-center py-12 text-gray-400">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />

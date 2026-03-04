@@ -16,8 +16,8 @@ export default function BottomNav() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200">
       <div
-        className="flex items-center justify-around"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="flex items-center justify-around pt-2"
+        style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }}
       >
         {navItems.map((item) => {
           const Icon = item.icon;

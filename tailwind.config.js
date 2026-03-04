@@ -147,6 +147,10 @@ export default {
         elevated: 'var(--shadow-elevated)',
       },
       spacing: {
+        'safe-top': 'env(safe-area-inset-top, 0px)',
+        'safe-bottom': 'env(safe-area-inset-bottom, 0px)',
+        'safe-left': 'env(safe-area-inset-left, 0px)',
+        'safe-right': 'env(safe-area-inset-right, 0px)',
         0: 'var(--spacing-0)',
         1: 'var(--spacing-1)',
         2: 'var(--spacing-2)',
@@ -188,6 +192,9 @@ export default {
         medium: 'var(--font-weight-medium)',
         semibold: 'var(--font-weight-semibold)',
         bold: 'var(--font-weight-bold)',
+      },
+      minHeight: {
+        'screen-safe': '100dvh',
       },
       lineHeight: {
         tight: 'var(--line-height-tight)',
