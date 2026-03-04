@@ -16,6 +16,65 @@ function nowIso() {
 // SECTION 1: DETERMINISTIC PARSERS (HEURISTICS)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Common OTC and prescription medication names — used to avoid misclassifying as meals */
+const KNOWN_MEDICATION_NAMES = new Set([
+  "tylenol", "acetaminophen", "ibuprofen", "advil", "motrin", "aleve", "naproxen",
+  "aspirin", "excedrin", "midol", "aspirin", "warfarin", "eliquis", "xarelto",
+  "metformin", "lipitor", "atorvastatin", "zoloft", "sertraline", "prozac", "fluoxetine",
+  "lisinopril", "amlodipine", "omeprazole", "prilosec", "nexium", "esomeprazole",
+  "gabapentin", "metoprolol", "losartan", "hydrochlorothiazide", "prednisone",
+  "levothyroxine", "synthroid", "amoxicillin", "azithromycin", "zithromax",
+  "prednisone", "albuterol", "ventolin", "fluticasone", "flonase",
+  "loratadine", "claritin", "cetirizine", "zyrtec", "diphenhydramine", "benadryl",
+  "famotidine", "pepcid", "ranitidine", "zantac", "pantoprazole", "protonix",
+  "tramadol", "hydrocodone", "oxycodone", "morphine", "codeine",
+  "clopidogrel", "plavix", "simvastatin", "zocor", "rosuvastatin", "crestor",
+  "sildenafil", "viagra", "tadalafil", "cialis", "duloxetine", "cymbalta",
+  "venlafaxine", "effexor", "bupropion", "wellbutrin", "escitalopram", "lexapro",
+]);
+
+export function parseMedicationNames(rawText: string): {
+  names: string[];
+  spans: Array<{ field: string; startChar: number; endChar: number }>;
+  isOnlyMedications: boolean;
+} {
+  const lower = rawText.toLowerCase();
+  const names: string[] = [];
+  const spans: Array<{ field: string; startChar: number; endChar: number }> = [];
+
+  // Split on "with", "and", "+", "," to get potential tokens
+  const tokens = lower.split(/\s+(?:with|and|\+)\s+|\s*,\s*/).map((t) => t.trim()).filter(Boolean);
+
+  for (const token of tokens) {
+    const normalized = token.replace(/\s+/g, " ");
+    if (KNOWN_MEDICATION_NAMES.has(normalized)) {
+      if (!names.includes(normalized)) {
+        names.push(normalized);
+        const idx = lower.indexOf(normalized);
+        if (idx >= 0) {
+          spans.push({ field: "fields.medication", startChar: idx, endChar: idx + normalized.length });
+        }
+      }
+    }
+  }
+
+  // Also check whole input for single medication (e.g. "Tylenol" alone)
+  if (tokens.length === 1 && KNOWN_MEDICATION_NAMES.has(tokens[0])) {
+    if (!names.includes(tokens[0])) {
+      names.push(tokens[0]);
+      const idx = lower.indexOf(tokens[0]);
+      if (idx >= 0) {
+        spans.push({ field: "fields.medication", startChar: idx, endChar: idx + tokens[0].length });
+      }
+    }
+  }
+
+  const isOnlyMedications =
+    tokens.length > 0 && tokens.every((t) => KNOWN_MEDICATION_NAMES.has(t.replace(/\s+/g, " ")));
+
+  return { names, spans, isOnlyMedications };
+}
+
 function parseSymptom(rawText: string) {
   const dictionary = [
     "headache",
@@ -164,19 +223,22 @@ function parseMeal(rawText: string) {
   }
 
   // Plain food fallback: "mango", "mango salsa", "peanut butter" — short phrase, no verb
+  // EXCLUDE known medication names (e.g. "Tylenol with ibuprofen" must NOT be meal)
   if (mealName === null && !m) {
     const trimmed = rawText.trim();
     const words = trimmed.split(/\s+/).filter(Boolean);
     const looksLikeNumber = /^\d+(\.\d+)?\s*(mg|mcg|g|ml|mg\/dl)?$/i.test(trimmed);
     const looksLikeMedication = /\b\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml)\b/i.test(rawText);
     const looksLikeSymptom = /\b(headache|rash|nausea|vomiting|diarrhea|cough|fever|itching|hives|sneezing|congestion)\b/i.test(rawText);
+    const containsMedicationName = words.some((w) => KNOWN_MEDICATION_NAMES.has(w.toLowerCase()));
     if (
       words.length >= 1 &&
       words.length <= 6 &&
       trimmed.length <= 80 &&
       !looksLikeNumber &&
       !looksLikeMedication &&
-      !looksLikeSymptom
+      !looksLikeSymptom &&
+      !containsMedicationName
     ) {
       mealName = trimmed;
       spans.push({ field: "fields.meal", startChar: 0, endChar: trimmed.length });
@@ -211,14 +273,52 @@ function confidenceLevelFrom(confidence: number): "Low" | "Medium" | "High" {
 export async function extractFromTextHeuristic(rawText: string) {
   const g = parseGlucose(rawText);
   const med = parseMedication(rawText);
+  const medNames = parseMedicationNames(rawText);
   const meal = parseMeal(rawText);
   const sym = parseSymptom(rawText);
 
   const hasMedicationIntent = /\b(took|take|taken|swallowed|pill|tablet|capsule|medicine|medication)\b/i.test(rawText);
   const hasMealIntent =
     /\b(ate|had|lunch|dinner|breakfast|snack|eating|eat)\b/i.test(rawText) ||
-    // Plain food: "mango", "mango salsa" — short phrase when no other intent
     (meal.name != null && meal.name.length > 0);
+
+  // Medication-by-name: "Tylenol with ibuprofen" — known med names override meal fallback
+  if (medNames.names.length > 0 && g.value === null) {
+    const events: any[] = [];
+    for (let i = 0; i < medNames.names.length; i++) {
+      const name = medNames.names[i];
+      const span = medNames.spans[i];
+      const event: any = {
+        id: `stub-med-${i + 1}`,
+        type: "medication",
+        startTime: nowIso(),
+        fields: { medication: name, dosage: null, unit: null },
+        confidence: 0.85,
+        confidenceScore: 85,
+        confidenceLevel: "High" as const,
+        needsClarification: true,
+        provenance: {
+          sourceInputId: "raw-input-stub",
+          sourceSpans: span ? [span] : [],
+          modelVersion: MODEL_VERSION,
+          extractionVersion: EXTRACTION_VERSION
+        }
+      };
+      const ok = validateHealthEvent(event);
+      if (!ok) {
+        const err: any = new Error("HealthEvent (medication-by-name) failed schema validation");
+        err.details = validateHealthEvent.errors;
+        err.statusCode = 500;
+        throw err;
+      }
+      events.push(event);
+    }
+    return {
+      events,
+      followUpQuestions: ["What dosage are you taking? (e.g., 500mg)"],
+      warnings: []
+    };
+  }
 
   // Routing precedence: Glucose -> Meal -> Meds (only if intent) -> Symptom
   let type: "glucose" | "medication" | "meal" | "symptom" = "symptom";

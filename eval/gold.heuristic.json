@@ -44,6 +44,15 @@
         "fields": { "symptom": "headache", "severity": null },
         "needsClarification": false
       }
+    },
+    {
+      "name": "Medication-by-name (Tylenol with ibuprofen → two med events)",
+      "input": "Tylenol with ibuprofen",
+      "expectedEvents": [
+        { "type": "medication" },
+        { "type": "medication" }
+      ],
+      "assertNeedsClarification": true
     }
   ]
 }
