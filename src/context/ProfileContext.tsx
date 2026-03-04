@@ -36,6 +36,11 @@ interface ProfileContextValue {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  /** Phase 19: Check if medication/supplement/allergy is already in profile */
+  isItemInProfile: (
+    type: "medication" | "supplement" | "allergy",
+    name: string
+  ) => boolean;
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
@@ -96,6 +101,34 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return profiles.find((p) => p.id === selectedProfileId) ?? null;
   }, [profiles, selectedProfileId]);
 
+  const isItemInProfile = useCallback(
+    (type: "medication" | "supplement" | "allergy", name: string): boolean => {
+      const profile = selectedProfile ?? profiles[0];
+      if (!profile) return false;
+      const normalized = name.toLowerCase().trim();
+
+      switch (type) {
+        case "medication": {
+          const meds = (profile.current_medications ?? []) as { name?: string }[];
+          return meds.some(
+            (m) => String(m?.name ?? "").toLowerCase() === normalized
+          );
+        }
+        case "supplement":
+          return (profile.supplements ?? []).some(
+            (s) => String(s).toLowerCase() === normalized
+          );
+        case "allergy":
+          return (profile.known_allergies ?? []).some(
+            (a) => String(a).toLowerCase() === normalized
+          );
+        default:
+          return false;
+      }
+    },
+    [selectedProfile, profiles]
+  );
+
   const value: ProfileContextValue = useMemo(
     () => ({
       profiles,
@@ -105,6 +138,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       refetch,
+      isItemInProfile,
     }),
     [
       profiles,
@@ -114,6 +148,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       refetch,
+      isItemInProfile,
     ]
   );
 

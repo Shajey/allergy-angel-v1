@@ -34,6 +34,7 @@ import {
   buildExplanationFromCheck,
   type ExplanationRuleType,
 } from "@/lib/buildExplanation.js";
+import { AddToProfileButton } from "@/components/ui/AddToProfileButton.js";
 
 // ── Trajectory insight type (for "Pattern detected" badge) ──────────
 
@@ -218,6 +219,20 @@ function isHighlighted(event: HealthEventRow, matched: RuleMatch[]): boolean {
     }
   }
   return false;
+}
+
+/** Get item name for medication/supplement (for Add to profile). */
+function getEventItemName(event: HealthEventRow): string | null {
+  const d = event.event_data;
+  if (event.event_type === "medication") {
+    const v = d.medication;
+    return v != null ? String(v).trim() : null;
+  }
+  if (event.event_type === "supplement") {
+    const v = d.supplement ?? d.name;
+    return v != null ? String(v).trim() : null;
+  }
+  return null;
 }
 
 /** Render the key fields of an event as a readable string. */
@@ -420,20 +435,29 @@ function VerdictTrustLayer({
 }
 
 // ── Events List ─────────────────────────────────────────────────────
+// Phase 19: Add to profile for medication/supplement with confidence >= 70%
 
 function EventsList({
   events,
   matched,
+  checkId,
 }: {
   events: HealthEventRow[];
   matched: RuleMatch[];
+  checkId: string;
 }) {
+  const { selectedProfileId } = useProfileContext();
   return (
     <div>
       <h2 className="text-sm font-semibold text-gray-900">Events</h2>
       <ul className="mt-2 space-y-2">
         {events.map((ev) => {
           const highlighted = isHighlighted(ev, matched);
+          const canAddToProfile =
+            selectedProfileId &&
+            (ev.event_type === "medication" || ev.event_type === "supplement") &&
+            ev.confidence_score >= 70 &&
+            getEventItemName(ev);
           return (
             <li
               key={ev.id}
@@ -454,6 +478,15 @@ function EventsList({
                 </span>
               </div>
               <div className="mt-1 text-gray-900">{eventSummary(ev)}</div>
+              {canAddToProfile && (
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <AddToProfileButton
+                    type={ev.event_type as "medication" | "supplement"}
+                    name={getEventItemName(ev)!}
+                    checkId={checkId}
+                  />
+                </div>
+              )}
             </li>
           );
         })}
@@ -708,8 +741,8 @@ export default function HistoryCheckDetailPage() {
         {/* Phase 10H: allergen taxonomy awareness note */}
         <AllergenAlertBanner alerts={allergenAlerts} />
 
-        {/* C) Events List */}
-        <EventsList events={events} matched={matched} />
+      {/* C) Events List */}
+      <EventsList events={events} matched={matched} checkId={check.id} />
 
         {/* D) Raw Input (collapsible) */}
         <RawInput text={check.raw_text} />

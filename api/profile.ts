@@ -44,6 +44,102 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  // ── POST ?action=add-item: add medication/supplement to profile (Phase 19) ──
+  if (req.method === "POST" && action === "add-item") {
+    const body = req.body as Record<string, unknown> | null;
+    const profileId =
+      (typeof body?.profileId === "string" ? body.profileId.trim() : "") ||
+      profileIdParam ||
+      defaultProfileId;
+    if (!profileId) {
+      return res.status(400).json({ error: "profileId required", details: null });
+    }
+    try {
+      const type = body?.type as string;
+      const name = typeof body?.name === "string" ? body.name.trim() : "";
+      if (!type || !name) {
+        return res.status(400).json({
+          error: "Missing required fields: type, name",
+          details: null,
+        });
+      }
+      if (type !== "medication" && type !== "supplement") {
+        return res.status(400).json({
+          error: "type must be medication or supplement",
+          details: null,
+        });
+      }
+
+      const { data: profile, error: fetchErr } = await supabase
+        .from("profiles")
+        .select("current_medications, supplements")
+        .eq("id", profileId)
+        .maybeSingle();
+
+      if (fetchErr || !profile) {
+        return res.status(404).json({ error: "Profile not found", details: null });
+      }
+
+      const normalized = name.toLowerCase();
+      const meds = (profile.current_medications ?? []) as { name?: string }[];
+      const supps = (profile.supplements ?? []) as string[];
+
+      if (type === "medication") {
+        if (meds.some((m) => String(m?.name ?? "").toLowerCase() === normalized)) {
+          return res.status(200).json({
+            success: true,
+            item: { name, type: "medication", alreadyExisted: true },
+          });
+        }
+        const updated = [...meds, { name }];
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            current_medications: updated,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", profileId)
+          .select()
+          .single();
+        if (error) throw new Error(`Update failed: ${error.message}`);
+        return res.status(200).json({
+          success: true,
+          item: { name, type: "medication", addedAt: new Date().toISOString() },
+        });
+      }
+
+      if (type === "supplement") {
+        if (supps.some((s) => String(s).toLowerCase() === normalized)) {
+          return res.status(200).json({
+            success: true,
+            item: { name, type: "supplement", alreadyExisted: true },
+          });
+        }
+        const updated = [...supps, name];
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            supplements: updated,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", profileId)
+          .select()
+          .single();
+        if (error) throw new Error(`Update failed: ${error.message}`);
+        return res.status(200).json({
+          success: true,
+          item: { name, type: "supplement", addedAt: new Date().toISOString() },
+        });
+      }
+
+      return res.status(400).json({ error: "Invalid type", details: null });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to add item";
+      console.error("[Profile add-item]", message);
+      return res.status(500).json({ error: message, details: null });
+    }
+  }
+
   // ── POST: create profile ─────────────────────────────────────────
   if (req.method === "POST") {
     try {
