@@ -405,6 +405,52 @@ Output:
 ```
 Medication names must never be classified as meals.
 
+### Example 7: Multiple supplements (decomposition — never as meal)
+
+Input: "vitamin D with calcium"
+
+Output:
+```json
+{
+  "events": [
+    {
+      "type": "supplement",
+      "fields": { "supplement": "vitamin D", "dosage": null },
+      "confidence": 0.9,
+      "confidenceScore": 90,
+      "confidenceLevel": "High",
+      "needsClarification": true,
+      "provenance": {
+        "sourceInputId": "raw-input-llm",
+        "sourceSpans": [{ "field": "fields.supplement", "startChar": 0, "endChar": 8 }],
+        "modelVersion": "openai",
+        "extractionVersion": "v0-llm-v1.2"
+      }
+    },
+    {
+      "type": "supplement",
+      "fields": { "supplement": "calcium", "dosage": null },
+      "confidence": 0.9,
+      "confidenceScore": 90,
+      "confidenceLevel": "High",
+      "needsClarification": true,
+      "provenance": {
+        "sourceInputId": "raw-input-llm",
+        "sourceSpans": [{ "field": "fields.supplement", "startChar": 14, "endChar": 21 }],
+        "modelVersion": "openai",
+        "extractionVersion": "v0-llm-v1.2"
+      }
+    }
+  ],
+  "followUpQuestions": [
+    "What dosage of vitamin D did you take?",
+    "What dosage of calcium did you take?"
+  ],
+  "warnings": []
+}
+```
+Supplement names (fish oil, vitamin D, magnesium, etc.) must never be classified as meals.
+
 ---
 
 Extract from this input:

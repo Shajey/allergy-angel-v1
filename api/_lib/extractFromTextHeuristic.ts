@@ -18,7 +18,7 @@ function nowIso() {
 
 /** Common supplement names — used to avoid misclassifying as meals */
 const KNOWN_SUPPLEMENT_NAMES = new Set([
-  "fish oil", "fishoil", "vitamin d", "vitamind", "vitamin c", "vitaminc", "vitamin b12", "vitamin b6",
+  "fish oil", "fishoil", "vitamin d", "vitamin d3", "vitamind", "vitamin c", "vitaminc", "vitamin b12", "vitamin b6",
   "magnesium", "zinc", "calcium", "iron", "omega-3", "omega3", "omega 3",
   "probiotics", "melatonin", "turmeric", "ashwagandha", "creatine", "b12", "vitamin e",
   "biotin", "collagen", "coq10", "coenzyme q10", "vitamin k", "vitamink",
