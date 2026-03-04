@@ -1,7 +1,7 @@
 /**
  * Phase 19 – Add to Profile from Check Detail
  *
- * One-tap add medication/supplement to profile. Shows "+ Add to profile" when
+ * One-tap add medication/supplement to profile. Shows "Add to profile" (with + icon) when
  * not in profile, "✓ In your profile" when already added.
  */
 
@@ -119,7 +119,7 @@ export function AddToProfileButton({
       )}
     >
       <Plus className="w-4 h-4 flex-shrink-0 text-gray-500" aria-hidden />
-      + Add to profile
+      Add to profile
     </button>
   );
 }
