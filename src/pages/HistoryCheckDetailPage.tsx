@@ -25,7 +25,7 @@
  * }
  */
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useProfileContext } from "../context/ProfileContext";
 import { WhyDisclosure } from "@/components/shared/WhyDisclosure.js";
@@ -36,6 +36,8 @@ import {
 } from "@/lib/buildExplanation.js";
 import { AddToProfileButton } from "@/components/ui/AddToProfileButton.js";
 import { Badge } from "@/components/ui/Badge.js";
+import { shareOrDownloadReport } from "@/lib/shareOrDownloadReport.js";
+import { useToast } from "@/lib/toast.js";
 
 // ── Trajectory insight type (for "Pattern detected" badge) ──────────
 
@@ -305,10 +307,14 @@ function VerdictTrustLayer({
   verdict,
   checkId,
   includeRawText = false,
+  onShareOrDownload,
+  shareDownloadLoading = false,
 }: {
   verdict: Verdict;
   checkId?: string;
   includeRawText?: boolean;
+  onShareOrDownload?: () => void | Promise<void>;
+  shareDownloadLoading?: boolean;
 }) {
   const { riskLevel, reasoning } = verdict;
 
@@ -404,14 +410,16 @@ function VerdictTrustLayer({
                   </code>
                 </div>
               )}
-              {checkId && (
+              {checkId && onShareOrDownload && (
                 <div className="pt-1">
-                  <a
-                    href={`/api/report/check/download?checkId=${checkId}&includeRawText=${includeRawText}&format=text`}
-                    className="text-gray-600 hover:text-gray-900 hover:underline"
+                  <button
+                    type="button"
+                    onClick={onShareOrDownload}
+                    disabled={shareDownloadLoading}
+                    className="text-gray-600 hover:text-gray-900 hover:underline text-left disabled:opacity-50"
                   >
-                    Download safety report
-                  </a>
+                    {shareDownloadLoading ? "Preparing…" : "Download safety report"}
+                  </button>
                 </div>
               )}
             </div>
@@ -564,6 +572,7 @@ function AllergenAlertBanner({ alerts }: { alerts: AllergenAlert[] }) {
 export default function HistoryCheckDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { selectedProfileId } = useProfileContext();
+  const { showToast } = useToast();
   const [data, setData] = useState<CheckDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -576,6 +585,9 @@ export default function HistoryCheckDetailPage() {
 
   // Phase 13.6: include raw text in safety report download (default OFF)
   const [includeRawText, setIncludeRawText] = useState(false);
+
+  // Share/download report (Web Share API on iOS, blob download on desktop)
+  const [shareDownloadLoading, setShareDownloadLoading] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -652,6 +664,25 @@ export default function HistoryCheckDetailPage() {
     };
   }, [id, selectedProfileId]);
 
+  const handleShareOrDownload = useCallback(async () => {
+    if (!data?.check) return;
+    setShareDownloadLoading(true);
+    try {
+      await shareOrDownloadReport({
+        checkId: data.check.id,
+        includeRawText,
+        profileId: selectedProfileId ?? undefined,
+      });
+    } catch (err: unknown) {
+      // User cancelled share sheet — don't show error
+      if (err instanceof Error && err.name === "AbortError") return;
+      const msg = err instanceof Error ? err.message : "Failed to share or download report";
+      showToast(msg, "error");
+    } finally {
+      setShareDownloadLoading(false);
+    }
+  }, [data?.check?.id, includeRawText, selectedProfileId, showToast]);
+
   // ── Loading state ──────────────────────────────────────────────
   if (loading) {
     return (
@@ -720,7 +751,13 @@ export default function HistoryCheckDetailPage() {
 
         {/* B) Verdict + Why? (Phase 10K) — only when verdict exists */}
         {verdict?.riskLevel && (
-          <VerdictTrustLayer verdict={verdict} checkId={check.id} includeRawText={includeRawText} />
+          <VerdictTrustLayer
+            verdict={verdict}
+            checkId={check.id}
+            includeRawText={includeRawText}
+            onShareOrDownload={handleShareOrDownload}
+            shareDownloadLoading={shareDownloadLoading}
+          />
         )}
 
         {/* Phase 10H: allergen taxonomy awareness note */}
@@ -752,18 +789,15 @@ export default function HistoryCheckDetailPage() {
           />
           <span>Include original text (may contain sensitive info)</span>
         </label>
-        <a
-          href={`/api/report/check/download?checkId=${check.id}&includeRawText=${includeRawText}&format=text`}
-          className="block"
+        <Button
+          variant="secondary"
+          size="sm"
+          className="w-full py-3 font-semibold rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200"
+          onClick={handleShareOrDownload}
+          disabled={shareDownloadLoading}
         >
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-full py-3 font-semibold rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200"
-          >
-            Download report
-          </Button>
-        </a>
+          {shareDownloadLoading ? "Preparing…" : "Download report"}
+        </Button>
       </div>
     </div>
   );
