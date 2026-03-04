@@ -165,25 +165,25 @@ export default function AngelProfilePage() {
   }
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-xl font-semibold">Profile</h1>
-      <p className="text-sm text-gray-500 mt-2">
+    <div className="px-4 py-4 max-w-xl mx-auto">
+      <h1 className="text-xl font-semibold text-gray-900">Profile</h1>
+      <p className="text-sm text-gray-500 mt-0.5">
         Add what you take regularly to improve risk detection.
       </p>
 
       {error && (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {/* Add */}
-      <div className="mt-6 rounded-md border border-gray-200 p-4 bg-white">
+      <div className="mt-6 rounded-xl border border-gray-100 p-4 bg-white">
         <div className="flex flex-col sm:flex-row gap-3">
           <select
             value={type}
             onChange={(e) => setType(e.target.value as ItemType)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-900 focus:border-gray-400 focus:outline-none"
           >
             <option value="medication">Medication</option>
             <option value="supplement">Supplement</option>
@@ -195,16 +195,16 @@ export default function AngelProfilePage() {
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
             placeholder={type === 'allergy' ? 'e.g. peanuts' : 'e.g. metformin'}
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none"
           />
 
           <button
             onClick={handleAdd}
             disabled={!canAdd}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
               canAdd
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                ? 'bg-gray-900 text-white hover:bg-gray-800'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
           >
             {saving ? 'Saving...' : 'Add'}
@@ -231,7 +231,7 @@ export default function AngelProfilePage() {
                     return (
                       <li
                         key={`${t}:${display}`}
-                        className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2"
+                        className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3"
                       >
                         <div className="text-sm text-gray-900">{display}</div>
                         <button

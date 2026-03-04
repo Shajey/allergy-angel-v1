@@ -59,7 +59,8 @@ export default function ProfileSwitcher({ variant = "default" }: ProfileSwitcher
         aria-label={`Checking for: ${displayName}. Switch profile`}
       >
         <span className={`truncate ${isFullWidth ? "flex-1 text-left" : "max-w-[100px] sm:max-w-[140px]"}`}>
-          Checking for: {displayName}
+          <span className="text-gray-500">Checking for: </span>
+          <span className="font-medium text-gray-900">{displayName}</span>
         </span>
         <ChevronDown className="h-4 w-4 shrink-0" />
       </button>
@@ -82,7 +83,7 @@ export default function ProfileSwitcher({ variant = "default" }: ProfileSwitcher
                 setOpen(false);
               }}
               className={`w-full min-h-[44px] px-3 py-2.5 text-left text-sm hover:bg-gray-50 active:bg-gray-100 flex items-center justify-between gap-2 ${
-                p.id === selectedProfile.id ? "bg-emerald-50 text-emerald-800 font-semibold ring-1 ring-inset ring-emerald-200" : ""
+                p.id === selectedProfile.id ? "bg-gray-100 text-gray-900 font-semibold" : "text-gray-700"
               }`}
             >
               <span className="truncate max-w-[200px]">{p.display_name}</span>
@@ -94,7 +95,7 @@ export default function ProfileSwitcher({ variant = "default" }: ProfileSwitcher
           <div className="border-t border-gray-100 mt-1 pt-1">
             <Link
               to="/manage-profiles"
-              className="block min-h-[44px] px-3 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100"
+              className="block min-h-[44px] px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               onClick={() => setOpen(false)}
             >
               Manage Profiles

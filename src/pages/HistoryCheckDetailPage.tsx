@@ -35,6 +35,7 @@ import {
   type ExplanationRuleType,
 } from "@/lib/buildExplanation.js";
 import { AddToProfileButton } from "@/components/ui/AddToProfileButton.js";
+import { Badge } from "@/components/ui/Badge.js";
 
 // ── Trajectory insight type (for "Pattern detected" badge) ──────────
 
@@ -269,50 +270,25 @@ function eventSummary(event: HealthEventRow): string {
 }
 
 /** Returns a human-readable label and Tailwind classes to visually distinguish event types. */
-function eventTypeBadge(eventType: string): { label: string; className: string } {
+function eventTypeLabel(eventType: string): string {
   switch (eventType) {
     case "medication":
-      return { label: "Medication", className: "bg-blue-100 text-blue-700" };
+      return "Medication";
     case "supplement":
-      return { label: "Supplement", className: "bg-purple-100 text-purple-700" };
+      return "Supplement";
     case "meal":
-      return { label: "Meal", className: "bg-amber-100 text-amber-700" };
+      return "Meal";
     case "symptom":
-      return { label: "Symptom", className: "bg-red-100 text-red-700" };
+      return "Symptom";
     case "glucose":
-      return { label: "Glucose", className: "bg-cyan-100 text-cyan-700" };
-    default: {
-      // Capitalize first letter for unknown types
-      const label = eventType.charAt(0).toUpperCase() + eventType.slice(1);
-      return { label, className: "bg-gray-100 text-gray-700" };
-    }
-  }
-}
-
-// ── Risk Badge + Reasoning (Phase 10K, 18.6) ─────────────────────────────
-// Phase 18: HIGH RISK urgent (red, bold), SAFE reassuring (green)
-
-function riskBadgeClass(riskLevel: string): string {
-  switch (riskLevel) {
-    case "high":
-      return "bg-red-600 text-white border-red-700 font-bold";
-    case "medium":
-      return "bg-amber-100 text-amber-800 border-amber-200";
+      return "Glucose";
     default:
-      return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      return eventType.charAt(0).toUpperCase() + eventType.slice(1);
   }
 }
 
-function riskBadgeLabel(riskLevel: string): string {
-  switch (riskLevel) {
-    case "high":
-      return "HIGH RISK";
-    case "medium":
-      return "CAUTION";
-    default:
-      return "SAFE";
-  }
-}
+// ── Risk Badge + Reasoning (Phase 10K, 18.6, 20) ─────────────────────────────
+// Phase 20: Urgent design system — Badge component, colored verdict card
 
 function ruleTypeBadge(rt: ExplanationRuleType): { label: string; className: string } {
   switch (rt) {
@@ -343,17 +319,29 @@ function VerdictTrustLayer({
 
   const hasEntries = explanation.entries.length > 0;
 
+  const verdictVariant = riskLevel === "high" ? "high" : riskLevel === "medium" ? "medium" : "safe";
+  const verdictBg =
+    riskLevel === "high"
+      ? "bg-red-50 border-red-100"
+      : riskLevel === "medium"
+        ? "bg-amber-50 border-amber-100"
+        : "bg-green-50 border-green-100";
+  const verdictText =
+    riskLevel === "high"
+      ? "text-red-800"
+      : riskLevel === "medium"
+        ? "text-amber-800"
+        : "text-green-800";
+
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border px-4 py-3 text-sm">
-        <div className="flex items-center gap-2">
-          <span
-            className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold min-h-[44px] items-center ${riskBadgeClass(riskLevel)}`}
-          >
-            {riskBadgeLabel(riskLevel)}
-          </span>
-        </div>
-        <p className="mt-2 text-gray-700 line-clamp-2">{reasoning}</p>
+      <div
+        className={`rounded-xl border p-4 ${verdictBg}`}
+      >
+        <Badge variant={verdictVariant} className="mb-2">
+          {riskLevel === "high" ? "HIGH RISK" : riskLevel === "medium" ? "CAUTION" : "SAFE"}
+        </Badge>
+        <p className={`text-base ${verdictText} line-clamp-2`}>{reasoning}</p>
       </div>
 
       {hasEntries && (
@@ -420,7 +408,7 @@ function VerdictTrustLayer({
                 <div className="pt-1">
                   <a
                     href={`/api/report/check/download?checkId=${checkId}&includeRawText=${includeRawText}&format=text`}
-                    className="text-emerald-600 hover:underline"
+                    className="text-gray-600 hover:text-gray-900 hover:underline"
                   >
                     Download safety report
                   </a>
@@ -449,8 +437,9 @@ function EventsList({
   const { selectedProfileId } = useProfileContext();
   return (
     <div>
-      <h2 className="text-sm font-semibold text-gray-900">Events</h2>
-      <ul className="mt-2 space-y-2">
+      <h2 className="text-lg font-semibold text-gray-900">Events</h2>
+      <p className="text-sm text-gray-500 mt-0.5">Items detected in your check.</p>
+      <ul className="mt-4 space-y-3">
         {events.map((ev) => {
           const highlighted = isHighlighted(ev, matched);
           const canAddToProfile =
@@ -461,25 +450,21 @@ function EventsList({
           return (
             <li
               key={ev.id}
-              className={`rounded-lg border p-3 text-sm ${
+              className={`rounded-xl border p-4 ${
                 highlighted
-                  ? "border-red-300 bg-red-50"
-                  : "border-gray-200 bg-white"
+                  ? "border-red-200 bg-red-50"
+                  : "border-gray-100 bg-white"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${eventTypeBadge(ev.event_type).className}`}
-                >
-                  {eventTypeBadge(ev.event_type).label}
-                </span>
-                <span className="text-xs text-gray-500">
+                <Badge variant="neutral">{eventTypeLabel(ev.event_type)}</Badge>
+                <span className="text-xs text-gray-400">
                   Confidence: {ev.confidence_score}%
                 </span>
               </div>
-              <div className="mt-1 text-gray-900">{eventSummary(ev)}</div>
+              <p className="text-base text-gray-900 mt-2">{eventSummary(ev)}</p>
               {canAddToProfile && (
-                <div className="mt-2 pt-2 border-t border-gray-100">
+                <div className="mt-3 pt-3 border-t border-gray-50">
                   <AddToProfileButton
                     type={ev.event_type as "medication" | "supplement"}
                     name={getEventItemName(ev)!}
@@ -501,16 +486,16 @@ function RawInput({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
+    <div className="rounded-xl border border-gray-100 bg-white">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-4 py-3 text-left text-sm font-semibold text-gray-900 flex items-center justify-between"
+        className="w-full px-4 py-3 text-left text-base font-medium text-gray-900 flex items-center justify-between rounded-xl"
       >
         Original text
-        <span className="text-gray-400 text-xs">{open ? "hide" : "show"}</span>
+        <span className="text-xs text-gray-400">{open ? "hide" : "show"}</span>
       </button>
       {open && (
-        <div className="px-4 pb-3 text-sm text-gray-700 whitespace-pre-wrap border-t border-gray-100 pt-2">
+        <div className="px-4 pb-3 text-sm text-gray-600 whitespace-pre-wrap border-t border-gray-50 pt-2">
           {text}
         </div>
       )}
@@ -525,7 +510,7 @@ function FollowUpQuestions({ questions }: { questions: string[] }) {
 
   return (
     <div>
-      <h2 className="text-sm font-semibold text-gray-900">Open questions</h2>
+      <h2 className="text-lg font-semibold text-gray-900">Open questions</h2>
       <div className="mt-2 flex flex-wrap gap-2">
         {questions.map((q, i) => (
           <span
@@ -685,7 +670,7 @@ export default function HistoryCheckDetailPage() {
         </div>
         <Link
           to="/history"
-          className="mt-4 inline-block text-sm font-medium text-emerald-700 hover:underline"
+          className="mt-4 inline-block text-sm font-medium text-gray-600 hover:text-gray-900 hover:underline"
         >
           Back to history
         </Link>
@@ -703,30 +688,30 @@ export default function HistoryCheckDetailPage() {
     <div className="flex-1 min-h-0 flex flex-col max-w-xl mx-auto">
       {/* Scrollable content - Phase 18.4: no-bounce for iOS */}
       <main className="flex-1 overflow-auto no-bounce px-4 sm:px-6 pt-4 sm:pt-6 space-y-4 overflow-x-hidden">
-        {/* Back link */}
-        <Link
-          to="/history"
-          className="text-sm font-medium text-emerald-700 hover:underline"
-        >
+      {/* Back link */}
+      <Link
+        to="/history"
+        className="text-sm font-medium text-gray-600 hover:text-gray-900 hover:underline"
+      >
           Back to history
         </Link>
 
-        {/* A) Header */}
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Check</h1>
-          <p className="text-sm text-gray-500 mt-1">
+      {/* A) Header */}
+      <div>
+        <h1 className="text-xl font-semibold text-gray-900">Check</h1>
+        <p className="text-sm text-gray-500 mt-0.5">
             {formatDate(check.created_at)}
           </p>
         </div>
 
         {/* Phase 10B: Pattern detected badge */}
         {patternCount > 0 && (
-          <Link
-            to={`/insights?highlightCheckId=${check.id}`}
-            className="block rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800 hover:bg-indigo-100 transition-colors"
-          >
+        <Link
+          to={`/insights?highlightCheckId=${check.id}`}
+          className="block rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800 hover:bg-blue-100 transition-colors"
+        >
             <span className="font-medium">Pattern detected</span>
-            <span className="ml-1 text-indigo-600">
+            <span className="ml-1 text-blue-600">
               — this check appears in {patternCount} insight
               {patternCount !== 1 ? "s" : ""}. View all patterns.
             </span>
@@ -754,16 +739,16 @@ export default function HistoryCheckDetailPage() {
         <div className="h-24" />
       </main>
 
-      {/* F) Sticky footer — Download Safety Report (Phase 13.6, 18.3.1) */}
+      {/* F) Sticky footer — Download Safety Report (Phase 13.6, 18.3.1, 20) */}
       <div
-        className="sticky bottom-0 shrink-0 bg-white border-t border-gray-200 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
+        className="sticky bottom-0 shrink-0 bg-white border-t border-gray-100 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
       >
         <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer mb-3">
           <input
             type="checkbox"
             checked={includeRawText}
             onChange={(e) => setIncludeRawText(e.target.checked)}
-            className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+            className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-gray-400"
           />
           <span>Include original text (may contain sensitive info)</span>
         </label>
@@ -774,7 +759,7 @@ export default function HistoryCheckDetailPage() {
           <Button
             variant="secondary"
             size="sm"
-            className="w-full py-3 font-medium"
+            className="w-full py-3 font-semibold rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200"
           >
             Download report
           </Button>

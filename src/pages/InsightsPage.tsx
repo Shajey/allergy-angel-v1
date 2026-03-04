@@ -18,6 +18,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Activity } from "lucide-react";
 import { useProfileContext } from "../context/ProfileContext";
 import { WhyDisclosure } from "@/components/shared/WhyDisclosure.js";
 
@@ -153,10 +154,10 @@ function InsightRow({
   return (
     <li
       ref={isHighlighted ? highlightRef : undefined}
-      className={`rounded-lg border p-4 text-sm transition-colors ${
+      className={`rounded-xl border p-4 text-sm transition-colors ${
         isHighlighted
-          ? "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-200"
-          : "border-gray-200 bg-white"
+          ? "border-green-200 bg-green-50 ring-2 ring-green-100"
+          : "border-gray-100 bg-white"
       }`}
     >
       {/* Top row: badge + score */}
@@ -413,7 +414,7 @@ export default function InsightsPage() {
   // ── Loading ──
   if (loading) {
     return (
-      <div className="p-6 max-w-xl mx-auto">
+      <div className="px-4 py-4 max-w-xl mx-auto">
         <p className="text-sm text-gray-500">Analyzing patterns...</p>
       </div>
     );
@@ -422,7 +423,7 @@ export default function InsightsPage() {
   // ── No profile selected ──
   if (!selectedProfileId) {
     return (
-      <div className="p-6 max-w-xl mx-auto">
+      <div className="px-4 py-4 max-w-xl mx-auto">
         <p className="text-sm text-gray-500">Select a profile to view insights.</p>
       </div>
     );
@@ -431,8 +432,8 @@ export default function InsightsPage() {
   // ── Error ──
   if (error) {
     return (
-      <div className="p-6 max-w-xl mx-auto">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <div className="px-4 py-4 max-w-xl mx-auto">
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
           {error}
         </div>
       </div>
@@ -442,12 +443,20 @@ export default function InsightsPage() {
   // ── Empty ──
   if (!data || data.insights.length === 0) {
     return (
-      <div className="p-6 max-w-xl mx-auto">
+      <div className="px-4 py-4 max-w-xl mx-auto">
         <h1 className="text-xl font-semibold text-gray-900">Insights</h1>
-        <p className="mt-2 text-sm text-gray-500">
-          No patterns detected in the last {data?.windowHours ?? 48} hours.
-          Keep logging to build your health timeline.
+        <p className="text-sm text-gray-500 mt-0.5">
+          Patterns from your health timeline.
         </p>
+        <div className="text-center py-12 mt-8">
+          <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <Activity className="w-6 h-6 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-700">No patterns detected</h3>
+          <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto">
+            Keep logging to build your health timeline.
+          </p>
+        </div>
       </div>
     );
   }
@@ -458,11 +467,11 @@ export default function InsightsPage() {
   let highlightRefAssigned = false;
 
   return (
-    <div className="p-6 max-w-xl mx-auto space-y-6 pb-24">
+    <div className="px-4 py-4 max-w-xl mx-auto space-y-6 pb-24">
       {/* Header */}
       <div>
         <h1 className="text-xl font-semibold text-gray-900">Insights</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-gray-500 mt-0.5">
           {insights.length} pattern{insights.length !== 1 ? "s" : ""} across{" "}
           {analyzedChecks} check{analyzedChecks !== 1 ? "s" : ""} in the last{" "}
           {windowHours}h &mdash; ranked by signal strength

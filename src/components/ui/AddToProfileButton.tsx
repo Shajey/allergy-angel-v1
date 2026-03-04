@@ -36,7 +36,7 @@ export function AddToProfileButton({
     return (
       <span
         className={cn(
-          "text-sm text-emerald-600 flex items-center gap-1",
+          "text-sm text-green-600 flex items-center gap-1",
           className
         )}
       >
@@ -84,7 +84,7 @@ export function AddToProfileButton({
     return (
       <span
         className={cn(
-          "text-sm text-emerald-600 flex items-center gap-1",
+          "text-sm text-green-600 flex items-center gap-1",
           className
         )}
       >
@@ -114,7 +114,7 @@ export function AddToProfileButton({
       type="button"
       onClick={handleAdd}
       className={cn(
-        "text-sm text-emerald-600 hover:text-emerald-800 hover:underline flex items-center gap-1",
+        "text-sm text-gray-600 hover:text-gray-900 hover:underline flex items-center gap-1",
         className
       )}
     >

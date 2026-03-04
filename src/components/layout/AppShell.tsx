@@ -18,8 +18,8 @@ function AppShell() {
 
 
 
-  const activeClass = 'bg-slate-100 text-slate-900';
-  const inactiveClass = 'text-gray-600 hover:text-gray-900 hover:bg-gray-100';
+  const activeClass = 'bg-gray-100 text-gray-900';
+  const inactiveClass = 'text-gray-500 hover:text-gray-900 hover:bg-gray-50';
   
 
   const navLinks = [
@@ -32,8 +32,8 @@ function AppShell() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gray-50">
-      {/* Mobile Header - Phase 18.3/18.4: Two-line layout, top safe area */}
-      <header className="md:hidden bg-white border-b border-gray-200 shadow-sm relative z-50 pt-safe">
+      {/* Mobile Header - Phase 20: Urgent design system */}
+      <header className="md:hidden bg-white border-b border-gray-100 relative z-50 pt-safe">
         {/* Row 1: Hamburger | Logo | Notifications */}
         <div className="flex items-center justify-between h-14 px-4">
           <button
@@ -46,7 +46,7 @@ function AppShell() {
 
           <Link
             to="/"
-            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-lg font-bold text-gray-900 hover:text-emerald-700 transition-colors"
+            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-lg font-semibold text-gray-900 hover:text-gray-700 transition-colors"
             aria-label="Go to Allergy Angel home"
           >
             <img src="/icons/icon.svg" alt="" className="h-7 w-7 flex-shrink-0" aria-hidden />
@@ -63,14 +63,14 @@ function AppShell() {
         </div>
       </header>
 
-      {/* Desktop Header - pt-safe for notch devices */}
-      <header className="hidden md:block bg-white border-b border-gray-200 shadow-sm relative z-50 pt-safe">
+      {/* Desktop Header */}
+      <header className="hidden md:block bg-white border-b border-gray-100 relative z-50 pt-safe">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link
               to="/"
-              className="flex items-center gap-2 text-lg sm:text-xl font-bold text-gray-900 hover:text-emerald-700 transition-colors"
+              className="flex items-center gap-2 text-lg sm:text-xl font-semibold text-gray-900 hover:text-gray-700 transition-colors"
               aria-label="Go to Allergy Angel home"
             >
               <img src="/icons/icon.svg" alt="" className="h-8 w-8 flex-shrink-0" aria-hidden />

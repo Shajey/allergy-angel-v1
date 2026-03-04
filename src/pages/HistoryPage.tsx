@@ -1,22 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useProfileContext } from '../context/ProfileContext';
+import { Badge } from '../components/ui/Badge';
 
 /**
  * Phase 9C – History List (wired to Supabase via GET /api/history)
- *
- * Data contract (GET /api/history):
- * {
- *   checks: Array<{
- *     id: string;
- *     profile_id: string;
- *     raw_text: string;
- *     follow_up_questions: string[];
- *     verdict: { riskLevel: "none"|"medium"|"high"; reasoning: string };
- *     created_at: string;
- *     summary: { eventCount: number; eventTypes: string[] };
- *   }>
- * }
+ * Phase 20 – Urgent design system: card layout, typography
  */
 
 interface CheckSummary {
@@ -27,17 +16,23 @@ interface CheckSummary {
   summary: { eventCount: number; eventTypes: string[] };
 }
 
-function RiskBadge({ level }: { level: string }) {
-  const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold';
-  const cls =
-    level === 'high'
-      ? 'bg-red-100 text-red-800'
-      : level === 'medium'
-      ? 'bg-amber-100 text-amber-800'
-      : 'bg-emerald-100 text-emerald-800';
-  const label = level === 'high' ? 'High Risk' : level === 'medium' ? 'Caution' : 'Safe';
+function formatHistoryDate(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
 
-  return <span className={`${base} ${cls}`}>{label}</span>;
+function riskBadgeVariant(level: string): 'high' | 'medium' | 'safe' {
+  if (level === 'high') return 'high';
+  if (level === 'medium') return 'medium';
+  return 'safe';
+}
+
+function riskLabel(level: string): string {
+  return level === 'high' ? 'High Risk' : level === 'medium' ? 'Caution' : 'Safe';
 }
 
 export default function HistoryPage() {
@@ -71,30 +66,27 @@ export default function HistoryPage() {
   }, [selectedProfileId]);
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <div>
-        <h1 className="text-xl font-semibold">History</h1>
-        <p className="text-sm text-gray-600 mt-1">Your recent checks.</p>
+    <div className="px-4 py-4 max-w-xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-gray-900">History</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Your recent checks.</p>
       </div>
 
       {!selectedProfileId ? (
-        <div className="mt-6">
-          <p className="text-sm text-gray-500">Select a profile to view history.</p>
-        </div>
+        <p className="text-sm text-gray-500">Select a profile to view history.</p>
       ) : loading ? (
-        <div className="mt-6">
-          <p className="text-sm text-gray-500">Loading...</p>
-        </div>
+        <p className="text-sm text-gray-500">Loading...</p>
       ) : error ? (
-        <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4">
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       ) : checks.length === 0 ? (
-        <div className="mt-6 rounded-md border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-700">No checks yet.</p>
+        <div className="rounded-xl border border-gray-100 bg-white p-6 text-center">
+          <p className="text-base text-gray-700">No checks yet.</p>
+          <p className="text-sm text-gray-500 mt-1">Run a check from the Ask page.</p>
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
+        <ul className="space-y-3">
           {checks.map((check) => {
             const title = check.raw_text?.trim() || '(no text)';
             const riskLevel = check.verdict?.riskLevel ?? 'none';
@@ -103,26 +95,25 @@ export default function HistoryPage() {
               <li key={check.id}>
                 <Link
                   to={`/history/${check.id}`}
-                  className="block rounded-md border border-gray-200 bg-white p-4 cursor-pointer active:bg-gray-50 transition-colors"
+                  className="block rounded-xl border border-gray-100 bg-white p-4 hover:border-gray-200 active:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <RiskBadge level={riskLevel} />
-                        <span className="text-xs text-gray-500">
-                          {new Date(check.created_at).toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="mt-2 text-sm text-gray-900 truncate">{title}</div>
-                      <div className="mt-1 text-xs text-gray-500">
-                        {check.summary.eventCount} event{check.summary.eventCount !== 1 ? 's' : ''}
-                        {' · '}
-                        {check.summary.eventTypes.join(', ')}
-                      </div>
+                  <h3 className="text-lg font-semibold text-gray-900 truncate">{title}</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {check.summary.eventCount} event{check.summary.eventCount !== 1 ? 's' : ''}
+                    {' · '}
+                    {check.summary.eventTypes.join(', ')}
+                  </p>
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={riskBadgeVariant(riskLevel)}>
+                        {riskLabel(riskLevel)}
+                      </Badge>
+                      <span className="text-sm text-gray-500">
+                        {formatHistoryDate(check.created_at)}
+                      </span>
                     </div>
-
-                    <span className="text-sm text-gray-400 mt-1 shrink-0">
-                      View details &rarr;
+                    <span className="text-sm text-gray-500 hover:text-gray-700">
+                      View details →
                     </span>
                   </div>
                 </Link>

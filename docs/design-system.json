@@ -1,0 +1,464 @@
+{
+    "designSystem": {
+      "name": "Allergy Angel Design System",
+      "reference": "Inspired by Urgent by Techniche",
+      "version": "1.0.0"
+    },
+  
+    "typography": {
+      "fontFamily": {
+        "primary": "Inter, system-ui, -apple-system, sans-serif",
+        "mono": "SF Mono, Menlo, monospace"
+      },
+      
+      "scale": {
+        "xs": { "size": "11px", "lineHeight": "14px", "use": "Badges, timestamps, micro labels" },
+        "sm": { "size": "13px", "lineHeight": "18px", "use": "Secondary text, captions, metadata" },
+        "base": { "size": "15px", "lineHeight": "22px", "use": "Body text, descriptions" },
+        "lg": { "size": "17px", "lineHeight": "24px", "use": "Card titles, list items" },
+        "xl": { "size": "20px", "lineHeight": "28px", "use": "Page titles, section headers" },
+        "2xl": { "size": "24px", "lineHeight": "32px", "use": "Hero text, primary headings" }
+      },
+      
+      "weights": {
+        "regular": 400,
+        "medium": 500,
+        "semibold": 600,
+        "bold": 700
+      },
+      
+      "styles": {
+        "pageTitle": {
+          "size": "xl",
+          "weight": "semibold",
+          "color": "gray.900",
+          "example": "History"
+        },
+        "cardTitle": {
+          "size": "lg",
+          "weight": "semibold",
+          "color": "gray.900",
+          "example": "#10332"
+        },
+        "cardSubtitle": {
+          "size": "sm",
+          "weight": "regular",
+          "color": "gray.500",
+          "example": "0.24 km away (Witan Gate (WTN))"
+        },
+        "label": {
+          "size": "xs",
+          "weight": "medium",
+          "color": "gray.400",
+          "letterSpacing": "0.02em",
+          "example": "Site", "Status", "Supplier"
+        },
+        "value": {
+          "size": "base",
+          "weight": "regular",
+          "color": "gray.900",
+          "example": "Witan Studios (WTN)"
+        },
+        "microcopy": {
+          "size": "sm",
+          "weight": "regular",
+          "color": "gray.500",
+          "example": "Your recent checks."
+        },
+        "tabLabel": {
+          "size": "xs",
+          "weight": "medium",
+          "color": "gray.500",
+          "activeColor": "gray.900"
+        }
+      }
+    },
+  
+    "colors": {
+      "gray": {
+        "50": "#F9FAFB",
+        "100": "#F3F4F6",
+        "200": "#E5E7EB",
+        "300": "#D1D5DB",
+        "400": "#9CA3AF",
+        "500": "#6B7280",
+        "600": "#4B5563",
+        "700": "#374151",
+        "800": "#1F2937",
+        "900": "#111827"
+      },
+      
+      "status": {
+        "high": {
+          "background": "#FEE2E2",
+          "text": "#DC2626",
+          "border": "#FECACA",
+          "label": "High Risk"
+        },
+        "medium": {
+          "background": "#FEF3C7",
+          "text": "#D97706",
+          "border": "#FDE68A",
+          "label": "Caution"
+        },
+        "safe": {
+          "background": "#D1FAE5",
+          "text": "#059669",
+          "border": "#A7F3D0",
+          "label": "Safe"
+        },
+        "info": {
+          "background": "#DBEAFE",
+          "text": "#2563EB",
+          "border": "#BFDBFE",
+          "label": "Info"
+        }
+      },
+      
+      "brand": {
+        "primary": "#DC2626",
+        "primaryLight": "#FEE2E2",
+        "accent": "#059669"
+      },
+      
+      "surface": {
+        "background": "#F9FAFB",
+        "card": "#FFFFFF",
+        "elevated": "#FFFFFF"
+      }
+    },
+  
+    "spacing": {
+      "unit": 4,
+      "scale": {
+        "0": "0px",
+        "1": "4px",
+        "2": "8px",
+        "3": "12px",
+        "4": "16px",
+        "5": "20px",
+        "6": "24px",
+        "8": "32px",
+        "10": "40px",
+        "12": "48px"
+      },
+      
+      "patterns": {
+        "cardPadding": "16px",
+        "cardGap": "12px",
+        "sectionGap": "24px",
+        "listItemPadding": "16px",
+        "labelValueGap": "4px",
+        "inlineGap": "8px"
+      }
+    },
+  
+    "borders": {
+      "radius": {
+        "none": "0px",
+        "sm": "4px",
+        "md": "8px",
+        "lg": "12px",
+        "xl": "16px",
+        "full": "9999px"
+      },
+      
+      "width": {
+        "thin": "1px",
+        "medium": "2px"
+      },
+      
+      "color": {
+        "default": "#E5E7EB",
+        "light": "#F3F4F6",
+        "focus": "#3B82F6"
+      }
+    },
+  
+    "shadows": {
+      "none": "none",
+      "sm": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+      "md": "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      "lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+    },
+  
+    "components": {
+      "card": {
+        "background": "surface.card",
+        "borderRadius": "lg",
+        "padding": "16px",
+        "border": "1px solid borders.color.light",
+        "shadow": "sm",
+        "hover": {
+          "shadow": "md"
+        }
+      },
+      
+      "badge": {
+        "borderRadius": "md",
+        "paddingX": "8px",
+        "paddingY": "4px",
+        "fontSize": "xs",
+        "fontWeight": "medium",
+        "variants": {
+          "high": {
+            "background": "status.high.background",
+            "color": "status.high.text"
+          },
+          "medium": {
+            "background": "status.medium.background",
+            "color": "status.medium.text"
+          },
+          "safe": {
+            "background": "status.safe.background",
+            "color": "status.safe.text"
+          },
+          "neutral": {
+            "background": "gray.100",
+            "color": "gray.600"
+          }
+        }
+      },
+      
+      "labelValuePair": {
+        "layout": "vertical",
+        "gap": "4px",
+        "label": {
+          "fontSize": "xs",
+          "fontWeight": "medium",
+          "color": "gray.400",
+          "textTransform": "none"
+        },
+        "value": {
+          "fontSize": "base",
+          "fontWeight": "regular",
+          "color": "gray.900"
+        }
+      },
+      
+      "listItem": {
+        "padding": "16px",
+        "borderBottom": "1px solid gray.100",
+        "title": {
+          "fontSize": "lg",
+          "fontWeight": "semibold",
+          "color": "gray.900"
+        },
+        "subtitle": {
+          "fontSize": "sm",
+          "fontWeight": "regular",
+          "color": "gray.500",
+          "marginTop": "2px"
+        },
+        "trailing": {
+          "alignment": "right",
+          "gap": "8px"
+        }
+      },
+      
+      "header": {
+        "height": "56px",
+        "paddingX": "16px",
+        "background": "surface.card",
+        "borderBottom": "1px solid gray.100",
+        "title": {
+          "fontSize": "lg",
+          "fontWeight": "semibold",
+          "color": "gray.900"
+        },
+        "backButton": {
+          "color": "gray.600",
+          "size": "24px"
+        }
+      },
+      
+      "bottomNav": {
+        "height": "56px",
+        "background": "surface.card",
+        "borderTop": "1px solid gray.100",
+        "item": {
+          "icon": {
+            "size": "24px",
+            "inactiveColor": "gray.400",
+            "activeColor": "gray.900"
+          },
+          "label": {
+            "fontSize": "xs",
+            "fontWeight": "medium",
+            "inactiveColor": "gray.400",
+            "activeColor": "gray.900"
+          }
+        }
+      },
+      
+      "button": {
+        "borderRadius": "lg",
+        "paddingY": "12px",
+        "paddingX": "16px",
+        "fontSize": "base",
+        "fontWeight": "semibold",
+        "variants": {
+          "primary": {
+            "background": "gray.900",
+            "color": "#FFFFFF",
+            "hover": {
+              "background": "gray.800"
+            }
+          },
+          "secondary": {
+            "background": "gray.100",
+            "color": "gray.700",
+            "hover": {
+              "background": "gray.200"
+            }
+          },
+          "ghost": {
+            "background": "transparent",
+            "color": "gray.600",
+            "hover": {
+              "background": "gray.50"
+            }
+          },
+          "danger": {
+            "background": "status.high.background",
+            "color": "status.high.text",
+            "hover": {
+              "background": "#FECACA"
+            }
+          }
+        }
+      },
+      
+      "input": {
+        "borderRadius": "lg",
+        "border": "1px solid gray.200",
+        "paddingY": "12px",
+        "paddingX": "16px",
+        "fontSize": "base",
+        "placeholder": {
+          "color": "gray.400"
+        },
+        "focus": {
+          "borderColor": "gray.400",
+          "outline": "none"
+        }
+      },
+      
+      "tabs": {
+        "variant": "pills",
+        "gap": "8px",
+        "item": {
+          "paddingY": "8px",
+          "paddingX": "12px",
+          "borderRadius": "full",
+          "fontSize": "sm",
+          "fontWeight": "medium",
+          "inactive": {
+            "background": "transparent",
+            "color": "gray.500"
+          },
+          "active": {
+            "background": "gray.100",
+            "color": "gray.900"
+          }
+        }
+      }
+    },
+  
+    "microcopy": {
+      "principles": [
+        "Labels are light gray (gray.400), small (xs), creating visual hierarchy",
+        "Values are darker (gray.900), larger (base/lg), drawing attention",
+        "Supporting context uses gray.500 to stay readable but secondary",
+        "Status badges use color backgrounds with matching text",
+        "Timestamps and metadata use sm size in gray.500",
+        "Action links use brand color, no underline until hover"
+      ],
+      
+      "examples": {
+        "emptyState": {
+          "title": "No patterns detected",
+          "subtitle": "Keep logging to build your health timeline.",
+          "titleStyle": "lg/medium/gray.700",
+          "subtitleStyle": "sm/regular/gray.500"
+        },
+        "cardMeta": {
+          "example": "2 events · medication, meal",
+          "style": "sm/regular/gray.500"
+        },
+        "timestamp": {
+          "example": "3/3/2026, 7:53:53 PM",
+          "style": "sm/regular/gray.500"
+        },
+        "confidence": {
+          "example": "Confidence: 85%",
+          "style": "sm/regular/gray.500"
+        }
+      }
+    },
+  
+    "layout": {
+      "maxWidth": "428px",
+      "safeAreaTop": "env(safe-area-inset-top)",
+      "safeAreaBottom": "env(safe-area-inset-bottom)",
+      
+      "page": {
+        "paddingX": "16px",
+        "paddingTop": "16px",
+        "paddingBottom": "24px",
+        "background": "surface.background"
+      },
+      
+      "sections": {
+        "gap": "24px",
+        "header": {
+          "marginBottom": "8px"
+        }
+      }
+    },
+  
+    "allergyAngelMapping": {
+      "pages": {
+        "ask": {
+          "title": "Allergy Angel",
+          "subtitle": "Checking for: {profileName}"
+        },
+        "history": {
+          "title": "History",
+          "subtitle": "Your recent checks."
+        },
+        "insights": {
+          "title": "Insights",
+          "emptyState": "No patterns detected in the last 48 hours. Keep logging to build your health timeline."
+        },
+        "profile": {
+          "title": "Profile"
+        }
+      },
+      
+      "historyCard": {
+        "title": "{mealDescription}",
+        "subtitle": "{eventCount} events · {eventTypes}",
+        "timestamp": "{formattedDate}",
+        "badge": "{riskLevel}",
+        "action": "View details →"
+      },
+      
+      "checkDetail": {
+        "sections": [
+          { "name": "verdict", "type": "badge + explanation" },
+          { "name": "events", "type": "list of event cards" },
+          { "name": "openQuestions", "type": "list" },
+          { "name": "actions", "type": "button group" }
+        ]
+      },
+      
+      "eventCard": {
+        "badge": "{eventType}",
+        "title": "{eventDescription}",
+        "meta": "Confidence: {confidence}%",
+        "action": "Add to profile (if applicable)"
+      }
+    }
+  }
+  

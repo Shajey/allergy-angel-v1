@@ -20,7 +20,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
 
-  const activeClass = 'bg-slate-100 text-slate-900';
+  const activeClass = 'bg-gray-100 text-gray-900';
   const inactiveClass = 'text-gray-600 hover:text-gray-900 hover:bg-gray-100';
 
   const handleResetLocal = () => {

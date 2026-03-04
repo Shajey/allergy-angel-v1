@@ -132,19 +132,19 @@ export default function AskPage() {
 
   // Clear image after successful submit (so next check starts fresh)
   return (
-    <div className="p-4 sm:p-6 max-w-xl mx-auto overflow-x-hidden">
-      <h1 className="text-xl font-semibold">Allergy Angel</h1>
+    <div className="px-4 py-4 max-w-xl mx-auto overflow-x-hidden">
+      <h1 className="text-xl font-semibold text-gray-900">Allergy Angel</h1>
       {checkingForName && (
-        <p className="text-sm font-medium text-emerald-700 mt-2" data-testid="checking-for">
+        <p className="text-sm text-gray-500 mt-0.5" data-testid="checking-for">
           Checking for: {checkingForName}
         </p>
       )}
-      <p className="text-sm text-muted-foreground mt-1">
+      <p className="text-sm text-gray-500 mt-1">
         Before you take or eat something, check for potential interactions.
       </p>
 
       <div className="mt-6">
-        <label className="block text-sm font-medium mb-2">
+        <label className="block text-xs font-medium text-gray-400 mb-1">
           What are you about to take or eat?
         </label>
         <textarea
@@ -152,10 +152,10 @@ export default function AskPage() {
           onChange={(e) => setText(e.target.value)}
           placeholder="e.g. magnesium with metformin"
           rows={3}
-          className="w-full rounded-md border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none"
         />
         <div className="mt-3">
-          <p className="text-xs text-gray-500 mb-2">Scan a label or type ingredients</p>
+          <p className="text-xs text-gray-400 mb-2">Scan a label or type ingredients</p>
           <PhotoCapture
             onCapture={handlePhotoCapture}
             isExtracting={isExtracting}
@@ -166,7 +166,7 @@ export default function AskPage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -175,10 +175,10 @@ export default function AskPage() {
         <button
           onClick={handleSubmit}
           disabled={!canSubmit || isSubmitting}
-          className={`w-full rounded-lg px-4 py-3 text-lg font-medium transition-all min-h-[48px]
+          className={`w-full rounded-xl px-4 py-3 text-base font-semibold min-h-[48px] transition-colors
             ${
               canSubmit && !isSubmitting
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800'
+                ? 'bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-700'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }
           `}
@@ -187,7 +187,7 @@ export default function AskPage() {
         </button>
       </div>
 
-      <div className="mt-4 text-xs text-muted-foreground">
+      <div className="mt-4 text-sm text-gray-500">
         Examples:
         <ul className="list-disc list-inside mt-1">
           <li>Magnesium with metformin</li>
