@@ -63,16 +63,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           details: null,
         });
       }
-      if (type !== "medication" && type !== "supplement") {
+      if (type !== "medication" && type !== "supplement" && type !== "allergy") {
         return res.status(400).json({
-          error: "type must be medication or supplement",
+          error: "type must be medication, supplement, or allergy",
           details: null,
         });
       }
 
       const { data: profile, error: fetchErr } = await supabase
         .from("profiles")
-        .select("current_medications, supplements")
+        .select("current_medications, supplements, known_allergies")
         .eq("id", profileId)
         .maybeSingle();
 
@@ -129,6 +129,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).json({
           success: true,
           item: { name, type: "supplement", addedAt: new Date().toISOString() },
+        });
+      }
+
+      if (type === "allergy") {
+        const allergies = (profile.known_allergies ?? []) as string[];
+        if (allergies.some((a) => String(a).toLowerCase() === normalized)) {
+          return res.status(200).json({
+            success: true,
+            item: { name, type: "allergy", alreadyExisted: true },
+          });
+        }
+        const updated = [...allergies, name];
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            known_allergies: updated,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", profileId)
+          .select()
+          .single();
+        if (error) throw new Error(`Update failed: ${error.message}`);
+        return res.status(200).json({
+          success: true,
+          item: { name, type: "allergy", addedAt: new Date().toISOString() },
         });
       }
 

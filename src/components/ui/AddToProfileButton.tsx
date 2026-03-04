@@ -11,7 +11,7 @@ import { useProfileContext } from "@/context/ProfileContext";
 import { cn } from "@/lib/utils";
 
 interface AddToProfileButtonProps {
-  type: "medication" | "supplement";
+  type: "medication" | "supplement" | "allergy";
   name: string;
   checkId: string;
   className?: string;

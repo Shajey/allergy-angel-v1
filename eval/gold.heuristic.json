@@ -53,6 +53,30 @@
         { "type": "medication" }
       ],
       "assertNeedsClarification": true
+    },
+    {
+      "name": "Medication-by-name (Tylenol and Metformin → two med events)",
+      "input": "Tylenol and Metformin",
+      "expectedEvents": [
+        { "type": "medication" },
+        { "type": "medication" }
+      ],
+      "assertNeedsClarification": true
+    },
+    {
+      "name": "Supplement-by-name (fish oil → supplement)",
+      "input": "fish oil",
+      "expectedEvents": [{ "type": "supplement" }],
+      "assertNeedsClarification": true
+    },
+    {
+      "name": "Supplement-by-name (vitamin D with calcium → two supplements)",
+      "input": "vitamin D with calcium",
+      "expectedEvents": [
+        { "type": "supplement" },
+        { "type": "supplement" }
+      ],
+      "assertNeedsClarification": true
     }
   ]
 }

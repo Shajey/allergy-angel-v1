@@ -430,6 +430,60 @@ function VerdictTrustLayer({
   );
 }
 
+// ── Allergy Suggestions ─────────────────────────────────────────────
+// When HIGH RISK due to allergen match, offer to add matched allergen to profile if not already there
+
+function extractAllergenTerm(m: RuleMatch): string | null {
+  if (m.rule === "allergy_match") {
+    const a = m.details?.allergen;
+    return typeof a === "string" && a.trim() ? a.trim() : null;
+  }
+  if (m.rule === "cross_reactive") {
+    const t = m.details?.matchedTerm;
+    return typeof t === "string" && t.trim() ? t.trim() : null;
+  }
+  return null;
+}
+
+function AllergySuggestions({ matched, checkId }: { matched: RuleMatch[]; checkId: string }) {
+  const { isItemInProfile, selectedProfileId } = useProfileContext();
+
+  const toAdd = matched
+    .map(extractAllergenTerm)
+    .filter((term): term is string => term != null && term.length > 0)
+    .filter((term) => !isItemInProfile("allergy", term));
+
+  // Dedupe by lowercase
+  const seen = new Set<string>();
+  const unique = toAdd.filter((t) => {
+    const k = t.toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+
+  if (unique.length === 0 || !selectedProfileId) return null;
+
+  return (
+    <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+      <p className="text-sm text-amber-800 font-medium mb-2">
+        Based on this check, would you like to add to your allergies?
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {unique.map((term) => (
+          <AddToProfileButton
+            key={term}
+            type="allergy"
+            name={term}
+            checkId={checkId}
+            className="!py-1.5 !px-2"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Events List ─────────────────────────────────────────────────────
 // Phase 19: Add to profile for medication/supplement with confidence >= 50%
 
@@ -758,6 +812,11 @@ export default function HistoryCheckDetailPage() {
             onShareOrDownload={handleShareOrDownload}
             shareDownloadLoading={shareDownloadLoading}
           />
+        )}
+
+        {/* Allergy suggestions: add matched allergens not in profile (HIGH RISK) */}
+        {verdict?.riskLevel === "high" && verdict?.matched && verdict.matched.length > 0 && (
+          <AllergySuggestions matched={verdict.matched} checkId={check.id} />
         )}
 
         {/* Phase 10H: allergen taxonomy awareness note */}

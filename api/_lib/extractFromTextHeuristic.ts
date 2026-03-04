@@ -16,6 +16,16 @@ function nowIso() {
 // SECTION 1: DETERMINISTIC PARSERS (HEURISTICS)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Common supplement names — used to avoid misclassifying as meals */
+const KNOWN_SUPPLEMENT_NAMES = new Set([
+  "fish oil", "fishoil", "vitamin d", "vitamind", "vitamin c", "vitaminc", "vitamin b12", "vitamin b6",
+  "magnesium", "zinc", "calcium", "iron", "omega-3", "omega3", "omega 3",
+  "probiotics", "melatonin", "turmeric", "ashwagandha", "creatine", "b12", "vitamin e",
+  "biotin", "collagen", "coq10", "coenzyme q10", "vitamin k", "vitamink",
+  "multivitamin", "gummy vitamins", "elderberry", "echinacea", "ginseng",
+  "st john's wort", "st johns wort", "valerian", "ginkgo", "spirulina",
+]);
+
 /** Common OTC and prescription medication names — used to avoid misclassifying as meals */
 const KNOWN_MEDICATION_NAMES = new Set([
   "tylenol", "acetaminophen", "ibuprofen", "advil", "motrin", "aleve", "naproxen",
@@ -42,8 +52,8 @@ export function parseMedicationNames(rawText: string): {
   const names: string[] = [];
   const spans: Array<{ field: string; startChar: number; endChar: number }> = [];
 
-  // Split on "with", "and", "+", "," to get potential tokens
-  const tokens = lower.split(/\s+(?:with|and|\+)\s+|\s*,\s*/).map((t) => t.trim()).filter(Boolean);
+  // Split on "with", "and", "+", ",", "&" to get potential tokens
+  const tokens = lower.split(/\s+(?:with|and|\+)\s+|\s*,\s*|\s*&\s*/).map((t) => t.trim()).filter(Boolean);
 
   for (const token of tokens) {
     const normalized = token.replace(/\s+/g, " ");
@@ -73,6 +83,49 @@ export function parseMedicationNames(rawText: string): {
     tokens.length > 0 && tokens.every((t) => KNOWN_MEDICATION_NAMES.has(t.replace(/\s+/g, " ")));
 
   return { names, spans, isOnlyMedications };
+}
+
+export function parseSupplementNames(rawText: string): {
+  names: string[];
+  spans: Array<{ field: string; startChar: number; endChar: number }>;
+  isOnlySupplements: boolean;
+} {
+  const lower = rawText.toLowerCase();
+  const names: string[] = [];
+  const spans: Array<{ field: string; startChar: number; endChar: number }> = [];
+
+  const tokens = lower.split(/\s+(?:with|and|\+)\s+|\s*,\s*|\s*&\s*/).map((t) => t.trim()).filter(Boolean);
+
+  const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
+
+  for (const token of tokens) {
+    const n = normalize(token);
+    if (KNOWN_SUPPLEMENT_NAMES.has(n)) {
+      if (!names.includes(n)) {
+        names.push(n);
+        const idx = lower.indexOf(n);
+        if (idx >= 0) {
+          spans.push({ field: "fields.supplement", startChar: idx, endChar: idx + n.length });
+        }
+      }
+    }
+  }
+
+  if (tokens.length === 1 && KNOWN_SUPPLEMENT_NAMES.has(normalize(tokens[0]))) {
+    const n = normalize(tokens[0]);
+    if (!names.includes(n)) {
+      names.push(n);
+      const idx = lower.indexOf(n);
+      if (idx >= 0) {
+        spans.push({ field: "fields.supplement", startChar: idx, endChar: idx + n.length });
+      }
+    }
+  }
+
+  const isOnlySupplements =
+    tokens.length > 0 && tokens.every((t) => KNOWN_SUPPLEMENT_NAMES.has(normalize(t)));
+
+  return { names, spans, isOnlySupplements };
 }
 
 function parseSymptom(rawText: string) {
@@ -223,7 +276,7 @@ function parseMeal(rawText: string) {
   }
 
   // Plain food fallback: "mango", "mango salsa", "peanut butter" — short phrase, no verb
-  // EXCLUDE known medication names (e.g. "Tylenol with ibuprofen" must NOT be meal)
+  // EXCLUDE known medication and supplement names
   if (mealName === null && !m) {
     const trimmed = rawText.trim();
     const words = trimmed.split(/\s+/).filter(Boolean);
@@ -231,6 +284,10 @@ function parseMeal(rawText: string) {
     const looksLikeMedication = /\b\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml)\b/i.test(rawText);
     const looksLikeSymptom = /\b(headache|rash|nausea|vomiting|diarrhea|cough|fever|itching|hives|sneezing|congestion)\b/i.test(rawText);
     const containsMedicationName = words.some((w) => KNOWN_MEDICATION_NAMES.has(w.toLowerCase()));
+    const trimmedNorm = trimmed.toLowerCase().replace(/\s+/g, " ");
+    const containsSupplementName =
+      KNOWN_SUPPLEMENT_NAMES.has(trimmedNorm) ||
+      words.some((w) => KNOWN_SUPPLEMENT_NAMES.has(w.toLowerCase()));
     if (
       words.length >= 1 &&
       words.length <= 6 &&
@@ -238,7 +295,8 @@ function parseMeal(rawText: string) {
       !looksLikeNumber &&
       !looksLikeMedication &&
       !looksLikeSymptom &&
-      !containsMedicationName
+      !containsMedicationName &&
+      !containsSupplementName
     ) {
       mealName = trimmed;
       spans.push({ field: "fields.meal", startChar: 0, endChar: trimmed.length });
@@ -277,10 +335,50 @@ export async function extractFromTextHeuristic(rawText: string) {
   const meal = parseMeal(rawText);
   const sym = parseSymptom(rawText);
 
+  const suppNames = parseSupplementNames(rawText);
   const hasMedicationIntent = /\b(took|take|taken|swallowed|pill|tablet|capsule|medicine|medication)\b/i.test(rawText);
   const hasMealIntent =
     /\b(ate|had|lunch|dinner|breakfast|snack|eating|eat)\b/i.test(rawText) ||
     (meal.name != null && meal.name.length > 0);
+
+  // Supplement-by-name: "fish oil", "vitamin D with calcium" — known supplement names override meal fallback
+  if (suppNames.names.length > 0 && g.value === null) {
+    const events: any[] = [];
+    for (let i = 0; i < suppNames.names.length; i++) {
+      const name = suppNames.names[i];
+      const span = suppNames.spans[i];
+      const displayName = name.split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      const event: any = {
+        id: `stub-supp-${i + 1}`,
+        type: "supplement",
+        startTime: nowIso(),
+        fields: { supplement: displayName, dosage: null },
+        confidence: 0.85,
+        confidenceScore: 85,
+        confidenceLevel: "High" as const,
+        needsClarification: true,
+        provenance: {
+          sourceInputId: "raw-input-stub",
+          sourceSpans: span ? [span] : [],
+          modelVersion: MODEL_VERSION,
+          extractionVersion: EXTRACTION_VERSION
+        }
+      };
+      const ok = validateHealthEvent(event);
+      if (!ok) {
+        const err: any = new Error("HealthEvent (supplement-by-name) failed schema validation");
+        err.details = validateHealthEvent.errors;
+        err.statusCode = 500;
+        throw err;
+      }
+      events.push(event);
+    }
+    return {
+      events,
+      followUpQuestions: ["What dosage are you taking? (e.g., 500mg)"],
+      warnings: []
+    };
+  }
 
   // Medication-by-name: "Tylenol with ibuprofen" — known med names override meal fallback
   if (medNames.names.length > 0 && g.value === null) {

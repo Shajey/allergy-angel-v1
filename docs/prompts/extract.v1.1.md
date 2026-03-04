@@ -135,6 +135,7 @@ Do not omit these keys; use `null` if unknown.
    - **Supplements**: vitamins, minerals, herbs, amino acids (e.g., magnesium, zinc, ashwagandha, vitamin D, fish oil, melatonin, creatine, probiotics).
    - **Medications**: pharmaceutical drugs (e.g., ibuprofen, Tylenol, Advil, acetaminophen, Zyrtec, metformin, aspirin, warfarin).
    - **NEVER classify medication names as meals.** If the text mentions only medications (e.g., "Tylenol with ibuprofen"), extract medication events, not meals.
+   - **NEVER classify supplement names as meals.** If the text mentions only supplements (e.g., "fish oil", "vitamin D with calcium"), extract supplement events, not meals.
    - If uncertain, classify as medication and set `needsClarification: true`.
 4. **Include sourceSpans**: For each extracted field, provide best-effort character spans (startChar, endChar) indicating where in the input text the information came from.
 5. **Use {{current_date}}**: For relative time phrases (today, yesterday, this morning, etc.), use {{current_date}} as the date reference.

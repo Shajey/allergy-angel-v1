@@ -13,10 +13,14 @@
  *   If a meal event's meal field contains only known medication names (e.g. "Tylenol with ibuprofen"),
  *   replace that meal with separate medication events.
  *
+ * Rule D (Supplement misclassification fix):
+ *   If a meal event's meal field contains only known supplement names (e.g. "fish oil", "vitamin D with calcium"),
+ *   replace that meal with separate supplement events.
+ *
  * Deterministic. No prompt/schema changes.
  */
 
-import { parseMedicationNames } from "../extractFromTextHeuristic.js";
+import { parseMedicationNames, parseSupplementNames } from "../extractFromTextHeuristic.js";
 
 /** Regex: carb cue in rawText (carb, carbs, or N g/gram/grams). */
 const CARB_CUE_REGEX = /(carb|carbs|\b\d+(\.\d+)?\s*(g|gram|grams)\b)/i;
@@ -48,7 +52,15 @@ export function postProcessExtractionResult(
     if (event.type === "meal") {
       const mealName = event.fields?.meal;
       if (typeof mealName === "string" && mealName.trim().length > 0) {
-        const { names, isOnlyMedications } = parseMedicationNames(mealName);
+        let { names, isOnlyMedications } = parseMedicationNames(mealName);
+        // Fallback: if meal field doesn't parse, check rawText (e.g. "Tylenol & Metformin")
+        if (names.length === 0 && rawText?.trim()) {
+          const rawParsed = parseMedicationNames(rawText.trim());
+          if (rawParsed.isOnlyMedications && rawParsed.names.length > 0) {
+            names = rawParsed.names;
+            isOnlyMedications = true;
+          }
+        }
         if (isOnlyMedications && names.length > 0) {
           // Replace meal with separate medication events
           for (const med of names) {
@@ -57,6 +69,28 @@ export function postProcessExtractionResult(
               ...event,
               type: "medication",
               fields: { medication: capitalized, dosage: null, unit: null },
+              needsClarification: true,
+            });
+          }
+          continue;
+        }
+        // Rule D: meal→supplement reclassification
+        let suppNames = parseSupplementNames(mealName).names;
+        let suppOnly = parseSupplementNames(mealName).isOnlySupplements;
+        if (suppNames.length === 0 && rawText?.trim()) {
+          const rawParsed = parseSupplementNames(rawText.trim());
+          if (rawParsed.isOnlySupplements && rawParsed.names.length > 0) {
+            suppNames = rawParsed.names;
+            suppOnly = true;
+          }
+        }
+        if (suppOnly && suppNames.length > 0) {
+          for (const supp of suppNames) {
+            const displayName = supp.split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+            newEvents.push({
+              ...event,
+              type: "supplement",
+              fields: { supplement: displayName, dosage: null },
               needsClarification: true,
             });
           }
