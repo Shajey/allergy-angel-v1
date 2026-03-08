@@ -547,9 +547,17 @@ async function handleRadarEntities(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Radar entities failed";
-    console.error("[Admin Radar Entities]", message);
-    return res.status(500).json({ error: message, details: null });
+    const details = isMissingTable(err)
+      ? "Required telemetry table is missing or not migrated yet."
+      : null;
+    console.error("[Admin API] radar-entities failed:", message);
+    return res.status(500).json({ error: "Radar data unavailable", details });
   }
+}
+
+function isMissingTable(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /relation.*does not exist|table.*does not exist|does not exist/i.test(msg);
 }
 
 async function handleRadarCombinations(req: VercelRequest, res: VercelResponse) {
@@ -569,8 +577,11 @@ async function handleRadarCombinations(req: VercelRequest, res: VercelResponse) 
     return res.status(200).json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Radar combinations failed";
-    console.error("[Admin Radar Combinations]", message);
-    return res.status(500).json({ error: message, details: null });
+    const details = isMissingTable(err)
+      ? "Required telemetry table is missing or not migrated yet."
+      : null;
+    console.error("[Admin API] radar-combinations failed:", message);
+    return res.status(500).json({ error: "Radar data unavailable", details });
   }
 }
 
@@ -587,8 +598,11 @@ async function handleRadarStats(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Radar stats failed";
-    console.error("[Admin Radar Stats]", message);
-    return res.status(500).json({ error: message, details: null });
+    const details = isMissingTable(err)
+      ? "Required telemetry table is missing or not migrated yet."
+      : null;
+    console.error("[Admin API] radar-stats failed:", message);
+    return res.status(500).json({ error: "Radar data unavailable", details });
   }
 }
 
@@ -609,8 +623,11 @@ async function handleRadarSignals(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Radar signals failed";
-    console.error("[Admin Radar Signals]", message);
-    return res.status(500).json({ error: message, details: null });
+    const details = isMissingTable(err)
+      ? "Required telemetry table is missing or not migrated yet."
+      : null;
+    console.error("[Admin API] radar-signals failed:", message);
+    return res.status(500).json({ error: "Radar data unavailable", details });
   }
 }
 
@@ -784,8 +801,11 @@ async function handleIngestionCandidates(req: VercelRequest, res: VercelResponse
     return res.status(200).json({ meta: { count: candidates.length }, candidates });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Ingestion candidates failed";
-    console.error("[Admin Ingestion]", message);
-    return res.status(500).json({ error: message, details: null });
+    const details = isMissingTable(err)
+      ? "Required ingestion_candidates table is missing or not migrated yet."
+      : null;
+    console.error("[Admin API] ingestion-candidates failed:", message);
+    return res.status(500).json({ error: "Ingestion data unavailable", details });
   }
 }
 
@@ -799,8 +819,11 @@ async function handleIngestionStats(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(stats);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Ingestion stats failed";
-    console.error("[Admin Ingestion Stats]", message);
-    return res.status(500).json({ error: message, details: null });
+    const details = isMissingTable(err)
+      ? "Required ingestion_candidates table is missing or not migrated yet."
+      : null;
+    console.error("[Admin API] ingestion-stats failed:", message);
+    return res.status(500).json({ error: "Ingestion data unavailable", details });
   }
 }
 

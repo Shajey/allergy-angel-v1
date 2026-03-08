@@ -16,6 +16,9 @@ interface RegistryEntryCardProps {
   matchedOn?: string;
   onProposeAdd: (alias: string) => Promise<void>;
   onProposeRemove: (alias: string) => Promise<void>;
+  /** Phase O3: Optional selection callback for Context Panel */
+  onSelect?: () => void;
+  isSelected?: boolean;
 }
 
 export default function RegistryEntryCard({
@@ -27,6 +30,8 @@ export default function RegistryEntryCard({
   matchedOn,
   onProposeAdd,
   onProposeRemove,
+  onSelect,
+  isSelected = false,
 }: RegistryEntryCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [addAlias, setAddAlias] = useState("");
@@ -70,10 +75,17 @@ export default function RegistryEntryCard({
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div
+      className={`rounded-xl border p-4 transition-colors ${
+        isSelected ? "ring-2 ring-[#0F172A] ring-offset-1 border-[#0F172A] bg-gray-50" : "border-gray-200 bg-white"
+      }`}
+    >
       <div
         className="flex items-center justify-between cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => {
+          setExpanded(!expanded);
+          onSelect?.();
+        }}
       >
         <div>
           <span className="font-medium text-gray-900">{id}</span>

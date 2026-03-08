@@ -4,16 +4,25 @@ dotenv.config({ path: ".env.local", override: true });
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getSupabaseClient } from "../../_lib/supabaseClient.js";
 import { isUuidLike } from "../../_lib/validation/isUuidLike.js";
-import { buildCheckReport } from "../../_lib/report/buildCheckReport.js";
+import {
+  buildCheckReport,
+  reportFilename,
+} from "../../_lib/report/buildCheckReport.js";
+import {
+  formatReportAsText,
+  textReportFilename,
+} from "../../_lib/report/formatReportAsText.js";
 
 /**
  * Phase 13.5 – Safety Report Export
- * Phase 13.6 – includeRawText query flag (default false, redacts raw text)
+ * Phase 13.6 – includeRawText, download (consolidated for Vercel Hobby 12-function limit)
+ * Phase 18.2 – Human-readable text format
  *
  * GET /api/report/check?checkId=<uuid>[&profileId=<uuid>][&includeRawText=true]
+ * GET /api/report/check?checkId=<uuid>&download=1[&format=text]
  *
- * Returns a deterministic JSON safety report for a single check.
- * Read-only — no DB writes, no inference changes.
+ * download=1  → attachment headers, format=text → .txt for parents
+ * Omit download → JSON inline (no attachment)
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
@@ -32,6 +41,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const includeRawText = req.query.includeRawText === "true" || req.query.includeRawText === "1";
+    const isDownload = req.query.download === "1" || req.query.download === "true";
+    const formatText = req.query.format === "text" || req.query.format === "txt";
 
     const supabase = getSupabaseClient();
 
@@ -71,12 +82,75 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         verdict: check.verdict,
       },
       events: events ?? [],
-      includeRawText,
+      includeRawText: includeRawText || formatText,
     });
 
+    if (isDownload && formatText) {
+      // Phase 18.2: Human-readable text report
+      let profile: { name: string; allergies: string[]; medications: string[]; supplements: string[] } | undefined;
+      try {
+        const { data: profileRow } = await supabase
+          .from("profiles")
+          .select("display_name, known_allergies, current_medications, supplements")
+          .eq("id", check.profile_id)
+          .maybeSingle();
+        if (profileRow) {
+          const meds = (profileRow.current_medications ?? []) as { name?: string; displayName?: string }[];
+          const allergies = (profileRow.known_allergies ?? []) as (string | { name: string })[];
+          const supps = (profileRow.supplements ?? []) as (string | { name: string })[];
+          profile = {
+            name: String(profileRow.display_name ?? "Unknown"),
+            allergies: allergies.map((a) => (typeof a === "string" ? a : a?.name ?? "")).filter(Boolean),
+            medications: meds.map((m) => String(m?.name ?? m)).filter(Boolean),
+            supplements: supps.map((s) => (typeof s === "string" ? s : s?.name ?? "")).filter(Boolean),
+          };
+        }
+      } catch {
+        // Profile fetch best-effort
+      }
+
+      const reportData = {
+        meta: report.meta,
+        input: {
+          events: report.input.events.map((e) => ({
+            event_type: e.event_type,
+            event_data: e.event_data,
+          })),
+          rawText: report.input.rawText ?? check.raw_text,
+        },
+        output: report.output,
+        profile,
+      };
+
+      const rawMatched = (check.verdict?.matched ?? []) as Array<{
+        rule: string;
+        ruleCode?: string;
+        details: Record<string, unknown>;
+      }>;
+
+      const textReport = formatReportAsText(reportData, {
+        includeOriginalText: includeRawText,
+        rawMatched: rawMatched.length > 0 ? rawMatched : undefined,
+      });
+
+      const filename = textReportFilename(check.created_at);
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      return res.status(200).send(textReport);
+    }
+
+    if (isDownload) {
+      const taxonomyVersion = report.meta.taxonomyVersion;
+      const filename = reportFilename(report.meta.profileId, report.meta.checkId, taxonomyVersion);
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      return res.status(200).json(report);
+    }
+
     return res.status(200).json(report);
-  } catch (err: any) {
-    console.error("[Report/Check]", err?.message);
-    return res.status(500).json({ error: err?.message ?? "Failed to build report" });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to build report";
+    console.error("[Report/Check]", message);
+    return res.status(500).json({ error: message });
   }
 }

@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": "20"
   },
   "scripts": {
     "dev": "vite",
@@ -54,6 +54,11 @@
     "test:phase-23_1": "tsx eval/test-phase-23_1-research-cache.ts",
     "ingest:rxnorm": "tsx scripts/ingestion/rxnorm/ingest.ts",
     "test:phase-24_1": "tsx eval/test-phase-24_1-rxnorm-ingestion.ts",
+    "test:phase-o1": "tsx eval/test-phase-o1-orchestrator-shell.ts",
+    "test:phase-o2": "tsx eval/test-phase-o2-orchestrator-live-shell.ts",
+    "test:phase-o3": "tsx eval/test-phase-o3-context-workflow.ts",
+    "test:phase-o3_1": "tsx eval/test-phase-o3_1-orchestrator-stability.ts",
+    "test:phase-o4": "tsx eval/test-phase-o4-research-workspace.ts",
     "promo:pack": "tsx eval/promo-packager.ts",
     "pr:pack": "tsx eval/pr-packager.ts",
     "pr:apply": "tsx eval/apply-pr-package.ts",

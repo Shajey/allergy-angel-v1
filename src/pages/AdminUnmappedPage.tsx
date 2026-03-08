@@ -5,9 +5,17 @@
  * Proposal-safe wording. Links to Registry Browser.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ResearchModal, type ResearchContext } from "../components/admin/ResearchModal";
+import { buildResearchUrl } from "../orchestrator/lib/researchTarget";
+import {
+  fetchRadarEntities,
+  fetchRadarCombinations,
+  fetchRadarStats,
+  fetchRadarSignals,
+} from "../orchestrator/lib/fetchOrchestratorData";
+import OrchestratorPageState from "../orchestrator/components/OrchestratorPageState";
+import { useOptionalOrchestratorSelection } from "../orchestrator/context/OrchestratorSelectionContext";
 
 type RadarSuggestedAction = "alias_candidate" | "new_entry_candidate" | "investigate" | "low_priority";
 type GapType = "alias_gap" | "semantic_gap" | "interaction_gap";
@@ -167,6 +175,7 @@ interface RadarSignal {
 type Tab = "entities" | "combinations" | "signals";
 
 export default function AdminUnmappedPage() {
+  const orchSelection = useOptionalOrchestratorSelection();
   const [tab, setTab] = useState<Tab>("entities");
   const [entities, setEntities] = useState<RadarEntity[]>([]);
   const [combinations, setCombinations] = useState<RadarCombination[]>([]);
@@ -174,131 +183,69 @@ export default function AdminUnmappedPage() {
   const [stats, setStats] = useState<RadarStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [researchModalOpen, setResearchModalOpen] = useState(false);
-  const [researchContext, setResearchContext] = useState<ResearchContext | null>(null);
   const windowDays = 30;
 
-  function openEntityResearch(e: RadarEntity) {
-    setResearchContext({
-      mode: "entity",
-      entity: e.entity,
-      entityType: e.entityType,
-      radarMetadata: {
-        occurrenceCount: e.occurrenceCount,
-        highRiskCount: e.highRiskCount,
-        dominantContext: e.dominantContext,
-      },
-    });
-    setResearchModalOpen(true);
-  }
+  const loadRadarData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const [entitiesRes, combinationsRes, statsRes, signalsRes] = await Promise.all([
+      fetchRadarEntities(50, windowDays),
+      fetchRadarCombinations(50, windowDays),
+      fetchRadarStats(windowDays),
+      fetchRadarSignals(50, windowDays),
+    ]);
 
-  function openCombinationResearch(c: RadarCombination) {
-    setResearchContext({
-      mode: "combination",
-      entityA: c.entityA,
-      entityB: c.entityB,
-      typeA: c.entityAType,
-      typeB: c.entityBType,
-      radarTelemetry: {
-        occurrenceCount: c.occurrenceCount,
-        highRiskCount: c.highRiskCount,
-        safeOccurrenceCount: c.safeOccurrenceCount,
-        signalPattern: c.signalPattern,
-      },
-    });
-    setResearchModalOpen(true);
-  }
+    const firstError =
+      !entitiesRes.ok ? entitiesRes.error
+      : !combinationsRes.ok ? combinationsRes.error
+      : !statsRes.ok ? statsRes.error
+      : !signalsRes.ok ? signalsRes.error
+      : null;
 
-  function openSignalResearch(s: RadarSignal) {
-    setResearchContext({
-      mode: "combination",
-      entityA: s.entityA,
-      entityB: s.entityB,
-      typeA: s.entityAType ?? "unknown",
-      typeB: s.entityBType ?? "unknown",
-      radarTelemetry: {
-        occurrenceCount: s.occurrenceCount,
-      },
-    });
-    setResearchModalOpen(true);
-  }
+    if (firstError) {
+      setError(firstError);
+      setEntities([]);
+      setCombinations([]);
+      setSignals([]);
+      setStats(null);
+    } else {
+      setEntities(entitiesRes.ok ? (entitiesRes.data.entities ?? []) : []);
+      setCombinations(combinationsRes.ok ? (combinationsRes.data.combinations ?? []) : []);
+      setSignals(signalsRes.ok ? (signalsRes.data.signals ?? []) : []);
+      setStats(statsRes.ok ? statsRes.data : null);
+    }
+    setLoading(false);
+  }, [windowDays]);
 
   useEffect(() => {
-    let cancelled = false;
+    loadRadarData();
+  }, [loadRadarData]);
 
-    async function fetchData() {
-      setLoading(true);
-      setError(null);
-      try {
-        const [entitiesRes, combinationsRes, statsRes, signalsRes] = await Promise.all([
-          fetch(`/api/admin?action=radar-entities&limit=50&windowDays=${windowDays}`),
-          fetch(`/api/admin?action=radar-combinations&limit=50&windowDays=${windowDays}`),
-          fetch(`/api/admin?action=radar-stats&windowDays=${windowDays}`),
-          fetch(`/api/admin?action=radar-signals&limit=50&windowDays=${windowDays}`),
-        ]);
-
-        if (!entitiesRes.ok) throw new Error(entitiesRes.statusText);
-        if (!combinationsRes.ok) throw new Error(combinationsRes.statusText);
-        if (!statsRes.ok) throw new Error(statsRes.statusText);
-        if (!signalsRes.ok) throw new Error(signalsRes.statusText);
-
-        const [entitiesJson, combinationsJson, statsJson, signalsJson] = await Promise.all([
-          entitiesRes.json(),
-          combinationsRes.json(),
-          statsRes.json(),
-          signalsRes.json(),
-        ]);
-
-        if (!cancelled) {
-          setEntities(entitiesJson.entities ?? []);
-          setCombinations(combinationsJson.combinations ?? []);
-          setStats(statsJson);
-          setSignals(signalsJson.signals ?? []);
-        }
-      } catch (err: unknown) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchData();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <p className="text-sm text-gray-500">Loading Knowledge Radar...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          {error}
-        </div>
-      </div>
-    );
-  }
+  const pageState =
+    loading ? "loading"
+    : error ? "error"
+    : entities.length === 0 && combinations.length === 0 && signals.length === 0
+      ? "empty"
+      : "success";
 
   return (
+    <OrchestratorPageState
+      state={pageState}
+      pageName="Radar"
+      errorMessage={error}
+      emptyMessage="No unknown entities or interaction gaps in the last 30 days."
+      onRetry={loadRadarData}
+    >
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Knowledge Radar</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Signal Radar</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Unknown entities and interaction gaps from persisted telemetry. Draft proposals only.
+            Unknown entities and interaction gaps from telemetry. Evidence-based proposals only.
           </p>
         </div>
         <Link
-          to="/admin/registry"
+          to="/orchestrator/registry"
           className="text-sm font-medium text-gray-600 hover:text-gray-900"
         >
           Registry Browser →
@@ -381,7 +328,38 @@ export default function AdminUnmappedPage() {
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {entities.map((e, i) => (
-                  <tr key={`${e.entity}-${i}`}>
+                  <tr
+                    key={`${e.entity}-${i}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() =>
+                      orchSelection?.setSelection({
+                        kind: "unknown-entity",
+                        entity: e.entity,
+                        entityType: e.entityType,
+                        occurrenceCount: e.occurrenceCount,
+                        suggestedAction: e.suggestedAction,
+                      })
+                    }
+                    onKeyDown={(ev) => {
+                      if ((ev.key === "Enter" || ev.key === " ") && orchSelection) {
+                        ev.preventDefault();
+                        orchSelection.setSelection({
+                          kind: "unknown-entity",
+                          entity: e.entity,
+                          entityType: e.entityType,
+                          occurrenceCount: e.occurrenceCount,
+                          suggestedAction: e.suggestedAction,
+                        });
+                      }
+                    }}
+                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                      orchSelection?.selection?.kind === "unknown-entity" &&
+                      orchSelection.selection.entity === e.entity
+                        ? "ring-1 ring-inset ring-[#0F172A] bg-gray-50"
+                        : ""
+                    }`}
+                  >
                     <td className="px-4 py-2 text-sm text-gray-900">{e.entity}</td>
                     <td className="px-4 py-2 text-sm text-gray-600">{e.entityType}</td>
                     <td className="px-4 py-2 text-sm text-gray-600">{e.occurrenceCount}</td>
@@ -398,7 +376,7 @@ export default function AdminUnmappedPage() {
                     <td className="px-4 py-2 text-sm text-gray-600">
                       {e.possibleAliasOf ? (
                         <Link
-                          to={`/admin/registry?search=${encodeURIComponent(e.possibleAliasOf)}`}
+                          to={`/orchestrator/registry?search=${encodeURIComponent(e.possibleAliasOf)}`}
                           className="text-blue-600 hover:underline"
                         >
                           {e.possibleAliasOf}
@@ -410,20 +388,28 @@ export default function AdminUnmappedPage() {
                     <td className="px-4 py-2">
                       <SuggestedActionBadge action={e.suggestedAction} />
                     </td>
-                    <td className="px-4 py-2 flex gap-2 flex-wrap">
+                    <td className="px-4 py-2 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                       <Link
-                        to={`/admin/registry?search=${encodeURIComponent(e.entity)}`}
+                        to={`/orchestrator/registry?search=${encodeURIComponent(e.entity)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
                       >
                         Check registry
                       </Link>
-                      <button
-                        type="button"
-                        onClick={() => openEntityResearch(e)}
+                      <Link
+                        to={buildResearchUrl({
+                          mode: "entity",
+                          entity: e.entity,
+                          entityType: e.entityType,
+                          radarMetadata: {
+                            occurrenceCount: e.occurrenceCount,
+                            highRiskCount: e.highRiskCount,
+                            dominantContext: e.dominantContext,
+                          },
+                        })}
                         className="text-sm text-amber-700 hover:underline"
                       >
                         Research
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -451,7 +437,39 @@ export default function AdminUnmappedPage() {
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {signals.map((s, i) => (
-                  <tr key={`${s.entityA}-${s.entityB}-${s.relationship}-${i}`}>
+                  <tr
+                    key={`${s.entityA}-${s.entityB}-${s.relationship}-${i}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() =>
+                      orchSelection?.setSelection({
+                        kind: "interaction-gap",
+                        entityA: s.entityA,
+                        entityB: s.entityB,
+                        occurrenceCount: s.occurrenceCount,
+                        payload: { relationship: s.relationship, priority: s.priority },
+                      })
+                    }
+                    onKeyDown={(ev) => {
+                      if ((ev.key === "Enter" || ev.key === " ") && orchSelection) {
+                        ev.preventDefault();
+                        orchSelection.setSelection({
+                          kind: "interaction-gap",
+                          entityA: s.entityA,
+                          entityB: s.entityB,
+                          occurrenceCount: s.occurrenceCount,
+                          payload: { relationship: s.relationship, priority: s.priority },
+                        });
+                      }
+                    }}
+                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                      orchSelection?.selection?.kind === "interaction-gap" &&
+                      orchSelection.selection.entityA === s.entityA &&
+                      orchSelection.selection.entityB === s.entityB
+                        ? "ring-1 ring-inset ring-[#0F172A] bg-gray-50"
+                        : ""
+                    }`}
+                  >
                     <td className="px-4 py-2 text-sm text-gray-900">{s.entityA}</td>
                     <td className="px-4 py-2 text-sm text-gray-900">{s.entityB}</td>
                     <td className="px-4 py-2 text-sm text-gray-600">
@@ -461,15 +479,15 @@ export default function AdminUnmappedPage() {
                     <td className="px-4 py-2">
                       <PriorityBadge label={s.priority} />
                     </td>
-                    <td className="px-4 py-2 flex gap-2 flex-wrap">
+                    <td className="px-4 py-2 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                       <Link
-                        to={`/admin/registry?search=${encodeURIComponent(s.entityA)}`}
+                        to={`/orchestrator/registry?search=${encodeURIComponent(s.entityA)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
                       >
                         Check A
                       </Link>
                       <Link
-                        to={`/admin/registry?search=${encodeURIComponent(s.entityB)}`}
+                        to={`/orchestrator/registry?search=${encodeURIComponent(s.entityB)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
                       >
                         Check B
@@ -482,13 +500,19 @@ export default function AdminUnmappedPage() {
                       >
                         Research interaction
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => openSignalResearch(s)}
+                      <Link
+                        to={buildResearchUrl({
+                          mode: "combination",
+                          entityA: s.entityA,
+                          entityB: s.entityB,
+                          typeA: s.entityAType ?? "unknown",
+                          typeB: s.entityBType ?? "unknown",
+                          radarTelemetry: { occurrenceCount: s.occurrenceCount },
+                        })}
                         className="text-sm text-amber-700 hover:underline"
                       >
                         Draft proposal
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -519,7 +543,45 @@ export default function AdminUnmappedPage() {
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {combinations.map((c, i) => (
-                  <tr key={`${c.entityA}-${c.entityB}-${i}`}>
+                  <tr
+                    key={`${c.entityA}-${c.entityB}-${i}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() =>
+                      orchSelection?.setSelection({
+                        kind: "interaction-gap",
+                        entityA: c.entityA,
+                        entityB: c.entityB,
+                        combinationType: c.combinationType,
+                        occurrenceCount: c.occurrenceCount,
+                        highRiskCount: c.highRiskCount,
+                        safeCount: c.safeOccurrenceCount,
+                        signalPattern: c.signalPattern,
+                      })
+                    }
+                    onKeyDown={(ev) => {
+                      if ((ev.key === "Enter" || ev.key === " ") && orchSelection) {
+                        ev.preventDefault();
+                        orchSelection.setSelection({
+                          kind: "interaction-gap",
+                          entityA: c.entityA,
+                          entityB: c.entityB,
+                          combinationType: c.combinationType,
+                          occurrenceCount: c.occurrenceCount,
+                          highRiskCount: c.highRiskCount,
+                          safeCount: c.safeOccurrenceCount,
+                          signalPattern: c.signalPattern,
+                        });
+                      }
+                    }}
+                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                      orchSelection?.selection?.kind === "interaction-gap" &&
+                      orchSelection.selection.entityA === c.entityA &&
+                      orchSelection.selection.entityB === c.entityB
+                        ? "ring-1 ring-inset ring-[#0F172A] bg-gray-50"
+                        : ""
+                    }`}
+                  >
                     <td className="px-4 py-2 text-sm text-gray-900">{c.entityA}</td>
                     <td className="px-4 py-2 text-sm text-gray-900">{c.entityB}</td>
                     <td className="px-4 py-2 text-sm text-gray-600">{c.combinationType}</td>
@@ -532,27 +594,43 @@ export default function AdminUnmappedPage() {
                     <td className="px-4 py-2">
                       <PriorityBadge label={c.priorityLabel} />
                     </td>
-                    <td className="px-4 py-2 flex gap-2 flex-wrap">
+                    <td className="px-4 py-2 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                       <Link
-                        to={`/admin/registry?search=${encodeURIComponent(c.entityA)}`}
+                        to={`/orchestrator/registry?search=${encodeURIComponent(c.entityA)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
                       >
                         Check A
                       </Link>
                       <Link
-                        to={`/admin/registry?search=${encodeURIComponent(c.entityB)}`}
+                        to={`/orchestrator/registry?search=${encodeURIComponent(c.entityB)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
                       >
                         Check B
                       </Link>
-                      <span className="text-sm text-amber-700">Investigate</span>
-                      <button
-                        type="button"
-                        onClick={() => openCombinationResearch(c)}
+                      <Link
+                        to="/orchestrator/radar"
+                        className="text-sm text-gray-600 hover:underline"
+                      >
+                        Investigate
+                      </Link>
+                      <Link
+                        to={buildResearchUrl({
+                          mode: "combination",
+                          entityA: c.entityA,
+                          entityB: c.entityB,
+                          typeA: c.entityAType,
+                          typeB: c.entityBType,
+                          radarTelemetry: {
+                            occurrenceCount: c.occurrenceCount,
+                            highRiskCount: c.highRiskCount,
+                            safeOccurrenceCount: c.safeOccurrenceCount,
+                            signalPattern: c.signalPattern,
+                          },
+                        })}
                         className="text-sm text-amber-700 hover:underline"
                       >
                         Draft proposal
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -562,14 +640,7 @@ export default function AdminUnmappedPage() {
         </div>
       )}
 
-      <ResearchModal
-        open={researchModalOpen}
-        onClose={() => {
-          setResearchModalOpen(false);
-          setResearchContext(null);
-        }}
-        context={researchContext}
-      />
     </div>
+    </OrchestratorPageState>
   );
 }

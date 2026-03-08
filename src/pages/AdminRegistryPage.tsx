@@ -10,6 +10,13 @@ import { Link, useSearchParams } from "react-router-dom";
 import { showToast } from "@/lib/toast";
 import RegistryEntryCard from "../components/admin/RegistryEntryCard";
 import PendingProposalPanel from "../components/admin/PendingProposalPanel";
+import {
+  fetchRegistryEntries,
+  fetchRegistrySearch,
+  fetchPendingProposals,
+} from "../orchestrator/lib/fetchOrchestratorData";
+import OrchestratorPageState from "../orchestrator/components/OrchestratorPageState";
+import { useOptionalOrchestratorSelection } from "../orchestrator/context/OrchestratorSelectionContext";
 
 type RegistryType = "drug" | "supplement" | "food";
 
@@ -50,6 +57,7 @@ async function adminFetch<T>(
 }
 
 export default function AdminRegistryPage() {
+  const selection = useOptionalOrchestratorSelection();
   const [searchParams] = useSearchParams();
   const initialSearch = searchParams.get("search") ?? "";
   const [registryType, setRegistryType] = useState<RegistryType>("drug");
@@ -65,39 +73,36 @@ export default function AdminRegistryPage() {
   const loadEntries = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      if (search.trim()) {
-        const result = await adminFetch<{ results: RegistryEntry[] }>(
-          `/api/admin?action=registry-search&search=${encodeURIComponent(search.trim())}&type=${registryType}`
-        );
-        setEntries(result.results ?? []);
+    if (search.trim()) {
+      const result = await fetchRegistrySearch(search.trim(), registryType);
+      if (result.ok) {
+        setEntries(result.data.results ?? []);
       } else {
-        const result = await adminFetch<{ entries: RegistryEntry[] }>(
-          `/api/admin?action=registry-list&type=${registryType}`
-        );
-        setEntries(result.entries ?? []);
+        setError(result.error);
+        setEntries([]);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load registry");
-      setEntries([]);
-    } finally {
-      setLoading(false);
+    } else {
+      const result = await fetchRegistryEntries(registryType);
+      if (result.ok) {
+        setEntries(result.data.entries ?? []);
+      } else {
+        setError(result.error);
+        setEntries([]);
+      }
     }
+    setLoading(false);
   }, [registryType, search]);
 
   const loadProposals = useCallback(async () => {
     setProposalsLoading(true);
-    try {
-      const result = await adminFetch<{ proposals: Proposal[] }>(
-        `/api/admin?action=alias-proposals&type=${registryType}&status=pending`
-      );
-      setProposals(result.proposals ?? []);
+    const result = await fetchPendingProposals(registryType, "pending");
+    if (result.ok) {
+      setProposals(result.data.proposals ?? []);
       setSelectedProposalIds(new Set());
-    } catch {
+    } else {
       setProposals([]);
-    } finally {
-      setProposalsLoading(false);
     }
+    setProposalsLoading(false);
   }, [registryType]);
 
   useEffect(() => {
@@ -151,20 +156,33 @@ export default function AdminRegistryPage() {
     });
   };
 
+  const pageState =
+    loading && entries.length === 0 ? "loading"
+    : error && entries.length === 0 ? "error"
+    : entries.length === 0 && !search.trim() ? "empty"
+    : "success";
+
   return (
+    <OrchestratorPageState
+      state={pageState}
+      pageName="Registry"
+      errorMessage={error}
+      emptyMessage="No registry entries yet."
+      onRetry={loadEntries}
+    >
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Registry Browser</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Registry</h1>
           <p className="mt-1 text-sm text-gray-600">
-            View registries and draft alias proposals. Proposals do not affect live inference.
+            Browse registries. Draft proposals require governance promotion.
           </p>
         </div>
         <Link
-          to="/admin/unmapped"
+          to="/orchestrator/radar"
           className="text-sm font-medium text-gray-600 hover:text-gray-900"
         >
-          Unmapped Discovery →
+          Signal Radar →
         </Link>
       </div>
 
@@ -196,12 +214,6 @@ export default function AdminRegistryPage() {
           className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm"
         />
       </div>
-
-      {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          {error}
-        </div>
-      )}
 
       {/* Export result */}
       {exportResult && (
@@ -247,6 +259,22 @@ export default function AdminRegistryPage() {
                   matchedOn={e.matchedOn}
                   onProposeAdd={(alias) => handleProposeAdd(e.id, alias)}
                   onProposeRemove={(alias) => handleProposeRemove(e.id, alias)}
+                  onSelect={
+                    selection
+                      ? () =>
+                          selection.setSelection({
+                            kind: "registry-entity",
+                            canonicalId: e.id,
+                            registryType: e.type,
+                            aliasCount: e.aliases?.length ?? 0,
+                            entityClass: e.class,
+                          })
+                      : undefined
+                  }
+                  isSelected={
+                    selection?.selection?.kind === "registry-entity" &&
+                    selection.selection.canonicalId === e.id
+                  }
                 />
               ))}
             </div>
@@ -267,5 +295,6 @@ export default function AdminRegistryPage() {
         </div>
       </div>
     </div>
+    </OrchestratorPageState>
   );
 }
