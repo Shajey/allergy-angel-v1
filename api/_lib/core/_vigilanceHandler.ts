@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { fetchVigilance } from "../../vigilance/computeVigilance.js";
+import { fetchVigilance } from "../vigilance/computeVigilance.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {

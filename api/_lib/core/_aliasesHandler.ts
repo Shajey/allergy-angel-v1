@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { DRUGS } from "../../knowledge/drugs.registry.js";
-import { SUPPLEMENTS } from "../../knowledge/supplements.registry.js";
-import { FOODS } from "../../knowledge/foods.registry.js";
+import { DRUGS } from "../knowledge/drugs.registry.js";
+import { SUPPLEMENTS } from "../knowledge/supplements.registry.js";
+import { FOODS } from "../knowledge/foods.registry.js";
 
 function normalize(s: string): string {
   return s

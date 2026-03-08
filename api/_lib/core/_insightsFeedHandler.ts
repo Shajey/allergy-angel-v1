@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { analyzeTrajectory } from "../../inference/analyzeTrajectory.js";
-import type { VerdictMeta } from "../../inference/checkRisk.js";
-import { insightFingerprint } from "../../inference/insightFingerprint.js";
-import { buildEvidenceContext } from "../../inference/negativeEvidence.js";
-import type { EvidenceContext } from "../../inference/negativeEvidence.js";
-import { detectFunctionalStacking } from "../../inference/detectFunctionalStacking.js";
-import type { StackingInsight } from "../../inference/detectFunctionalStacking.js";
-import { getSupabaseClient } from "../../supabaseClient.js";
+import { analyzeTrajectory } from "../inference/analyzeTrajectory.js";
+import type { VerdictMeta } from "../inference/checkRisk.js";
+import { insightFingerprint } from "../inference/insightFingerprint.js";
+import { buildEvidenceContext } from "../inference/negativeEvidence.js";
+import type { EvidenceContext } from "../inference/negativeEvidence.js";
+import { detectFunctionalStacking } from "../inference/detectFunctionalStacking.js";
+import type { StackingInsight } from "../inference/detectFunctionalStacking.js";
+import { getSupabaseClient } from "../supabaseClient.js";
 
 /**
  * Vercel Serverless Function

@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient } from "../../supabaseClient.js";
+import { getSupabaseClient } from "../supabaseClient.js";
 import {
   computeRecentTriggersFromChecks,
   type RecentTriggerCheck,
-} from "../../vigilance/recentTriggers.js";
+} from "../vigilance/recentTriggers.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {

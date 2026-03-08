@@ -4,11 +4,12 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useOptionalOrchestratorSelection } from "../context/OrchestratorSelectionContext";
 import {
   parseResearchTargetFromSearchParams,
   researchTargetFromSelection,
+  buildResearchUrl,
   type ResearchTarget,
 } from "../lib/researchTarget";
 import ProposalPreviewPanel from "../components/research/ProposalPreviewPanel";
@@ -27,6 +28,7 @@ type ResearchResult =
 
 export default function ResearchWorkspacePage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const selection = useOptionalOrchestratorSelection()?.selection ?? null;
 
   const [target, setTarget] = useState<ResearchTarget | null>(null);
@@ -34,15 +36,22 @@ export default function ResearchWorkspacePage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ResearchResult | null>(null);
 
-  const derivedTarget = parseResearchTargetFromSearchParams(searchParams) ?? researchTargetFromSelection(selection);
+  const targetFromParams = parseResearchTargetFromSearchParams(searchParams);
+  const targetFromSelection = researchTargetFromSelection(selection);
+  const derivedTarget = targetFromParams ?? targetFromSelection;
 
   useEffect(() => {
     setTarget(derivedTarget);
     if (!derivedTarget) {
       setResult(null);
       setError(null);
+      return;
     }
-  }, [derivedTarget]);
+    // Persist target to URL when from selection — so "Start research" stays visible if selection clears
+    if (!targetFromParams && targetFromSelection) {
+      navigate(buildResearchUrl(derivedTarget), { replace: true });
+    }
+  }, [derivedTarget, targetFromParams, targetFromSelection, navigate]);
 
   const runResearch = useCallback(
     async (forceResearch = false) => {

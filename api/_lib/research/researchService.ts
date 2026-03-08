@@ -121,6 +121,23 @@ function entityGatePassed(radarMetadata?: Record<string, unknown>, adminForce?: 
   return occ >= 3 || risk > 0;
 }
 
+/** Normalize LLM output: coerce invalid draft fields (null, array, string) to undefined for schema validation */
+function normalizeProposalDrafts(parsed: unknown, type: "entity" | "combination"): void {
+  const obj = parsed as Record<string, unknown>;
+  const proposal = obj?.proposal as Record<string, unknown> | undefined;
+  if (!proposal || typeof proposal !== "object") return;
+
+  const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+    v !== null && typeof v === "object" && !Array.isArray(v);
+
+  if (type === "entity") {
+    if (!isPlainObject(proposal.entityDraft)) delete proposal.entityDraft;
+    if (!isPlainObject(proposal.aliasDraft)) delete proposal.aliasDraft;
+  } else {
+    if (!isPlainObject(proposal.relationshipDraft)) delete proposal.relationshipDraft;
+  }
+}
+
 function combinationGatePassed(
   radarTelemetry?: { occurrenceCount?: number; highRiskCount?: number; signalPattern?: string },
   adminForce?: boolean
@@ -188,6 +205,7 @@ export async function researchEntity(
   try {
     const raw = await provider.researchEntity(args);
     const parsed = JSON.parse(raw) as unknown;
+    normalizeProposalDrafts(parsed, "entity");
     const valid = validateEntityResearchOutput(parsed);
     if (!valid) {
       return {
@@ -315,6 +333,7 @@ export async function researchCombination(
   try {
     const raw = await provider.researchCombination(args);
     const parsed = JSON.parse(raw) as unknown;
+    normalizeProposalDrafts(parsed, "combination");
     const valid = validateCombinationResearchOutput(parsed);
     if (!valid) {
       return {

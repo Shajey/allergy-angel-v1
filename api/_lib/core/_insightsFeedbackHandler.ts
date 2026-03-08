@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { insightFingerprint } from "../../inference/insightFingerprint.js";
-import { getSupabaseClient } from "../../supabaseClient.js";
+import { insightFingerprint } from "../inference/insightFingerprint.js";
+import { getSupabaseClient } from "../supabaseClient.js";
 
 const VALID_VOTES = new Set(["relevant", "not_relevant", "unsure"]);
 

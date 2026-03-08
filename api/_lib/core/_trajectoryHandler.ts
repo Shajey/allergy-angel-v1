@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { analyzeTrajectory } from "../../inference/analyzeTrajectory.js";
-import { getSupabaseClient } from "../../supabaseClient.js";
+import { analyzeTrajectory } from "../inference/analyzeTrajectory.js";
+import { getSupabaseClient } from "../supabaseClient.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {

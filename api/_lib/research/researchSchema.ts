@@ -55,7 +55,7 @@ const entityResearchOutputSchema = {
         proposalType: { type: "string", enum: ["create-entity", "add-alias", "no-action"] },
         registryType: { type: "string", enum: ["drug", "supplement", "food"] },
         entityDraft: {
-          type: "object",
+          type: ["object", "null"],
           properties: {
             canonicalName: { type: "string" },
             aliases: { type: "array", items: { type: "string" } },
@@ -63,7 +63,7 @@ const entityResearchOutputSchema = {
           },
         },
         aliasDraft: {
-          type: "object",
+          type: ["object", "null"],
           properties: {
             canonicalId: { type: "string" },
             proposedAlias: { type: "string" },
@@ -111,7 +111,7 @@ const combinationResearchOutputSchema = {
       properties: {
         proposalType: { type: "string", enum: ["create-relationship", "investigate-only", "no-action"] },
         relationshipDraft: {
-          type: "object",
+          type: ["object", "null"],
           properties: {
             subjectType: { type: "string", enum: ["entity", "class"] },
             subjectId: { type: "string" },
