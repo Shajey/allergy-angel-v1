@@ -7,6 +7,7 @@ import { getProfiles } from "./_lib/profiles/getProfiles.js";
 import { createProfile } from "./_lib/profiles/createProfile.js";
 import { updateProfile } from "./_lib/profiles/updateProfile.js";
 import { deleteProfile } from "./_lib/profiles/deleteProfile.js";
+import { resolveEntity } from "./_lib/knowledge/entityResolver.js";
 
 /**
  * Vercel Serverless Function
@@ -80,18 +81,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(404).json({ error: "Profile not found", details: null });
       }
 
-      const normalized = name.toLowerCase();
-      const meds = (profile.current_medications ?? []) as { name?: string }[];
-      const supps = (profile.supplements ?? []) as string[];
+      const resolution = resolveEntity(name);
+      const canonicalName = resolution.resolved
+        ? resolution.canonical
+        : name.toLowerCase().trim();
+      const meds = (profile.current_medications ?? []) as { name?: string; displayName?: string }[];
+      const supps = (profile.supplements ?? []) as (string | { name: string; displayName?: string })[];
 
       if (type === "medication") {
-        if (meds.some((m) => String(m?.name ?? "").toLowerCase() === normalized)) {
+        const medCanonical = (m: { name?: string; displayName?: string }) =>
+          String(m?.name ?? "").toLowerCase().trim();
+        if (meds.some((m) => medCanonical(m) === canonicalName)) {
           return res.status(200).json({
             success: true,
             item: { name, type: "medication", alreadyExisted: true },
           });
         }
-        const updated = [...meds, { name }];
+        const updated = [...meds, { name: canonicalName, displayName: name }];
         const { error } = await supabase
           .from("profiles")
           .update({
@@ -109,13 +115,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (type === "supplement") {
-        if (supps.some((s) => String(s).toLowerCase() === normalized)) {
+        const suppCanonical = (s: string | { name: string; displayName?: string }) =>
+          (typeof s === "string" ? s : s?.name ?? "").toLowerCase().trim();
+        if (supps.some((s) => suppCanonical(s) === canonicalName)) {
           return res.status(200).json({
             success: true,
             item: { name, type: "supplement", alreadyExisted: true },
           });
         }
-        const updated = [...supps, name];
+        const updated = [...supps, { name: canonicalName, displayName: name }];
         const { error } = await supabase
           .from("profiles")
           .update({
@@ -133,14 +141,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (type === "allergy") {
-        const allergies = (profile.known_allergies ?? []) as string[];
-        if (allergies.some((a) => String(a).toLowerCase() === normalized)) {
+        const resolutionA = resolveEntity(name);
+        const canonicalAllergy = resolutionA.resolved
+          ? resolutionA.canonical
+          : name.toLowerCase().trim();
+        const allergies = (profile.known_allergies ?? []) as (string | { name: string; displayName?: string })[];
+        const allergyCanonical = (a: string | { name: string; displayName?: string }) =>
+          (typeof a === "string" ? a : a?.name ?? "").toLowerCase().trim();
+        if (allergies.some((a) => allergyCanonical(a) === canonicalAllergy)) {
           return res.status(200).json({
             success: true,
             item: { name, type: "allergy", alreadyExisted: true },
           });
         }
-        const updated = [...allergies, name];
+        const updated = [...allergies, { name: canonicalAllergy, displayName: name }];
         const { error } = await supabase
           .from("profiles")
           .update({
@@ -257,13 +271,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const updates: Record<string, unknown> = {};
 
       if (Array.isArray(body.known_allergies)) {
-        updates.known_allergies = body.known_allergies;
+        updates.known_allergies = body.known_allergies.map((a: unknown) => {
+          const raw = typeof a === "object" && a !== null && "name" in a
+            ? String((a as { name: string }).name)
+            : String(a);
+          const r = resolveEntity(raw);
+          return r.resolved
+            ? { name: r.canonical, displayName: raw }
+            : { name: raw.toLowerCase().trim(), displayName: raw };
+        });
       }
       if (Array.isArray(body.current_medications)) {
-        updates.current_medications = body.current_medications;
+        updates.current_medications = body.current_medications.map((m: unknown) => {
+          const obj = m as { name?: string; dosage?: string; displayName?: string };
+          const raw = String(obj?.name ?? obj ?? "");
+          const r = resolveEntity(raw);
+          return {
+            name: r.resolved ? r.canonical : raw.toLowerCase().trim(),
+            displayName: raw,
+            dosage: obj?.dosage,
+          };
+        });
       }
       if (Array.isArray(body.supplements)) {
-        updates.supplements = body.supplements;
+        updates.supplements = body.supplements.map((s: unknown) => {
+          const raw = typeof s === "object" && s !== null && "name" in s
+            ? String((s as { name: string }).name)
+            : String(s);
+          const r = resolveEntity(raw);
+          return r.resolved
+            ? { name: r.canonical, displayName: raw }
+            : { name: raw.toLowerCase().trim(), displayName: raw };
+        });
       }
 
       if (Object.keys(updates).length === 0) {

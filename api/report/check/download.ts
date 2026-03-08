@@ -90,12 +90,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .eq("id", check.profile_id)
           .maybeSingle();
         if (profileRow) {
-          const meds = (profileRow.current_medications ?? []) as { name?: string }[];
+          const meds = (profileRow.current_medications ?? []) as { name?: string; displayName?: string }[];
+          const allergies = (profileRow.known_allergies ?? []) as (string | { name: string })[];
+          const supps = (profileRow.supplements ?? []) as (string | { name: string })[];
           profile = {
             name: String(profileRow.display_name ?? "Unknown"),
-            allergies: (profileRow.known_allergies ?? []) as string[],
+            allergies: allergies.map((a) => (typeof a === "string" ? a : a?.name ?? "")).filter(Boolean),
             medications: meds.map((m) => String(m?.name ?? m)).filter(Boolean),
-            supplements: (profileRow.supplements ?? []) as string[],
+            supplements: supps.map((s) => (typeof s === "string" ? s : s?.name ?? "")).filter(Boolean),
           };
         }
       } catch {

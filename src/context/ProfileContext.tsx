@@ -1,5 +1,6 @@
 /**
  * Phase 16 – Multi-profile foundation
+ * Phase 21b – isItemInProfile uses canonical matching via entity resolver
  *
  * Provides selected profile state and list of profiles.
  * Persists selected profile ID to localStorage (allergyangel_selected_profile).
@@ -14,6 +15,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  preloadAliasMap,
+  resolveEntitySync,
+} from "@/lib/entityResolver";
 
 const STORAGE_KEY = "allergyangel_selected_profile";
 
@@ -50,6 +55,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [selectedProfileId, setSelectedProfileIdState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [aliasMap, setAliasMap] = useState<Record<string, string> | null>(null);
+
+  useEffect(() => {
+    preloadAliasMap()
+      .then(setAliasMap)
+      .catch(() => {});
+  }, []);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -105,28 +117,47 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     (type: "medication" | "supplement" | "allergy", name: string): boolean => {
       const profile = selectedProfile ?? profiles[0];
       if (!profile) return false;
-      const normalized = name.toLowerCase().trim();
+
+      const map = aliasMap ?? {};
+      const { canonical: inputCanonical } = resolveEntitySync(name, map);
+      const inputNorm = name.toLowerCase().trim();
+
+      const getProfileCanonical = (item: string | { name?: string; displayName?: string }) => {
+        const raw = typeof item === "string" ? item : String(item?.name ?? "");
+        const { canonical } = resolveEntitySync(raw, map);
+        return canonical;
+      };
 
       switch (type) {
         case "medication": {
-          const meds = (profile.current_medications ?? []) as { name?: string }[];
-          return meds.some(
-            (m) => String(m?.name ?? "").toLowerCase() === normalized
-          );
+          const meds = (profile.current_medications ?? []) as { name?: string; displayName?: string }[];
+          return meds.some((m) => {
+            const medCanon = getProfileCanonical(m);
+            const medRaw = String(m?.name ?? "").toLowerCase().trim();
+            return medCanon === inputCanonical || medRaw === inputNorm;
+          });
         }
-        case "supplement":
-          return (profile.supplements ?? []).some(
-            (s) => String(s).toLowerCase() === normalized
-          );
-        case "allergy":
-          return (profile.known_allergies ?? []).some(
-            (a) => String(a).toLowerCase() === normalized
-          );
+        case "supplement": {
+          const supps = (profile.supplements ?? []) as (string | { name: string; displayName?: string })[];
+          return supps.some((s) => {
+            const suppCanon = getProfileCanonical(s);
+            const suppRaw = (typeof s === "string" ? s : s?.name ?? "").toLowerCase().trim();
+            return suppCanon === inputCanonical || suppRaw === inputNorm;
+          });
+        }
+        case "allergy": {
+          const allergies = (profile.known_allergies ?? []) as (string | { name: string; displayName?: string })[];
+          return allergies.some((a) => {
+            const aCanon = getProfileCanonical(a);
+            const aRaw = (typeof a === "string" ? a : a?.name ?? "").toLowerCase().trim();
+            return aCanon === inputCanonical || aRaw === inputNorm;
+          });
+        }
         default:
           return false;
       }
     },
-    [selectedProfile, profiles]
+    [selectedProfile, profiles, aliasMap]
   );
 
   const value: ProfileContextValue = useMemo(

@@ -19,12 +19,23 @@ type ItemType = 'medication' | 'supplement' | 'allergy';
 interface Medication {
   name: string;
   dosage?: string;
+  displayName?: string;
 }
 
+type AllergyItem = string | { name: string; displayName?: string };
+type SupplementItem = string | { name: string; displayName?: string };
+
 interface ProfileData {
-  known_allergies: string[];
+  known_allergies: AllergyItem[];
   current_medications: Medication[];
-  supplements: string[];
+  supplements: SupplementItem[];
+}
+
+function getDisplayName(item: string | { name: string; displayName?: string }): string {
+  return typeof item === 'string' ? item : (item.displayName ?? item.name);
+}
+function getCanonicalName(item: string | { name: string; displayName?: string }): string {
+  return typeof item === 'string' ? item : item.name;
 }
 
 export default function AngelProfilePage() {
@@ -99,13 +110,13 @@ export default function AngelProfilePage() {
     if (!trimmed || !profile) return;
 
     if (type === 'allergy') {
-      if (profile.known_allergies.some((a) => a.toLowerCase() === trimmed.toLowerCase())) return;
+      if (profile.known_allergies.some((a) => getCanonicalName(a).toLowerCase() === trimmed.toLowerCase())) return;
       await saveProfile({ known_allergies: [...profile.known_allergies, trimmed] });
     } else if (type === 'medication') {
       if (profile.current_medications.some((m) => m.name.toLowerCase() === trimmed.toLowerCase())) return;
       await saveProfile({ current_medications: [...profile.current_medications, { name: trimmed }] });
     } else {
-      if (profile.supplements.some((s) => s.toLowerCase() === trimmed.toLowerCase())) return;
+      if (profile.supplements.some((s) => getCanonicalName(s).toLowerCase() === trimmed.toLowerCase())) return;
       await saveProfile({ supplements: [...profile.supplements, trimmed] });
     }
 
@@ -119,19 +130,19 @@ export default function AngelProfilePage() {
     if (t === 'allergy') {
       await saveProfile({
         known_allergies: profile.known_allergies.filter(
-          (a) => a.toLowerCase() !== itemValue.toLowerCase()
+          (a) => getDisplayName(a).toLowerCase() !== itemValue.toLowerCase()
         ),
       });
     } else if (t === 'medication') {
       await saveProfile({
         current_medications: profile.current_medications.filter(
-          (m) => m.name.toLowerCase() !== itemValue.toLowerCase()
+          (m) => (m.displayName ?? m.name).toLowerCase() !== itemValue.toLowerCase()
         ),
       });
     } else {
       await saveProfile({
         supplements: profile.supplements.filter(
-          (s) => s.toLowerCase() !== itemValue.toLowerCase()
+          (s) => getDisplayName(s).toLowerCase() !== itemValue.toLowerCase()
         ),
       });
     }
@@ -140,9 +151,11 @@ export default function AngelProfilePage() {
   // ── Build display lists ────────────────────────────────────────
   const grouped = profile
     ? {
-        medication: profile.current_medications.map((m) => m.name + (m.dosage ? ` (${m.dosage})` : '')),
-        supplement: profile.supplements,
-        allergy: profile.known_allergies,
+        medication: profile.current_medications.map((m) =>
+          (m.displayName ?? m.name) + (m.dosage ? ` (${m.dosage})` : '')
+        ),
+        supplement: profile.supplements.map(getDisplayName),
+        allergy: profile.known_allergies.map(getDisplayName),
       }
     : { medication: [], supplement: [], allergy: [] };
 

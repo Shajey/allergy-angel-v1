@@ -9,6 +9,7 @@ import { extractTextFromImage } from "./_lib/extractFromImage.js";
 import { postProcessExtractionResult } from "./_lib/inference/postProcessExtractionResult.js";
 import { saveExtractionRun } from "./_lib/persistence/saveExtractionRun.js";
 import { postProcessFollowUps } from "./_lib/inference/postProcessFollowUps.js";
+import { enrichWithResolution } from "./_lib/knowledge/enrichWithResolution.js";
 
 /**
  * Vercel Serverless Function
@@ -118,6 +119,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── Post-process: meal needsClarification + carb follow-up suppression ─
     postProcessExtractionResult(rawText, result);
+
+    // ── Phase 21a: Enrich events with entity resolution before inference ─
+    result.events = enrichWithResolution(result.events ?? []);
 
     // ── Phase 7 + 9A + 16: persist extraction run (best-effort) ───────────
     // profile_id from request body, else DEFAULT_PROFILE_ID.

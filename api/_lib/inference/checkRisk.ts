@@ -42,6 +42,7 @@ import {
   normalizeSupplementName,
   normalizeMedicationName,
 } from "./supplementInteractions.js";
+import { resolveEntity, resolveMealText } from "../knowledge/entityResolver.js";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -134,20 +135,28 @@ function normalize(s: string): string {
   return s.toLowerCase().trim();
 }
 
+/** Phase 21a: Resolve medication to canonical for lookup. Strips dosage in parens. */
+function resolveMedicationToCanonical(name: string): string {
+  const cleaned = normalizeMedicationName(name); // Strips (5mg) etc.
+  const resolved = resolveEntity(cleaned);
+  return resolved.resolved ? resolved.canonical : cleaned;
+}
+
 /**
  * Check whether an extracted medication conflicts with any current medication.
+ * Phase 21a: Uses canonical forms for matching.
  */
 function medicationInteracts(
   extractedMed: string,
   currentMeds: { name: string }[]
 ): { extracted: string; conflictsWith: string } | null {
-  const extracted = normalize(extractedMed);
-  const interactions = INTERACTION_MAP[extracted];
+  const extractedCanonical = resolveMedicationToCanonical(extractedMed);
+  const interactions = INTERACTION_MAP[extractedCanonical];
   if (!interactions) return null;
 
   for (const current of currentMeds) {
-    const currentName = normalize(current.name);
-    if (interactions.includes(currentName)) {
+    const currentCanonical = resolveMedicationToCanonical(current.name);
+    if (interactions.includes(currentCanonical)) {
       return { extracted: extractedMed, conflictsWith: current.name };
     }
   }
@@ -175,8 +184,10 @@ export function checkRisk(args: {
     if (event.type === "meal") {
       const mealText: string = event.fields?.meal ?? "";
       if (mealText) {
+        // Phase 21a: Resolve meal text aliases (e.g. groundnut → peanut)
+        const resolvedMealText = resolveMealText(mealText);
         const { matched: isMatch, matchedTerm } = isAllergenMatch(
-          mealText,
+          resolvedMealText,
           expandedAllergies
         );
         if (isMatch && matchedTerm) {
@@ -211,7 +222,7 @@ export function checkRisk(args: {
         } else {
           // ── Phase 18.1.1: Dish commonly contains allergen (HIGH) ─
           // e.g. pad thai → peanut. Ask for confirmation.
-          const dishMatch = getDishAllergenMatch(mealText, profile.known_allergies);
+          const dishMatch = getDishAllergenMatch(resolvedMealText, profile.known_allergies);
           if (dishMatch && highestRisk !== "high") {
             highestRisk = "high";
             const matchedCategory = resolveCategoryForSeverity(dishMatch.allergen);
@@ -241,9 +252,9 @@ export function checkRisk(args: {
             // ── Phase 10J: Cross-reactive check (MEDIUM) ─────────────
             // Only when no direct taxonomy match. Do NOT override High.
             const crossMatch = getCrossReactiveMatch(
-            profile.known_allergies,
-            mealText
-          );
+              profile.known_allergies,
+              resolvedMealText
+            );
           if (crossMatch && highestRisk !== "high") {
             highestRisk = "medium";
             const baseSeverity = getAllergenSeverity(crossMatch.source);
@@ -276,12 +287,12 @@ export function checkRisk(args: {
         }
 
         // ── Rule D: Food → medication interaction (Phase 17) ─────────
-        const mealLower = mealText.toLowerCase();
+        const mealLower = resolvedMealText.toLowerCase();
         for (const [food, interaction] of Object.entries(FOOD_MEDICATION_KEYWORDS)) {
           if (mealLower.includes(food)) {
             for (const profileMed of profile.current_medications) {
-              const normalizedMed = normalizeMedicationName(profileMed.name);
-              if (interaction.meds.includes(normalizedMed)) {
+              const medCanonical = resolveMedicationToCanonical(profileMed.name);
+              if (interaction.meds.includes(medCanonical)) {
                 matched.push({
                   rule: "food_medication_interaction",
                   ruleCode: RULE_FOOD_MED_INTERACTION,
@@ -314,6 +325,7 @@ export function checkRisk(args: {
     if (event.type === "medication") {
       const medName: string = event.fields?.medication ?? "";
       if (medName) {
+        // Phase 21a: medicationInteracts uses canonical resolution internally
         const conflict = medicationInteracts(medName, profile.current_medications);
         if (conflict) {
           if (highestRisk !== "high") highestRisk = "medium";
@@ -328,20 +340,30 @@ export function checkRisk(args: {
 
     // ── Rule C: Supplement → medication interaction (Phase 17) ───────
     if (event.type === "supplement") {
-      const supplementName = normalizeSupplementName(
-        (event.fields?.supplement ?? event.fields?.name ?? "") as string
-      );
-      if (!supplementName) continue;
-      const interaction = SUPPLEMENT_INTERACTION_MAP[supplementName];
+      // Phase 21a: Use resolution.canonical if available, else resolve or normalize
+      const rawSupplement =
+        (event.fields?.supplement ?? event.fields?.name ?? "") as string;
+      if (!rawSupplement) continue;
+
+      let supplementCanonical: string;
+      if (event.resolution?.resolved && event.resolution?.type === "supplement") {
+        supplementCanonical = event.resolution.canonical;
+      } else {
+        const resolved = resolveEntity(rawSupplement);
+        supplementCanonical = resolved.resolved
+          ? resolved.canonical
+          : normalizeSupplementName(rawSupplement);
+      }
+      const interaction = SUPPLEMENT_INTERACTION_MAP[supplementCanonical];
       if (interaction && profile.current_medications.length > 0) {
         for (const profileMed of profile.current_medications) {
-          const normalizedMed = normalizeMedicationName(profileMed.name);
-          if (interaction.interactsWith.includes(normalizedMed)) {
+          const medCanonical = resolveMedicationToCanonical(profileMed.name);
+          if (interaction.interactsWith.includes(medCanonical)) {
             matched.push({
               rule: "supplement_medication_interaction",
               ruleCode: RULE_SUPPLEMENT_MED_INTERACTION,
               details: {
-                supplement: supplementName,
+                supplement: rawSupplement,
                 medication: profileMed.name,
                 risk: interaction.risk,
                 reason: interaction.reason,

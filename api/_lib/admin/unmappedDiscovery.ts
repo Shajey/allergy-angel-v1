@@ -18,6 +18,10 @@ import {
   normalizeTerm as fcNormalize,
 } from "../inference/functionalClasses.js";
 import { buildEvidence } from "./unmappedEvidence.js";
+import {
+  classifySuggestedAction,
+  type SuggestedAction,
+} from "./suggestedAction.js";
 
 // ── Stopwords for meal tokenization ────────────────────────────────────
 const MEAL_STOPWORDS = new Set([
@@ -197,6 +201,8 @@ export interface UnmappedCandidate {
   examples: string[];
   sources: Record<string, number>;
   riskRate: number;
+  /** Phase 21d suggested action */
+  suggestedAction: SuggestedAction;
 }
 
 export interface UnmappedDiscoveryOptions {
@@ -407,6 +413,7 @@ export function discoverUnmappedFromRecords(
         examples: evidence.examples,
         sources: evidence.sources,
         riskRate: evidence.riskRate,
+        suggestedAction: classifySuggestedAction(value, v.kind),
       };
     })
     .filter((c) => {
@@ -417,13 +424,9 @@ export function discoverUnmappedFromRecords(
       return true;
     })
     .sort((a, b) => {
-      // Ranking: highRiskCount desc, riskRate desc, count desc, lastSeenAt desc, candidate asc.
-      // Tie-breakers ensure deterministic "rare-but-deadly" ordering; final candidate asc is stable.
+      // Phase 21d: HighRiskCount DESC, Count DESC, Value ASC
       if (b.highRiskCount !== a.highRiskCount) return b.highRiskCount - a.highRiskCount;
-      if (b.riskRate !== a.riskRate) return b.riskRate > a.riskRate ? 1 : b.riskRate < a.riskRate ? -1 : 0;
       if (b.count !== a.count) return b.count - a.count;
-      const lastCmp = b.lastSeenAt.localeCompare(a.lastSeenAt);
-      if (lastCmp !== 0) return lastCmp;
       return a.value.localeCompare(b.value);
     })
     .slice(0, limit);

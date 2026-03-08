@@ -12,6 +12,11 @@ import {
   type AdviceEntry,
 } from "../advice/adviceRegistry.js";
 import { getParentKeyForTerm } from "../inference/allergenTaxonomy.js";
+import {
+  toResolutionMetadata,
+  type ResolutionMetadata,
+  type ResolvedEntity,
+} from "../knowledge/types.js";
 
 // ── Input types ─────────────────────────────────────────────────────
 
@@ -48,6 +53,7 @@ export interface ReportEventInput {
   event_data: Record<string, unknown>;
 }
 
+
 // ── Output types ────────────────────────────────────────────────────
 
 export interface ReportMatchedEntry {
@@ -77,6 +83,7 @@ export interface CheckReport {
       created_at: string;
       event_type: string;
       event_data: Record<string, unknown>;
+      resolution?: ResolutionMetadata;
     }>;
     rawText?: string;
   };
@@ -143,12 +150,22 @@ export function buildCheckReport(args: {
       traceId,
     },
     input: {
-      events: sortedEvents.map((e) => ({
-        id: e.id,
-        created_at: e.created_at,
-        event_type: e.event_type,
-        event_data: e.event_data,
-      })),
+      events: sortedEvents.map((e) => {
+        const eventData = e.event_data ?? {};
+        const rawResolution = eventData._resolution as ResolvedEntity | undefined;
+        const eventDataClean = { ...eventData };
+        delete eventDataClean._resolution;
+        const resolution = rawResolution
+          ? toResolutionMetadata(rawResolution)
+          : undefined;
+        return {
+          id: e.id,
+          created_at: e.created_at,
+          event_type: e.event_type,
+          event_data: eventDataClean,
+          ...(resolution ? { resolution } : {}),
+        };
+      }),
       ...(includeRawText ? { rawText: check.raw_text } : {}),
     },
     output: {

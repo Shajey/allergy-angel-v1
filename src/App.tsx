@@ -10,6 +10,8 @@ import HistoryPage from './pages/HistoryPage';
 import HistoryCheckDetailPage from './pages/HistoryCheckDetailPage';
 import InsightsPage from './pages/InsightsPage';
 import AdminUnmappedPage from './pages/AdminUnmappedPage';
+import AdminRegistryPage from './pages/AdminRegistryPage';
+import AdminIngestionPage from './pages/AdminIngestionPage';
 import ManageProfilesPage from './pages/ManageProfilesPage';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
             <Route path="insights" element={<InsightsPage />} />
             <Route path="manage-profiles" element={<ManageProfilesPage />} />
             <Route path="admin/unmapped" element={<AdminUnmappedPage />} />
+            <Route path="admin/registry" element={<AdminRegistryPage />} />
+            <Route path="admin/ingestion" element={<AdminIngestionPage />} />
           </Route>
 
           {/* Catch-all */}

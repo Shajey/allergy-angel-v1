@@ -3,6 +3,7 @@ import { getSupabaseClient } from "../supabaseClient.js";
 import { checkRisk, type Verdict } from "../inference/checkRisk.js";
 import { ALLERGEN_TAXONOMY_VERSION } from "../inference/allergenTaxonomy.js";
 import { postProcessFollowUps } from "../inference/postProcessFollowUps.js";
+import { recordRadarTelemetry } from "../telemetry/verdictObserver.js";
 
 /**
  * Persist an extraction run to Supabase Postgres.
@@ -49,12 +50,26 @@ export async function saveExtractionRun(args: {
   }
 
   // ── 0b. Compute deterministic risk verdict (Phase 9B) ─────────────
+  // Phase 21b: Normalize profile for checkRisk (extract names from object form)
+  const knownAllergies = (profile.known_allergies ?? []).map((a: unknown) =>
+    typeof a === "object" && a !== null && "name" in a
+      ? String((a as { name: string }).name)
+      : String(a)
+  );
+  const currentMeds = (profile.current_medications ?? []).map((m: unknown) => {
+    const obj = m as { name?: string; dosage?: string };
+    return {
+      name: String(obj?.name ?? obj ?? ""),
+      dosage: obj?.dosage,
+    };
+  });
+
   let verdict: Verdict;
   try {
     verdict = checkRisk({
       profile: {
-        known_allergies: profile.known_allergies ?? [],
-        current_medications: profile.current_medications ?? [],
+        known_allergies: knownAllergies,
+        current_medications: currentMeds,
       },
       events: result.events,
     });
@@ -89,6 +104,13 @@ export async function saveExtractionRun(args: {
   result.followUpQuestions = postProcessed.followUpQuestions;
   if (postProcessed.warnings?.length) {
     result.warnings = [...(result.warnings ?? []), ...postProcessed.warnings];
+  }
+
+  // ── Phase 22: Knowledge Radar telemetry (fire-and-forget) ────────
+  try {
+    recordRadarTelemetry({ verdict, events: result.events });
+  } catch (err) {
+    console.error("[Radar] Telemetry failed:", err instanceof Error ? err.message : err);
   }
 
   // ── 1. Insert the parent "check" row (includes verdict) ───────────
@@ -128,16 +150,23 @@ export async function saveExtractionRun(args: {
   // ── 3. Persist health events (all linked to check_id) ────────────
   if (result.events.length === 0) return;
 
-  const rows = result.events.map((event: any) => ({
-    profile_id: profileId,
-    check_id: checkId,
-    event_type: event.type,
-    event_data: event.fields ?? {},
-    confidence_score:
-      event.confidenceScore ?? Math.round((event.confidence ?? 0) * 100),
-    provenance: event.provenance ?? {},
-    ...(rawInputId ? { raw_input_id: rawInputId } : {}),
-  }));
+  const rows = result.events.map((event: any) => {
+    const fields = event.fields ?? {};
+    const eventData: Record<string, unknown> = { ...fields };
+    if (event.resolution) {
+      eventData._resolution = event.resolution;
+    }
+    return {
+      profile_id: profileId,
+      check_id: checkId,
+      event_type: event.type,
+      event_data: eventData,
+      confidence_score:
+        event.confidenceScore ?? Math.round((event.confidence ?? 0) * 100),
+      provenance: event.provenance ?? {},
+      ...(rawInputId ? { raw_input_id: rawInputId } : {}),
+    };
+  });
 
   const { error: eventsError } = await supabase
     .from("health_events")

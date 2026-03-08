@@ -674,8 +674,10 @@ export default function HistoryCheckDetailPage() {
             const profileRes = await fetch(profileUrl);
             if (profileRes.ok) {
               const profileJson = await profileRes.json();
-              const allergies: string[] =
-                profileJson?.profile?.known_allergies ?? [];
+              const rawAllergies = profileJson?.profile?.known_allergies ?? [];
+              const allergies: string[] = rawAllergies.map((a: string | { name: string }) =>
+                typeof a === "string" ? a : (a?.name ?? "")
+              ).filter(Boolean);
               if (allergies.length > 0) {
                 const alerts = detectAllergenAlerts(
                   allergies,

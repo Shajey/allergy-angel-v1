@@ -236,6 +236,64 @@ export const SUPPLEMENT_INTERACTION_MAP: Record<string, SupplementInteraction> =
     risk: "medium",
     reason: "May increase bleeding risk in high doses with blood thinners",
   },
+
+  // Phase 21a: Canonical keys for entity resolution
+  "omega-3-fatty-acid": {
+    interactsWith: [
+      "warfarin",
+      "eliquis",
+      "apixaban",
+      "aspirin",
+      "plavix",
+      "clopidogrel",
+      "coumadin",
+    ],
+    risk: "medium",
+    reason: "May increase bleeding risk when combined with blood thinners",
+  },
+  "st-johns-wort": {
+    interactsWith: [
+      "sertraline",
+      "prozac",
+      "fluoxetine",
+      "lexapro",
+      "escitalopram",
+      "zoloft",
+      "celexa",
+      "citalopram",
+      "paxil",
+      "paroxetine",
+      "birth control",
+      "oral contraceptive",
+      "cyclosporine",
+      "warfarin",
+      "digoxin",
+    ],
+    risk: "high",
+    reason:
+      "Can significantly reduce medication effectiveness and increase serotonin syndrome risk with antidepressants",
+  },
+  "ginkgo-biloba": {
+    interactsWith: ["warfarin", "aspirin", "ibuprofen", "naproxen", "eliquis", "plavix"],
+    risk: "medium",
+    reason: "May increase bleeding risk with blood thinners and NSAIDs",
+  },
+  "vitamin-k": {
+    interactsWith: ["warfarin", "coumadin"],
+    risk: "high",
+    reason: "Directly counteracts warfarin; can make blood thinner ineffective",
+  },
+  "vitamin-e": {
+    interactsWith: ["warfarin", "aspirin", "plavix", "clopidogrel", "eliquis"],
+    risk: "medium",
+    reason: "High doses may increase bleeding risk with blood thinners",
+  },
+  "green-tea-extract": {
+    interactsWith: ["warfarin", "nadolol", "atenolol"],
+    risk: "medium",
+    reason:
+      "High doses may reduce warfarin effectiveness and affect blood pressure medications",
+  },
 };
 
 export const SUPPLEMENT_INTERACTION_VERSION = "17.1";
