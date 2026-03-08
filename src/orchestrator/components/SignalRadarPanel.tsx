@@ -16,7 +16,7 @@ import {
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 mt-4 first:mt-0 text-xs font-semibold uppercase tracking-wide text-[#64748B]">
+    <p className="orch-section-header mb-2 mt-4 first:mt-0 text-xs font-semibold uppercase tracking-wide text-[#0F172A]">
       {children}
     </p>
   );
@@ -116,8 +116,8 @@ export default function SignalRadarPanel() {
 
   if (loading) {
     return (
-      <aside className="w-56 shrink-0 border-r border-[#E2E8F0] bg-white p-3 overflow-y-auto">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#64748B]">
+      <aside className="w-56 shrink-0 bg-white p-4 overflow-y-auto">
+        <p className="orch-section-header mb-3 text-xs font-semibold uppercase tracking-wide text-[#0F172A]">
           Signal Radar
         </p>
         <div className="space-y-2">
@@ -130,8 +130,8 @@ export default function SignalRadarPanel() {
   }
 
   return (
-    <aside className="w-56 shrink-0 border-r border-[#E2E8F0] bg-white p-3 overflow-y-auto">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#64748B]">
+    <aside className="w-56 shrink-0 bg-white p-4 overflow-y-auto">
+      <p className="orch-section-header mb-3 text-xs font-semibold uppercase tracking-wide text-[#0F172A]">
         Signal Radar
       </p>
 

@@ -37,7 +37,7 @@ export default function ActivityStream() {
   }, []);
 
   return (
-    <div className="flex items-center gap-4 border-t border-[#E2E8F0] bg-white px-4 py-2">
+    <div className="orch-card-frosted mx-4 mb-4 flex items-center gap-4 px-4 py-2">
       <Link
         to="/orchestrator/activity"
         className="shrink-0 text-xs font-semibold uppercase tracking-wide text-[#64748B] hover:text-[#0F172A]"

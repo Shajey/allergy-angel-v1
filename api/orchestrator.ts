@@ -852,6 +852,7 @@ async function handleIngestionCreateProposal(req: VercelRequest, res: VercelResp
         error: "Only drug candidates supported in this phase",
         details: null,
       });
+    }
     const proposal = await createProposal({
       registry_type: "drug",
       canonical_id: candidate.canonicalId,
@@ -906,11 +907,13 @@ async function handleIngestionDismiss(req: VercelRequest, res: VercelResponse) {
         error: "Candidate not found",
         details: null,
       });
+    }
     if (candidate.status !== "pending") {
       return res.status(400).json({
         error: "Only pending candidates can be dismissed",
         details: null,
       });
+    }
     await updateCandidateStatus(candidateId, "dismissed");
     return res.status(200).json({ success: true, message: "Candidate dismissed" });
   } catch (err: unknown) {

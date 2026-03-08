@@ -20,12 +20,17 @@ export default function QuickActionsCard({ actions }: QuickActionsCardProps) {
     <div className="rounded-lg border border-[#E2E8F0] bg-white p-3">
       <p className="text-xs font-medium text-[#64748B] mb-2">Quick actions</p>
       <div className="flex flex-wrap gap-2">
-        {actions.map((a, i) =>
-          a.to ? (
+        {actions.map((a, i) => {
+          const isPrimary = /research|draft proposal/i.test(a.label);
+          return a.to ? (
             <Link
               key={i}
               to={a.to}
-              className="inline-flex items-center rounded-md border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-xs font-medium text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+              className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                isPrimary
+                  ? "orch-gradient-btn border-0"
+                  : "border border-[#E2E8F0] bg-white text-[#0F172A] hover:bg-[#F1F5F9]"
+              }`}
             >
               {a.label}
             </Link>
@@ -34,12 +39,16 @@ export default function QuickActionsCard({ actions }: QuickActionsCardProps) {
               key={i}
               type="button"
               onClick={a.onClick}
-              className="inline-flex items-center rounded-md border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-xs font-medium text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+              className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                isPrimary
+                  ? "orch-gradient-btn border-0"
+                  : "border border-[#E2E8F0] bg-white text-[#0F172A] hover:bg-[#F1F5F9]"
+              }`}
             >
               {a.label}
             </button>
-          )
-        )}
+          );
+        })}
       </div>
     </div>
   );

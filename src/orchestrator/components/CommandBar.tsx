@@ -1,9 +1,11 @@
 /**
- * Phase O1/O2 – Command Bar
+ * Phase O1/O2/O3 – Command Bar
  * Mission-mode selection. Stronger active state, header identity.
+ * O3: Clinical Modernism logo with shield + radar node.
  */
 
 import { Link, useLocation } from "react-router-dom";
+import Logo from "./Logo";
 
 const NAV_ITEMS = [
   { path: "/orchestrator/radar", label: "Radar" },
@@ -18,20 +20,9 @@ export default function CommandBar() {
   const location = useLocation();
 
   return (
-    <header className="flex items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-3">
-      <Link
-        to="/orchestrator/radar"
-        className="flex flex-col gap-0.5"
-      >
-        <span className="flex items-center gap-2 text-base font-semibold text-[#0F172A] hover:text-[#334155]">
-          <span className="text-[#64748B]">AA</span>
-          <span>Orchestrator</span>
-        </span>
-        <span className="text-[10px] font-medium uppercase tracking-wider text-[#94A3B8]">
-          Governed Safety Intelligence
-        </span>
-      </Link>
-      <nav className="flex items-center gap-1">
+    <header className="orch-card mx-4 mt-4 mb-0 flex items-center justify-between px-4 py-3">
+      <Logo />
+      <nav className="flex items-center gap-1 pl-4">
         {NAV_ITEMS.map((item) => {
           const isActive =
             location.pathname === item.path ||
@@ -42,7 +33,7 @@ export default function CommandBar() {
               to={item.path}
               className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-[#0F172A] text-white shadow-sm"
+                  ? "orch-nav-active shadow-sm"
                   : "text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]"
               } ${item.placeholder ? "opacity-60" : ""}`}
             >

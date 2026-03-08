@@ -144,7 +144,7 @@ export default function ResearchWorkspacePage() {
             <button
               type="button"
               onClick={() => runResearch(false)}
-              className="rounded-lg bg-[#0F172A] px-4 py-2 text-sm font-medium text-white hover:bg-[#334155] disabled:opacity-50"
+              className="orch-gradient-btn rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
             >
               Start research
             </button>
@@ -203,7 +203,7 @@ export default function ResearchWorkspacePage() {
             <button
               type="button"
               onClick={exportDraft}
-              className="rounded-lg bg-[#F59E0B] px-4 py-2 text-sm font-medium text-white hover:bg-[#D97706]"
+              className="orch-gradient-btn rounded-lg px-4 py-2 text-sm font-medium"
             >
               Save draft proposal
             </button>

@@ -267,8 +267,8 @@ export default function ContextPanel() {
   const { selection } = useOrchestratorSelection();
 
   return (
-    <aside className="w-64 shrink-0 border-l border-[#E2E8F0] bg-white p-4 overflow-y-auto">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#64748B]">
+    <aside className="w-64 shrink-0 p-4 overflow-y-auto">
+      <p className="orch-section-header mb-3 text-xs font-semibold uppercase tracking-wide text-[#0F172A]">
         Context
       </p>
       <div className="space-y-3">

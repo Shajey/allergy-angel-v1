@@ -18,10 +18,10 @@ interface SignalCardProps {
 }
 
 const statusClasses: Record<string, string> = {
-  emerging: "border-l-[#EF4444]",
-  mostlySafe: "border-l-[#10B981]",
-  investigate: "border-l-[#F59E0B]",
-  insufficient: "border-l-[#94A3B8]",
+  emerging: "border-l-4 border-l-[#EF4444]",
+  mostlySafe: "border-l-4 border-l-[#10B981]",
+  investigate: "border-l-4 border-l-[#F59E0B]",
+  insufficient: "border-l-4 border-l-[#94A3B8]",
 };
 
 export default function SignalCard({
@@ -36,7 +36,7 @@ export default function SignalCard({
   isSelected = false,
 }: SignalCardProps) {
   const accentClass = statusClasses[statusColor] ?? statusClasses.insufficient;
-  const baseClass = `rounded-lg border p-3 text-left shadow-sm border-l-4 ${accentClass} transition-colors cursor-pointer`;
+  const baseClass = `rounded-lg border p-3 text-left shadow-sm ${accentClass} transition-colors cursor-pointer`;
   const interactiveClass = onSelect
     ? `hover:bg-[#F8FAFC] ${isSelected ? "ring-2 ring-[#0F172A] ring-offset-1 bg-[#F1F5F9]" : "bg-white border-[#E2E8F0]"}`
     : "bg-white border-[#E2E8F0]";

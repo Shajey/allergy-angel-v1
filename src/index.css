@@ -48,3 +48,87 @@ body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
 }
+
+/* ── Phase: PureMed Orchestrator (orch- prefix) ───────────────────────────── */
+.orch-bg { background-color: #F8FAFC; }
+.orch-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+.orch-gradient-btn {
+  background: linear-gradient(135deg, #FF9B9B 0%, #FFB382 100%);
+  color: #0F172A;
+}
+.orch-gradient-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.orch-nav-active { background: #0F172A; color: white; }
+.orch-badge-high-risk {
+  background: #EF4444;
+  color: white;
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
+}
+.orch-badge-mostly-safe {
+  background: #10B981;
+  color: white;
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.5));
+}
+.orch-section-header {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 600;
+  color: #0F172A;
+}
+.orch-data-cell {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+}
+.orch-frosted {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.85);
+}
+.orch-card-frosted {
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.9);
+}
+.orch-table {
+  border: 1px solid #E2E8F0;
+}
+.orch-table-body tr {
+  border-bottom: none;
+}
+.orch-table-body tr + tr {
+  border-top: 1px solid #E2E8F0;
+}
+.orch-table-row td {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* Phase O3 – Orchestrator Brand Identity */
+.orch-logo-aa {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0F172A;
+}
+.orch-logo-word {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: #0F172A;
+}
+.orch-logo-sub {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #94A3B8;
+}

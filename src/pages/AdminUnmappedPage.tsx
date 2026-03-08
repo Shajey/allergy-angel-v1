@@ -60,18 +60,19 @@ function GapTypeBadge({ gapType }: { gapType: GapType }) {
 
 function PriorityBadge({ label }: { label: string }) {
   const classes: Record<string, string> = {
-    high: "bg-red-50 text-red-800",
+    high: "orch-badge-high-risk",
     medium: "bg-amber-50 text-amber-800",
     low: "bg-gray-100 text-gray-600",
   };
+  const key = (label ?? "").toLowerCase();
   return (
-    <span className={`text-xs px-2 py-0.5 rounded ${classes[label] ?? classes.low}`}>
+    <span className={`text-xs px-2 py-0.5 rounded ${classes[key] ?? classes.low}`}>
       {label}
     </span>
   );
 }
 
-/** Phase 22.4: Signal pattern badge */
+/** Phase 22.4: Signal pattern badge — PureMed glow for high risk / mostly safe */
 function SignalPatternBadge({ pattern }: { pattern?: SignalPattern }) {
   const labels: Record<string, string> = {
     emerging_risk: "Emerging risk",
@@ -80,8 +81,8 @@ function SignalPatternBadge({ pattern }: { pattern?: SignalPattern }) {
     insufficient_data: "Insufficient data",
   };
   const classes: Record<string, string> = {
-    emerging_risk: "bg-red-50 text-red-800",
-    mostly_safe: "bg-green-50 text-green-800",
+    emerging_risk: "orch-badge-high-risk",
+    mostly_safe: "orch-badge-mostly-safe",
     mixed_signal: "bg-amber-50 text-amber-800",
     insufficient_data: "bg-gray-100 text-gray-600",
   };
@@ -239,7 +240,7 @@ export default function AdminUnmappedPage() {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Signal Radar</h1>
+          <h1 className="orch-section-header text-xl">Signal Radar</h1>
           <p className="mt-1 text-sm text-gray-600">
             Unknown entities and interaction gaps from telemetry. Evidence-based proposals only.
           </p>
@@ -269,15 +270,15 @@ export default function AdminUnmappedPage() {
         </div>
       )}
 
-      {/* Tabs */}
+      {/* Tabs — navy active state */}
       <div className="flex gap-2 mb-4">
         <button
           type="button"
           onClick={() => setTab("entities")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             tab === "entities"
-              ? "bg-gray-900 text-white"
-              : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+              ? "orch-nav-active"
+              : "bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]"
           }`}
         >
           Unknown Entities
@@ -285,10 +286,10 @@ export default function AdminUnmappedPage() {
         <button
           type="button"
           onClick={() => setTab("combinations")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             tab === "combinations"
-              ? "bg-gray-900 text-white"
-              : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+              ? "orch-nav-active"
+              : "bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]"
           }`}
         >
           Interaction Gaps
@@ -296,10 +297,10 @@ export default function AdminUnmappedPage() {
         <button
           type="button"
           onClick={() => setTab("signals")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             tab === "signals"
-              ? "bg-gray-900 text-white"
-              : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+              ? "orch-nav-active"
+              : "bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]"
           }`}
         >
           Emerging Signals
@@ -311,22 +312,22 @@ export default function AdminUnmappedPage() {
           {entities.length === 0 ? (
             <p className="text-sm text-gray-500">No unknown entities in the last 30 days.</p>
           ) : (
-            <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-              <thead className="bg-gray-50">
+            <table className="orch-table min-w-full rounded-xl overflow-hidden">
+              <thead className="bg-[#F8FAFC]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Entity</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Count</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">High Risk</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Context</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Gap Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Priority</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Possible alias of</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Suggested</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Actions</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Type</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Count</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">High Risk</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Context</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Gap Type</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Priority</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Possible alias of</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Suggested</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="orch-table-body bg-white">
                 {entities.map((e, i) => (
                   <tr
                     key={`${e.entity}-${i}`}
@@ -353,27 +354,27 @@ export default function AdminUnmappedPage() {
                         });
                       }
                     }}
-                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                    className={`orch-table-row cursor-pointer transition-colors ${
                       orchSelection?.selection?.kind === "unknown-entity" &&
                       orchSelection.selection.entity === e.entity
-                        ? "ring-1 ring-inset ring-[#0F172A] bg-gray-50"
-                        : ""
+                        ? "ring-1 ring-inset ring-[#0F172A] bg-[#F1F5F9]"
+                        : "hover:bg-[#F8FAFC]"
                     }`}
                   >
-                    <td className="px-4 py-2 text-sm text-gray-900">{e.entity}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{e.entityType}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{e.occurrenceCount}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{e.highRiskCount}</td>
-                    <td className="px-4 py-2">
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#0F172A]">{e.entity}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{e.entityType}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{e.occurrenceCount}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{e.highRiskCount}</td>
+                    <td className="px-4 py-3">
                       <ContextBadge dominantContext={e.dominantContext} />
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-3">
                       {e.gapType ? <GapTypeBadge gapType={e.gapType} /> : "—"}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-3">
                       <PriorityBadge label={e.priorityScore >= 2 ? "high" : e.priorityScore >= 1 ? "medium" : "low"} />
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-600">
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">
                       {e.possibleAliasOf ? (
                         <Link
                           to={`/orchestrator/registry?search=${encodeURIComponent(e.possibleAliasOf)}`}
@@ -385,10 +386,10 @@ export default function AdminUnmappedPage() {
                         "—"
                       )}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-3">
                       <SuggestedActionBadge action={e.suggestedAction} />
                     </td>
-                    <td className="px-4 py-2 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="px-4 py-3 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                       <Link
                         to={`/orchestrator/registry?search=${encodeURIComponent(e.entity)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
@@ -424,18 +425,18 @@ export default function AdminUnmappedPage() {
           {signals.length === 0 ? (
             <p className="text-sm text-gray-500">No emerging relationship signals in the last 30 days.</p>
           ) : (
-            <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-              <thead className="bg-gray-50">
+            <table className="orch-table min-w-full rounded-xl overflow-hidden">
+              <thead className="bg-[#F8FAFC]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Entity A</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Entity B</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Relationship</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Occurrences</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Priority</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Actions</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity A</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity B</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Relationship</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Occurrences</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Priority</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="orch-table-body bg-white">
                 {signals.map((s, i) => (
                   <tr
                     key={`${s.entityA}-${s.entityB}-${s.relationship}-${i}`}
@@ -462,24 +463,24 @@ export default function AdminUnmappedPage() {
                         });
                       }
                     }}
-                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                    className={`orch-table-row cursor-pointer transition-colors ${
                       orchSelection?.selection?.kind === "interaction-gap" &&
                       orchSelection.selection.entityA === s.entityA &&
                       orchSelection.selection.entityB === s.entityB
-                        ? "ring-1 ring-inset ring-[#0F172A] bg-gray-50"
-                        : ""
+                        ? "ring-1 ring-inset ring-[#0F172A] bg-[#F1F5F9]"
+                        : "hover:bg-[#F8FAFC]"
                     }`}
                   >
-                    <td className="px-4 py-2 text-sm text-gray-900">{s.entityA}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">{s.entityB}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#0F172A]">{s.entityA}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#0F172A]">{s.entityB}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">
                       <span className="text-xs">{s.relationship.replace(/_/g, " ")}</span>
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{s.occurrenceCount}</td>
-                    <td className="px-4 py-2">
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{s.occurrenceCount}</td>
+                    <td className="px-4 py-3">
                       <PriorityBadge label={s.priority} />
                     </td>
-                    <td className="px-4 py-2 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="px-4 py-3 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                       <Link
                         to={`/orchestrator/registry?search=${encodeURIComponent(s.entityA)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
@@ -527,21 +528,21 @@ export default function AdminUnmappedPage() {
           {combinations.length === 0 ? (
             <p className="text-sm text-gray-500">No interaction gaps in the last 30 days.</p>
           ) : (
-            <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-              <thead className="bg-gray-50">
+            <table className="orch-table min-w-full rounded-xl overflow-hidden">
+              <thead className="bg-[#F8FAFC]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Entity A</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Entity B</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Occurrences</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">High Risk</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Safe</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Signal Pattern</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Priority</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Action</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity A</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity B</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Type</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Occurrences</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">High Risk</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Safe</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Signal Pattern</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Priority</th>
+                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="orch-table-body bg-white">
                 {combinations.map((c, i) => (
                   <tr
                     key={`${c.entityA}-${c.entityB}-${i}`}
@@ -574,27 +575,27 @@ export default function AdminUnmappedPage() {
                         });
                       }
                     }}
-                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                    className={`orch-table-row cursor-pointer transition-colors ${
                       orchSelection?.selection?.kind === "interaction-gap" &&
                       orchSelection.selection.entityA === c.entityA &&
                       orchSelection.selection.entityB === c.entityB
-                        ? "ring-1 ring-inset ring-[#0F172A] bg-gray-50"
-                        : ""
+                        ? "ring-1 ring-inset ring-[#0F172A] bg-[#F1F5F9]"
+                        : "hover:bg-[#F8FAFC]"
                     }`}
                   >
-                    <td className="px-4 py-2 text-sm text-gray-900">{c.entityA}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">{c.entityB}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{c.combinationType}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{c.occurrenceCount}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{c.highRiskCount}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{c.safeOccurrenceCount ?? 0}</td>
-                    <td className="px-4 py-2">
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#0F172A]">{c.entityA}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#0F172A]">{c.entityB}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{c.combinationType}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{c.occurrenceCount}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{c.highRiskCount}</td>
+                    <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{c.safeOccurrenceCount ?? 0}</td>
+                    <td className="px-4 py-3">
                       <SignalPatternBadge pattern={c.signalPattern} />
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-3">
                       <PriorityBadge label={c.priorityLabel} />
                     </td>
-                    <td className="px-4 py-2 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="px-4 py-3 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                       <Link
                         to={`/orchestrator/registry?search=${encodeURIComponent(c.entityA)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
