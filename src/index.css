@@ -64,11 +64,12 @@ body {
 .orch-gradient-btn:hover:not(:disabled) {
   filter: brightness(1.05);
 }
-.orch-nav-active { background: #0F172A; color: white; }
+/* Phase O5: Darkened 3–5% for tab prominence */
+.orch-nav-active { background: #0A0F1A; color: white; }
+/* Phase O4: Softer clinical high-priority badge */
 .orch-badge-high-risk {
-  background: #EF4444;
-  color: white;
-  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
+  background: #fde8e8;
+  color: #b42318;
 }
 .orch-badge-mostly-safe {
   background: #10B981;
@@ -100,6 +101,10 @@ body {
 .orch-table {
   border: 1px solid #E2E8F0;
 }
+/* Phase O5: Header anchor — analytical separation */
+.orch-table thead {
+  background: rgba(0, 0, 0, 0.03);
+}
 .orch-table-body tr {
   border-bottom: none;
 }
@@ -109,6 +114,60 @@ body {
 .orch-table-row td {
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
+}
+/* Phase O5: Interactive hover — smooth tactical transition */
+.orch-table-row {
+  transition: background 0.15s ease;
+}
+.orch-table-row:hover {
+  background: rgba(0, 0, 0, 0.025) !important;
+}
+/* Phase O4: Priority accent — 4px left bar for high-priority rows */
+.orch-table-row.orch-priority-high td:first-child {
+  border-left: 4px solid #b42318;
+}
+
+/* Phase O4 – Operational Intelligence */
+.orch-metric-chip {
+  background: #F1F5F9;
+  color: #0F172A;
+  border-radius: 20px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.orch-live-pulse {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #EF4444;
+  margin-right: 0.35rem;
+  vertical-align: middle;
+  animation: orch-pulse 1.5s ease-in-out infinite;
+}
+@keyframes orch-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.orch-tab-inactive {
+  background: transparent;
+  color: #64748B;
+  border: none;
+}
+.orch-tab-inactive:hover {
+  background: rgba(15, 23, 42, 0.04);
+  color: #0F172A;
+}
+
+/* Phase O5 – Polished Apple */
+.orch-intelligence-strip {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 16px;
+}
+.orch-suggested-cell {
+  padding-right: 1.25rem;
 }
 
 /* Phase O3 – Orchestrator Brand Identity */
@@ -120,7 +179,7 @@ body {
 }
 .orch-logo-word {
   font-family: Inter, system-ui, sans-serif;
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 0.05em;
   color: #0F172A;
 }

@@ -20,22 +20,19 @@ import { useOptionalOrchestratorSelection } from "../orchestrator/context/Orches
 type RadarSuggestedAction = "alias_candidate" | "new_entry_candidate" | "investigate" | "low_priority";
 type GapType = "alias_gap" | "semantic_gap" | "interaction_gap";
 
+/** Phase O4/O5: Suggested action with icons — Investigate gets extra padding to prevent truncation */
 function SuggestedActionBadge({ action }: { action: string }) {
-  const labels: Record<string, string> = {
-    alias_candidate: "Alias candidate",
-    new_entry_candidate: "New entry candidate",
-    investigate: "Investigate",
-    low_priority: "Low priority",
+  const config: Record<string, { icon: string; label: string; className: string; extraPadding?: boolean }> = {
+    investigate: { icon: "🔎", label: "Investigate", className: "bg-amber-50 text-amber-800", extraPadding: true },
+    new_entry_candidate: { icon: "➕", label: "New entry candidate", className: "bg-amber-50 text-amber-800" },
+    low_priority: { icon: "↓", label: "Low priority", className: "bg-gray-100 text-gray-600" },
+    alias_candidate: { icon: "↗", label: "Alias candidate", className: "bg-blue-50 text-blue-800" },
   };
-  const classes: Record<string, string> = {
-    alias_candidate: "bg-blue-50 text-blue-800",
-    new_entry_candidate: "bg-amber-50 text-amber-800",
-    investigate: "bg-amber-100 text-amber-900",
-    low_priority: "bg-gray-100 text-gray-600",
-  };
+  const c = config[action] ?? { icon: "", label: action, className: "bg-gray-100 text-gray-600" };
   return (
-    <span className={`text-xs px-2 py-0.5 rounded ${classes[action] ?? classes.low_priority}`}>
-      {labels[action] ?? action}
+    <span className={`orch-suggested-badge inline-flex items-center gap-1.5 text-xs py-0.5 rounded ${c.extraPadding ? "px-3" : "px-2"} ${c.className}`}>
+      <span aria-hidden>{c.icon}</span>
+      {c.label}
     </span>
   );
 }
@@ -238,47 +235,44 @@ export default function AdminUnmappedPage() {
       onRetry={loadRadarData}
     >
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="orch-section-header text-xl">Signal Radar</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Unknown entities and interaction gaps from telemetry. Evidence-based proposals only.
-          </p>
+      {/* Phase O5: Intelligence Strip — buffered header panel */}
+      <div className="orch-intelligence-strip mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="orch-section-header text-xl">Signal Radar</h1>
+            <p className="mt-1 text-sm text-[#64748B]">
+              Unknown entities and interaction gaps from telemetry. Evidence-based proposals only.
+            </p>
+          </div>
+          <Link
+            to="/orchestrator/registry"
+            className="text-sm font-medium text-[#64748B] hover:text-[#0F172A]"
+          >
+            Registry Browser →
+          </Link>
         </div>
-        <Link
-          to="/orchestrator/registry"
-          className="text-sm font-medium text-gray-600 hover:text-gray-900"
-        >
-          Registry Browser →
-        </Link>
+        {stats && (
+          <div className="orch-metric-strip flex flex-wrap gap-2">
+            <span className="orch-metric-chip">Unknown entities: {stats.totalUnknownEntities}</span>
+            <span className="orch-metric-chip">Interaction gaps: {stats.totalInteractionGaps}</span>
+            <span className="orch-metric-chip">
+              <span className="orch-live-pulse" aria-hidden />
+              High priority: {stats.highPriorityCount}
+            </span>
+            {stats.totalCombinationsObserved != null && (
+              <span className="orch-metric-chip">Combinations observed: {stats.totalCombinationsObserved}</span>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Stats strip */}
-      {stats && (
-        <div className="mb-6 flex flex-wrap gap-4 text-sm text-gray-600">
-          <span>Unknown entities (30d): {stats.totalUnknownEntities}</span>
-          <span>Interaction gaps: {stats.totalInteractionGaps}</span>
-          <span>High priority: {stats.highPriorityCount}</span>
-          {stats.totalCombinationsObserved != null && (
-            <>
-              <span>Combinations observed: {stats.totalCombinationsObserved}</span>
-              <span>Emerging risk: {stats.emergingRiskCount ?? 0}</span>
-              <span>Mostly safe: {stats.mostlySafeCount ?? 0}</span>
-              <span>Insufficient data: {stats.insufficientDataCount ?? 0}</span>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Tabs — navy active state */}
+      {/* Phase O4/O5: Tabs — prominent active, soft inactive */}
       <div className="flex gap-2 mb-4">
         <button
           type="button"
           onClick={() => setTab("entities")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === "entities"
-              ? "orch-nav-active"
-              : "bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]"
+            tab === "entities" ? "orch-nav-active" : "orch-tab-inactive"
           }`}
         >
           Unknown Entities
@@ -287,9 +281,7 @@ export default function AdminUnmappedPage() {
           type="button"
           onClick={() => setTab("combinations")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === "combinations"
-              ? "orch-nav-active"
-              : "bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]"
+            tab === "combinations" ? "orch-nav-active" : "orch-tab-inactive"
           }`}
         >
           Interaction Gaps
@@ -298,9 +290,7 @@ export default function AdminUnmappedPage() {
           type="button"
           onClick={() => setTab("signals")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === "signals"
-              ? "orch-nav-active"
-              : "bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]"
+            tab === "signals" ? "orch-nav-active" : "orch-tab-inactive"
           }`}
         >
           Emerging Signals
@@ -313,7 +303,7 @@ export default function AdminUnmappedPage() {
             <p className="text-sm text-gray-500">No unknown entities in the last 30 days.</p>
           ) : (
             <table className="orch-table min-w-full rounded-xl overflow-hidden">
-              <thead className="bg-[#F8FAFC]">
+              <thead>
                 <tr>
                   <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity</th>
                   <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Type</th>
@@ -355,10 +345,12 @@ export default function AdminUnmappedPage() {
                       }
                     }}
                     className={`orch-table-row cursor-pointer transition-colors ${
+                      e.priorityScore >= 2 ? "orch-priority-high" : ""
+                    } ${
                       orchSelection?.selection?.kind === "unknown-entity" &&
                       orchSelection.selection.entity === e.entity
                         ? "ring-1 ring-inset ring-[#0F172A] bg-[#F1F5F9]"
-                        : "hover:bg-[#F8FAFC]"
+                        : ""
                     }`}
                   >
                     <td className="orch-data-cell px-4 py-3 text-sm text-[#0F172A]">{e.entity}</td>
@@ -386,7 +378,7 @@ export default function AdminUnmappedPage() {
                         "—"
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="orch-suggested-cell px-4 py-3">
                       <SuggestedActionBadge action={e.suggestedAction} />
                     </td>
                     <td className="px-4 py-3 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
@@ -426,7 +418,7 @@ export default function AdminUnmappedPage() {
             <p className="text-sm text-gray-500">No emerging relationship signals in the last 30 days.</p>
           ) : (
             <table className="orch-table min-w-full rounded-xl overflow-hidden">
-              <thead className="bg-[#F8FAFC]">
+              <thead>
                 <tr>
                   <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity A</th>
                   <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity B</th>
@@ -464,11 +456,13 @@ export default function AdminUnmappedPage() {
                       }
                     }}
                     className={`orch-table-row cursor-pointer transition-colors ${
+                      (s.priority ?? "").toLowerCase() === "high" ? "orch-priority-high" : ""
+                    } ${
                       orchSelection?.selection?.kind === "interaction-gap" &&
                       orchSelection.selection.entityA === s.entityA &&
                       orchSelection.selection.entityB === s.entityB
                         ? "ring-1 ring-inset ring-[#0F172A] bg-[#F1F5F9]"
-                        : "hover:bg-[#F8FAFC]"
+                        : ""
                     }`}
                   >
                     <td className="orch-data-cell px-4 py-3 text-sm text-[#0F172A]">{s.entityA}</td>
@@ -529,7 +523,7 @@ export default function AdminUnmappedPage() {
             <p className="text-sm text-gray-500">No interaction gaps in the last 30 days.</p>
           ) : (
             <table className="orch-table min-w-full rounded-xl overflow-hidden">
-              <thead className="bg-[#F8FAFC]">
+              <thead>
                 <tr>
                   <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity A</th>
                   <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity B</th>
@@ -576,11 +570,13 @@ export default function AdminUnmappedPage() {
                       }
                     }}
                     className={`orch-table-row cursor-pointer transition-colors ${
+                      (c.priorityLabel ?? "").toLowerCase() === "high" ? "orch-priority-high" : ""
+                    } ${
                       orchSelection?.selection?.kind === "interaction-gap" &&
                       orchSelection.selection.entityA === c.entityA &&
                       orchSelection.selection.entityB === c.entityB
                         ? "ring-1 ring-inset ring-[#0F172A] bg-[#F1F5F9]"
-                        : "hover:bg-[#F8FAFC]"
+                        : ""
                     }`}
                   >
                     <td className="orch-data-cell px-4 py-3 text-sm text-[#0F172A]">{c.entityA}</td>
