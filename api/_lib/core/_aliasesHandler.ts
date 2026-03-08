@@ -1,14 +1,7 @@
-/**
- * Phase 21b – Alias Map Endpoint
- *
- * GET /api/knowledge/aliases
- * Returns flat alias → canonical map for client-side resolution caching.
- */
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { DRUGS } from "../_lib/knowledge/drugs.registry.js";
-import { SUPPLEMENTS } from "../_lib/knowledge/supplements.registry.js";
-import { FOODS } from "../_lib/knowledge/foods.registry.js";
+import { DRUGS } from "../../knowledge/drugs.registry.js";
+import { SUPPLEMENTS } from "../../knowledge/supplements.registry.js";
+import { FOODS } from "../../knowledge/foods.registry.js";
 
 function normalize(s: string): string {
   return s

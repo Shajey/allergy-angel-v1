@@ -2,9 +2,18 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "rewrites": [
-    { "source": "/api/admin/unmapped", "destination": "/api/admin?action=unmapped" },
-    { "source": "/api/admin/pr-packager", "destination": "/api/admin?action=pr-packager" },
-    { "source": "/api/admin/promotion-export", "destination": "/api/admin?action=promotion-export" },
+    { "source": "/api/admin", "destination": "/api/orchestrator" },
+    { "source": "/api/admin/unmapped", "destination": "/api/orchestrator?action=unmapped" },
+    { "source": "/api/admin/pr-packager", "destination": "/api/orchestrator?action=pr-packager" },
+    { "source": "/api/admin/promotion-export", "destination": "/api/orchestrator?action=promotion-export" },
+    { "source": "/api/trajectory", "destination": "/api/core?action=trajectory" },
+    { "source": "/api/insights/feed", "destination": "/api/core?action=insights-feed" },
+    { "source": "/api/insights/feedback", "destination": "/api/core?action=insights-feedback" },
+    { "source": "/api/knowledge/aliases", "destination": "/api/core?action=aliases" },
+    { "source": "/api/vigilance", "destination": "/api/core?action=vigilance" },
+    { "source": "/api/vigilance/recent", "destination": "/api/core?action=vigilance-recent" },
+    { "source": "/api/history", "destination": "/api/core?action=history-list" },
+    { "source": "/api/history/:id", "destination": "/api/core?action=history-detail&id=:id" },
     { "source": "/api/report/check/download", "destination": "/api/report/check?download=1" }
   ]
 }

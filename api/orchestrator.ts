@@ -36,16 +36,21 @@ function normalizeAlias(s: string): string {
 }
 
 /**
- * Consolidated Admin API – handles multiple admin routes via ?action=
- * Served at /api/admin with rewrites from:
- *   /api/admin/unmapped      -> /api/admin?action=unmapped
- *   /api/admin/pr-packager   -> /api/admin?action=pr-packager
- *   /api/admin/promotion-export -> /api/admin?action=promotion-export
+ * Orchestrator Admin API – single serverless function for all admin/orchestrator actions.
+ * Routes via ?action= to reduce Vercel Hobby plan function count.
  *
- * Reduces serverless function count for Vercel Hobby plan (12 limit).
+ * /api/orchestrator?action=radar-entities
+ * /api/orchestrator?action=registry-list
+ * /api/orchestrator?action=ingestion-candidates
+ * etc.
  */
 function isAdminEnabled(): boolean {
   return process.env.ADMIN_ENABLED === "true";
+}
+
+function isMissingTable(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /relation.*does not exist|table.*does not exist|does not exist/i.test(msg);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -142,7 +147,7 @@ async function handleUnmapped(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Discovery failed";
-    console.error("[Admin Unmapped]", message);
+    console.error("[Orchestrator] unmapped failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
@@ -205,12 +210,10 @@ async function handlePromotionExport(req: VercelRequest, res: VercelResponse) {
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : "Promotion export failed";
-    console.error("[Admin Promotion Export]", message);
+    console.error("[Orchestrator] promotion-export failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
-
-// ── Phase 21c: Registry Browser ─────────────────────────────────
 
 async function handleRegistryList(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
@@ -269,8 +272,6 @@ async function handleRegistryEntry(req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({ entry });
 }
 
-// ── Phase 21c: Alias Proposals ─────────────────────────────────
-
 async function handleAliasProposals(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method Not Allowed", details: null });
@@ -291,7 +292,7 @@ async function handleAliasProposals(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ meta: { count: proposals.length }, proposals });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "List proposals failed";
-    console.error("[Admin Alias Proposals]", message);
+    console.error("[Orchestrator] alias-proposals failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
@@ -366,7 +367,7 @@ async function handleAliasProposeAdd(req: VercelRequest, res: VercelResponse) {
         details: null,
       });
     }
-    console.error("[Admin Alias Propose Add]", message);
+    console.error("[Orchestrator] alias-propose-add failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
@@ -444,7 +445,7 @@ async function handleAliasProposeRemove(req: VercelRequest, res: VercelResponse)
         details: null,
       });
     }
-    console.error("[Admin Alias Propose Remove]", message);
+    console.error("[Orchestrator] alias-propose-remove failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
@@ -473,7 +474,7 @@ async function handleAliasProposalDismiss(req: VercelRequest, res: VercelRespons
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : "Dismiss proposal failed";
-    console.error("[Admin Alias Proposal Dismiss]", message);
+    console.error("[Orchestrator] alias-proposal-dismiss failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
@@ -523,12 +524,10 @@ async function handleAliasProposalExport(req: VercelRequest, res: VercelResponse
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : "Export proposals failed";
-    console.error("[Admin Alias Proposal Export]", message);
+    console.error("[Orchestrator] alias-proposal-export failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
-
-// ── Phase 22: Knowledge Radar ────────────────────────────────────────
 
 async function handleRadarEntities(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
@@ -550,14 +549,9 @@ async function handleRadarEntities(req: VercelRequest, res: VercelResponse) {
     const details = isMissingTable(err)
       ? "Required telemetry table is missing or not migrated yet."
       : null;
-    console.error("[Admin API] radar-entities failed:", message);
+    console.error("[Orchestrator] radar-entities failed:", message);
     return res.status(500).json({ error: "Radar data unavailable", details });
   }
-}
-
-function isMissingTable(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err);
-  return /relation.*does not exist|table.*does not exist|does not exist/i.test(msg);
 }
 
 async function handleRadarCombinations(req: VercelRequest, res: VercelResponse) {
@@ -580,7 +574,7 @@ async function handleRadarCombinations(req: VercelRequest, res: VercelResponse) 
     const details = isMissingTable(err)
       ? "Required telemetry table is missing or not migrated yet."
       : null;
-    console.error("[Admin API] radar-combinations failed:", message);
+    console.error("[Orchestrator] radar-combinations failed:", message);
     return res.status(500).json({ error: "Radar data unavailable", details });
   }
 }
@@ -601,7 +595,7 @@ async function handleRadarStats(req: VercelRequest, res: VercelResponse) {
     const details = isMissingTable(err)
       ? "Required telemetry table is missing or not migrated yet."
       : null;
-    console.error("[Admin API] radar-stats failed:", message);
+    console.error("[Orchestrator] radar-stats failed:", message);
     return res.status(500).json({ error: "Radar data unavailable", details });
   }
 }
@@ -626,12 +620,10 @@ async function handleRadarSignals(req: VercelRequest, res: VercelResponse) {
     const details = isMissingTable(err)
       ? "Required telemetry table is missing or not migrated yet."
       : null;
-    console.error("[Admin API] radar-signals failed:", message);
+    console.error("[Orchestrator] radar-signals failed:", message);
     return res.status(500).json({ error: "Radar data unavailable", details });
   }
 }
-
-// ── Phase 23: Research Assistant ────────────────────────────────────────
 
 async function handleResearchEntity(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -697,7 +689,7 @@ async function handleResearchEntity(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Research failed";
-    console.error("[Admin Research Entity]", message);
+    console.error("[Orchestrator] research-entity failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
@@ -771,12 +763,10 @@ async function handleResearchCombination(req: VercelRequest, res: VercelResponse
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Research failed";
-    console.error("[Admin Research Combination]", message);
+    console.error("[Orchestrator] research-combination failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
-
-// ── Phase 24.1: Ingestion ────────────────────────────────────────────────
 
 async function handleIngestionCandidates(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
@@ -804,7 +794,7 @@ async function handleIngestionCandidates(req: VercelRequest, res: VercelResponse
     const details = isMissingTable(err)
       ? "Required ingestion_candidates table is missing or not migrated yet."
       : null;
-    console.error("[Admin API] ingestion-candidates failed:", message);
+    console.error("[Orchestrator] ingestion-candidates failed:", message);
     return res.status(500).json({ error: "Ingestion data unavailable", details });
   }
 }
@@ -822,7 +812,7 @@ async function handleIngestionStats(req: VercelRequest, res: VercelResponse) {
     const details = isMissingTable(err)
       ? "Required ingestion_candidates table is missing or not migrated yet."
       : null;
-    console.error("[Admin API] ingestion-stats failed:", message);
+    console.error("[Orchestrator] ingestion-stats failed:", message);
     return res.status(500).json({ error: "Ingestion data unavailable", details });
   }
 }
@@ -889,7 +879,7 @@ async function handleIngestionCreateProposal(req: VercelRequest, res: VercelResp
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Create proposal failed";
-    console.error("[Admin Ingestion Create Proposal]", message);
+    console.error("[Orchestrator] ingestion-create-proposal failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
@@ -925,7 +915,7 @@ async function handleIngestionDismiss(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ success: true, message: "Candidate dismissed" });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Dismiss failed";
-    console.error("[Admin Ingestion Dismiss]", message);
+    console.error("[Orchestrator] ingestion-dismiss failed:", message);
     return res.status(500).json({ error: message, details: null });
   }
 }

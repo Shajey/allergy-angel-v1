@@ -53,8 +53,8 @@ export default function ResearchWorkspacePage() {
       try {
         const url =
           target.mode === "entity"
-            ? "/api/admin?action=research-entity"
-            : "/api/admin?action=research-combination";
+            ? "/api/orchestrator?action=research-entity"
+            : "/api/orchestrator?action=research-combination";
         const body =
           target.mode === "entity"
             ? {

@@ -114,7 +114,7 @@ export default function AdminRegistryPage() {
   }, [loadProposals]);
 
   const handleProposeAdd = async (canonicalId: string, alias: string) => {
-    await adminFetch("/api/admin?action=alias-propose-add", {
+    await adminFetch("/api/orchestrator?action=alias-propose-add", {
       method: "POST",
       body: JSON.stringify({ type: registryType, id: canonicalId, alias }),
     });
@@ -122,7 +122,7 @@ export default function AdminRegistryPage() {
   };
 
   const handleProposeRemove = async (canonicalId: string, alias: string) => {
-    await adminFetch("/api/admin?action=alias-propose-remove", {
+    await adminFetch("/api/orchestrator?action=alias-propose-remove", {
       method: "POST",
       body: JSON.stringify({ type: registryType, id: canonicalId, alias }),
     });
@@ -130,7 +130,7 @@ export default function AdminRegistryPage() {
   };
 
   const handleDismiss = async (proposalId: string) => {
-    await adminFetch("/api/admin?action=alias-proposal-dismiss", {
+    await adminFetch("/api/orchestrator?action=alias-proposal-dismiss", {
       method: "POST",
       body: JSON.stringify({ proposalId }),
     });
@@ -139,7 +139,7 @@ export default function AdminRegistryPage() {
   };
 
   const handleExport = async (proposalIds: string[]) => {
-    const result = await adminFetch<object>("/api/admin?action=alias-proposal-export", {
+    const result = await adminFetch<object>("/api/orchestrator?action=alias-proposal-export", {
       method: "POST",
       body: JSON.stringify({ proposalIds }),
     });

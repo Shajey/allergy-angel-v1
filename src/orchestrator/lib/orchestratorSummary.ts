@@ -68,7 +68,7 @@ export type OrchestratorSummaryResult =
   | { ok: false; error: string };
 
 export async function loadOrchestratorSummary(): Promise<OrchestratorSummaryResult> {
-  const base = "/api/admin";
+  const base = "/api/orchestrator";
   const [statsRes, entitiesRes, combinationsRes, ingestionRes, proposalsRes] = await Promise.all([
     fetchJson<{
       totalUnknownEntities?: number;

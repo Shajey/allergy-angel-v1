@@ -70,7 +70,7 @@ export default function AdminIngestionPage() {
   async function handleCreateProposal(id: string) {
     setActioning(id);
     try {
-      const res = await fetch("/api/admin?action=ingestion-create-proposal", {
+      const res = await fetch("/api/orchestrator?action=ingestion-create-proposal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ candidateId: id }),
@@ -89,7 +89,7 @@ export default function AdminIngestionPage() {
   async function handleDismiss(id: string) {
     setActioning(id);
     try {
-      const res = await fetch("/api/admin?action=ingestion-dismiss", {
+      const res = await fetch("/api/orchestrator?action=ingestion-dismiss", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ candidateId: id }),

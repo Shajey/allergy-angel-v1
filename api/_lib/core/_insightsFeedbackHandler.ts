@@ -1,35 +1,10 @@
-import dotenv from "dotenv";
-dotenv.config({ path: ".env.local", override: true });
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { insightFingerprint } from "../_lib/inference/insightFingerprint.js";
-import { getSupabaseClient } from "../_lib/supabaseClient.js";
-
-/**
- * Vercel Serverless Function
- * POST /api/insights/feedback – upsert a vote on an insight
- * GET  /api/insights/feedback – retrieve existing votes for a profile
- *
- * POST body:
- *   {
- *     profileId: string,
- *     insight: { type, priorityHints: { triggerValue?, symptomValue? }, supportingEvents: string[] },
- *     vote: 'relevant' | 'not_relevant' | 'unsure'
- *   }
- *
- * GET query params:
- *   profileId – required
- *   limit     – optional, default 200, max 500
- *
- * Returns:
- *   POST → { ok: true, fingerprint: string }
- *   GET  → { votes: { [fingerprint]: vote } }
- */
+import { insightFingerprint } from "../../inference/insightFingerprint.js";
+import { getSupabaseClient } from "../../supabaseClient.js";
 
 const VALID_VOTES = new Set(["relevant", "not_relevant", "unsure"]);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // ── POST: upsert vote ──────────────────────────────────────────────
   if (req.method === "POST") {
     try {
       const body = req.body as Record<string, unknown> | null;
@@ -55,7 +30,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: "Missing insight object", details: null });
       }
 
-      // Compute fingerprint
       const fingerprint = insightFingerprint({
         type: String(insight.type ?? ""),
         priorityHints: (insight.priorityHints ?? {}) as {
@@ -68,7 +42,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           : [],
       });
 
-      // Upsert into insight_feedback
       const supabase = getSupabaseClient();
       const { error: upsertErr } = await supabase
         .from("insight_feedback")
@@ -87,16 +60,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json({ ok: true, fingerprint });
-    } catch (err: any) {
-      console.error("[InsightFeedback POST]", err?.message);
-      return res.status(500).json({
-        error: err?.message ?? "Feedback storage failed",
-        details: null,
-      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Feedback storage failed";
+      console.error("[InsightFeedback POST]", msg);
+      return res.status(500).json({ error: msg, details: null });
     }
   }
 
-  // ── GET: retrieve votes ────────────────────────────────────────────
   if (req.method === "GET") {
     try {
       const profileId =
@@ -123,41 +93,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         throw new Error(`Query failed: ${queryErr.message}`);
       }
 
-      // Build fingerprint → vote map
       const votes: Record<string, string> = {};
       for (const row of data ?? []) {
-        votes[row.insight_fingerprint] = row.vote;
+        votes[(row as { insight_fingerprint: string; vote: string }).insight_fingerprint] = (
+          row as { insight_fingerprint: string; vote: string }
+        ).vote;
       }
 
       return res.status(200).json({ votes });
-    } catch (err: any) {
-      console.error("[InsightFeedback GET]", err?.message);
-      return res.status(500).json({
-        error: err?.message ?? "Failed to retrieve feedback",
-        details: null,
-      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to retrieve feedback";
+      console.error("[InsightFeedback GET]", msg);
+      return res.status(500).json({ error: msg, details: null });
     }
   }
 
   return res.status(405).json({ error: "Method Not Allowed", details: null });
 }
-
-/*
- * ── Test commands ──────────────────────────────────────────────────
- *
- * # Submit a vote:
- * curl -s -X POST http://localhost:3000/api/insights/feedback \
- *   -H "Content-Type: application/json" \
- *   -d '{
- *     "profileId": "a0000000-0000-0000-0000-000000000001",
- *     "insight": {
- *       "type": "trigger_symptom",
- *       "priorityHints": { "triggerValue": "peanut butter sandwich", "symptomValue": "headache" },
- *       "supportingEvents": ["check-id-1", "check-id-2"]
- *     },
- *     "vote": "relevant"
- *   }' | jq .
- *
- * # Retrieve votes:
- * curl -s "http://localhost:3000/api/insights/feedback?profileId=a0000000-0000-0000-0000-000000000001" | jq .
- */

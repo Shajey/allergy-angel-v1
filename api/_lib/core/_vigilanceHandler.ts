@@ -1,21 +1,6 @@
-import dotenv from "dotenv";
-dotenv.config({ path: ".env.local", override: true });
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { fetchVigilance } from "../_lib/vigilance/computeVigilance.js";
+import { fetchVigilance } from "../../vigilance/computeVigilance.js";
 
-/**
- * Phase 13 – Vigilance State API
- *
- * GET /api/vigilance
- *
- * Read-only: returns whether a profile currently has active
- * medium/high risk based on stored check verdicts.
- *
- * Query params:
- *   profileId   – required (falls back to DEFAULT_PROFILE_ID)
- *   windowHours – optional; default 12, max 168
- */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method Not Allowed", details: null });

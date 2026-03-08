@@ -7,7 +7,7 @@ export type OrchestratorFetchResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string; status?: number; details?: string };
 
-const BASE = "/api/admin";
+const BASE = "/api/orchestrator";
 
 function logFetchFailure(page: string, action: string, status?: number, error?: string): void {
   if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {

@@ -1,25 +1,10 @@
-import dotenv from "dotenv";
-dotenv.config({ path: ".env.local", override: true });
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSupabaseClient } from "../_lib/supabaseClient.js";
+import { getSupabaseClient } from "../../supabaseClient.js";
 import {
   computeRecentTriggersFromChecks,
   type RecentTriggerCheck,
-} from "../_lib/vigilance/recentTriggers.js";
+} from "../../vigilance/recentTriggers.js";
 
-/**
- * Phase 13.2 – Recent Vigilance Triggers API
- *
- * GET /api/vigilance/recent
- *
- * Read-only: returns recent medium/high risk triggers for a profile.
- *
- * Query params:
- *   profileId   – required (falls back to DEFAULT_PROFILE_ID)
- *   windowHours – optional; default 12, max 168
- *   limit       – optional; default 10, max 50
- */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method Not Allowed", details: null });
@@ -79,8 +64,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err: unknown) {
     const message =
-      err instanceof Error ? err.message : "Recent triggers fetch failed";
-    console.error("[Vigilance/recent]", message);
+      err instanceof Error ? err.message : "Recent triggers failed";
+    console.error("[VigilanceRecent]", message);
     return res.status(500).json({ error: message, details: null });
   }
 }
