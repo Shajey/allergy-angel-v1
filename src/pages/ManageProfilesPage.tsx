@@ -111,9 +111,9 @@ export default function ManageProfilesPage() {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
+    <div className="px-4 py-6 max-w-xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Manage Profiles</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Manage Profiles</h1>
         <Link
           to="/profile"
           className="text-sm text-emerald-600 hover:text-emerald-700"
@@ -126,39 +126,41 @@ export default function ManageProfilesPage() {
       </p>
 
       {error && (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="mt-4 aa-soft-card border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {/* Add new */}
-      <div className="mt-6 rounded-md border border-gray-200 bg-white p-4">
+      <div className="mt-6 aa-soft-card p-6">
         {adding ? (
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-4">
             <input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Profile name"
-              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="flex-1 rounded-2xl border border-gray-200 px-4 py-3 text-sm"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAdd();
                 if (e.key === "Escape") setAdding(false);
               }}
             />
-            <button
-              onClick={handleAdd}
-              disabled={!newName.trim() || saving}
-              className="rounded-md px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
-            >
-              Add
-            </button>
-            <button
-              onClick={() => { setAdding(false); setNewName(""); }}
-              className="rounded-md px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
-            >
-              Cancel
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleAdd}
+                disabled={!newName.trim() || saving}
+                className="rounded-2xl px-4 py-3 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => { setAdding(false); setNewName(""); }}
+                className="rounded-2xl px-4 py-3 text-sm text-slate-500 hover:text-slate-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         ) : (
           <button
@@ -171,54 +173,58 @@ export default function ManageProfilesPage() {
       </div>
 
       {/* List */}
-      <ul className="mt-6 space-y-3">
+      <ul className="mt-6 flex flex-col gap-4">
         {profiles.map((p) => (
           <li
             key={p.id}
-            className="rounded-md border border-gray-200 bg-white p-4 flex items-center justify-between gap-4"
+            className={`aa-soft-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+              selectedProfileId === p.id ? "ring-2 ring-[#0F172A] ring-offset-2" : ""
+            }`}
           >
             {editingId === p.id ? (
-              <div className="flex-1 flex gap-2">
+              <div className="flex-1 flex flex-col sm:flex-row gap-4">
                 <input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className="flex-1 rounded-2xl border border-gray-200 px-4 py-3 text-sm"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleUpdate(p.id, editName.trim());
                     if (e.key === "Escape") setEditingId(null);
                   }}
                 />
-                <button
-                  onClick={() => handleUpdate(p.id, editName.trim())}
-                  disabled={saving}
-                  className="rounded-md px-3 py-2 text-sm bg-emerald-600 text-white hover:bg-emerald-700"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setEditingId(null)}
-                  className="rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleUpdate(p.id, editName.trim())}
+                    disabled={saving}
+                    className="rounded-2xl px-4 py-3 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="rounded-2xl px-4 py-3 text-sm text-slate-500 hover:text-slate-700 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             ) : (
               <>
                 <div className="min-w-0 flex-1">
-                  <span className="font-medium">{p.display_name}</span>
+                  <span className="font-semibold text-gray-900">{p.display_name}</span>
                   {p.is_primary && (
                     <span className="ml-2 text-xs text-gray-500">(primary)</span>
                   )}
                   {selectedProfileId === p.id && (
-                    <span className="ml-2 text-xs text-emerald-600">(active)</span>
+                    <span className="ml-2 text-xs font-medium text-[#0F172A]">(active)</span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-3 shrink-0">
                   {!p.is_primary && (
                     <button
                       onClick={() => handleUpdate(p.id, undefined, true)}
                       disabled={saving}
-                      className="text-xs text-gray-600 hover:text-gray-900"
+                      className="text-sm text-slate-500 hover:text-slate-700"
                     >
                       Set primary
                     </button>
@@ -226,14 +232,14 @@ export default function ManageProfilesPage() {
                   <button
                     onClick={() => startEdit(p)}
                     disabled={saving}
-                    className="text-xs text-emerald-600 hover:text-emerald-700"
+                    className="text-sm text-slate-600 hover:text-slate-800"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(p.id)}
                     disabled={saving || profiles.length <= 1}
-                    className="text-xs text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-sm text-slate-500 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Delete
                   </button>

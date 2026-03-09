@@ -29,7 +29,6 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useProfileContext } from "../context/ProfileContext";
 import { WhyDisclosure } from "@/components/shared/WhyDisclosure.js";
-import { Button } from "@/components/ui/button.js";
 import {
   buildExplanationFromCheck,
   type ExplanationRuleType,
@@ -326,23 +325,23 @@ function VerdictTrustLayer({
   const hasEntries = explanation.entries.length > 0;
 
   const verdictVariant = riskLevel === "high" ? "high" : riskLevel === "medium" ? "medium" : "safe";
-  const verdictBg =
+  const heroClass =
     riskLevel === "high"
-      ? "bg-red-50 border-red-100"
+      ? "aa-hero-avoid"
       : riskLevel === "medium"
-        ? "bg-amber-50 border-amber-100"
-        : "bg-green-50 border-green-100";
+        ? "aa-hero-caution"
+        : "aa-hero-safe";
   const verdictText =
     riskLevel === "high"
-      ? "text-red-800"
+      ? "text-[#b42318]"
       : riskLevel === "medium"
-        ? "text-amber-800"
-        : "text-green-800";
+        ? "text-[#b45309]"
+        : "text-[#047857]";
 
   return (
     <div className="space-y-3">
       <div
-        className={`rounded-xl border p-4 ${verdictBg}`}
+        className={`rounded-2xl p-6 ${heroClass}`}
       >
         <Badge variant={verdictVariant} className="mb-2">
           {riskLevel === "high" ? "HIGH RISK" : riskLevel === "medium" ? "CAUTION" : "SAFE"}
@@ -484,6 +483,24 @@ function AllergySuggestions({ matched, checkId }: { matched: RuleMatch[]; checkI
   );
 }
 
+// ── Phase C2: Minimalist confidence bar (4px, semantic colors) ─────
+function EventConfidenceBar({ score }: { score: number }) {
+  const pct = Math.min(100, Math.max(0, score));
+  const fillColor = pct >= 70 ? "#10B981" : pct >= 50 ? "#F59E0B" : "#b42318";
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-gray-500 shrink-0">Confidence</span>
+      <div className="flex-1 min-w-[60px] h-1 rounded-full bg-gray-200 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-300"
+          style={{ width: `${pct}%`, backgroundColor: fillColor }}
+        />
+      </div>
+      <span className="text-xs text-gray-500 w-8">{score}%</span>
+    </div>
+  );
+}
+
 // ── Events List ─────────────────────────────────────────────────────
 // Phase 19: Add to profile for medication/supplement with confidence >= 50%
 
@@ -512,17 +529,15 @@ function EventsList({
           return (
             <li
               key={ev.id}
-              className={`rounded-xl border p-4 ${
+              className={`rounded-2xl border p-4 ${
                 highlighted
                   ? "border-red-200 bg-red-50"
                   : "border-gray-100 bg-white"
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <Badge variant="neutral">{eventTypeLabel(ev.event_type)}</Badge>
-                <span className="text-xs text-gray-400">
-                  Confidence: {ev.confidence_score}%
-                </span>
+                <EventConfidenceBar score={ev.confidence_score} />
               </div>
               <p className="text-base text-gray-900 mt-2">{eventSummary(ev)}</p>
               {canAddToProfile && (
@@ -837,7 +852,7 @@ export default function HistoryCheckDetailPage() {
         <div className="h-24" />
       </main>
 
-      {/* F) Sticky footer — Download Safety Report (Phase 13.6, 18.3.1, 20) */}
+      {/* F) Sticky footer — Phase C2: Ghost Download button, min 44px thumb target */}
       <div
         className="sticky bottom-0 shrink-0 bg-white border-t border-gray-100 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
       >
@@ -850,15 +865,14 @@ export default function HistoryCheckDetailPage() {
           />
           <span>Include original text (may contain sensitive info)</span>
         </label>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="w-full py-3 font-semibold rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200"
+        <button
+          type="button"
           onClick={handleShareOrDownload}
           disabled={shareDownloadLoading}
+          className="min-h-[44px] w-full font-semibold rounded-2xl border border-slate-200 text-gray-900 hover:bg-slate-50 bg-transparent transition-colors disabled:opacity-50"
         >
           {shareDownloadLoading ? "Preparing…" : "Download report"}
-        </Button>
+        </button>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@
 
 import { useOrchestratorSelection } from "../context/OrchestratorSelectionContext";
 import { buildResearchUrl } from "../lib/researchTarget";
+import { buildGraphUrl } from "../lib/graphUtils";
 import ContextSection from "./context/ContextSection";
 import QuickActionsCard, { type QuickAction } from "./context/QuickActionsCard";
 
@@ -44,6 +45,7 @@ function UnknownEntityContext({
     { label: "Check registry", to: `/orchestrator/registry?search=${encodeURIComponent(entity)}` },
     { label: "Open radar", to: "/orchestrator/radar" },
     { label: "Research", to: researchUrl },
+    { label: "Inspect in Graph", to: buildGraphUrl({ entity }) },
   ];
   return (
     <div className="space-y-3">
@@ -95,6 +97,7 @@ function InteractionGapContext({
   const actions: QuickAction[] = [
     { label: "Investigate", to: "/orchestrator/radar" },
     { label: "Research pair", to: researchUrl },
+    { label: "Inspect in Graph", to: buildGraphUrl({ entityA, entityB }) },
     { label: "Check A", to: `/orchestrator/registry?search=${encodeURIComponent(entityA)}` },
     { label: "Check B", to: `/orchestrator/registry?search=${encodeURIComponent(entityB)}` },
   ];
@@ -147,6 +150,7 @@ function SignalContext({
   const actions: QuickAction[] = [
     { label: "Open radar", to: "/orchestrator/radar" },
     { label: "Research", to: researchUrl },
+    { label: "Inspect in Graph", to: entityA && entityB ? buildGraphUrl({ entityA, entityB }) : "/orchestrator/graph" },
   ];
   return (
     <div className="space-y-3">
@@ -216,6 +220,7 @@ function RegistryEntityContext({
   const actions: QuickAction[] = [
     { label: "Open registry", to: `/orchestrator/registry?search=${encodeURIComponent(canonicalId)}` },
     { label: "Research", to: researchUrl },
+    { label: "Inspect in Graph", to: buildGraphUrl({ entity: canonicalId }) },
     { label: "Search radar", to: "/orchestrator/radar" },
   ];
   return (
@@ -268,10 +273,10 @@ export default function ContextPanel() {
 
   return (
     <aside className="w-64 shrink-0 p-4 overflow-y-auto">
-      <p className="orch-section-header mb-3 text-xs font-semibold uppercase tracking-wide text-[#0F172A]">
+      <p className="orch-section-header mb-4 text-xs font-semibold uppercase tracking-wide text-[#64748B]">
         Context
       </p>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {!selection && <EmptyState />}
         {selection?.kind === "unknown-entity" && (
           <UnknownEntityContext

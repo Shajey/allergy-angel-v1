@@ -1,6 +1,6 @@
 /**
- * Phase O4 – Research Workspace Layout
- * Lab bench layout: target summary, research output, proposal preview.
+ * Phase O4/O5 – Research Workspace Layout
+ * Lab bench layout: Chain of Evidence — TARGET → EVIDENCE → PROPOSAL MANIFEST → GOVERNANCE FOOTER.
  */
 
 import type { ReactNode } from "react";
@@ -15,8 +15,8 @@ interface Props {
 
 export default function ResearchWorkspaceLayout({ children }: Props) {
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex items-center justify-between">
+    <div className="flex flex-col gap-8">
+      <header className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
         <h1 className="orch-section-header text-[22px]">Research Workspace</h1>
         <Link
           to="/orchestrator/radar"
@@ -27,13 +27,13 @@ export default function ResearchWorkspaceLayout({ children }: Props) {
       </header>
 
       <div
-        className="rounded-lg border border-[#FCD34D] bg-[#FFFBEB] px-4 py-3 text-sm text-[#92400E]"
+        className="rounded-xl border border-[#FCD34D] bg-[#FFFBEB] px-4 py-3 text-sm text-[#92400E]"
         role="status"
       >
         {GOVERNANCE_NOTE}
       </div>
 
-      <main className="flex flex-col gap-6">{children}</main>
+      <main className="flex flex-col gap-8">{children}</main>
     </div>
   );
 }

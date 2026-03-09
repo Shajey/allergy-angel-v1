@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { path: "/orchestrator/radar", label: "Radar" },
   { path: "/orchestrator/registry", label: "Registry" },
   { path: "/orchestrator/research", label: "Research" },
+  { path: "/orchestrator/graph", label: "Graph" },
   { path: "/orchestrator/ingestion", label: "Ingestion" },
   { path: "/orchestrator/governance", label: "Governance", placeholder: true },
   { path: "/orchestrator/activity", label: "Activity" },
@@ -20,7 +21,7 @@ export default function CommandBar() {
   const location = useLocation();
 
   return (
-    <header className="orch-card mx-4 mt-4 mb-0 flex items-center justify-between px-4 py-3">
+    <header className="orch-card mx-4 mt-4 mb-0 flex items-center justify-between px-4 py-3 [&_a]:pointer-events-auto">
       <Logo />
       <nav className="flex items-center gap-1 pl-4">
         {NAV_ITEMS.map((item) => {

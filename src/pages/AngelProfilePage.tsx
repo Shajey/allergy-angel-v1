@@ -178,25 +178,25 @@ export default function AngelProfilePage() {
   }
 
   return (
-    <div className="px-4 py-4 max-w-xl mx-auto">
+    <div className="px-4 py-6 max-w-xl mx-auto">
       <h1 className="text-xl font-semibold text-gray-900">Profile</h1>
       <p className="text-sm text-gray-500 mt-0.5">
         Add what you take regularly to improve risk detection.
       </p>
 
       {error && (
-        <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {/* Add */}
-      <div className="mt-6 rounded-xl border border-gray-100 p-4 bg-white">
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div className="mt-6 aa-soft-card p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <select
             value={type}
             onChange={(e) => setType(e.target.value as ItemType)}
-            className="rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-900 focus:border-gray-400 focus:outline-none"
+            className="rounded-2xl border border-gray-200 px-4 py-3 text-base text-gray-900 focus:border-gray-400 focus:outline-none"
           >
             <option value="medication">Medication</option>
             <option value="supplement">Supplement</option>
@@ -208,13 +208,13 @@ export default function AngelProfilePage() {
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
             placeholder={type === 'allergy' ? 'e.g. peanuts' : 'e.g. metformin'}
-            className="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none"
+            className="flex-1 rounded-2xl border border-gray-200 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none"
           />
 
           <button
             onClick={handleAdd}
             disabled={!canAdd}
-            className={`rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+            className={`rounded-2xl px-4 py-3 text-base font-semibold transition-colors ${
               canAdd
                 ? 'bg-gray-900 text-white hover:bg-gray-800'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -225,32 +225,31 @@ export default function AngelProfilePage() {
         </div>
       </div>
 
-      {/* Lists */}
-      <div className="mt-6 space-y-6">
+      {/* Lists — distinct card clusters */}
+      <div className="mt-6 flex flex-col gap-6">
         {(['medication', 'supplement', 'allergy'] as ItemType[]).map((t) => {
           const items = grouped[t];
           return (
-            <div key={t}>
-              <h2 className="text-sm font-semibold text-gray-900 capitalize">{t}s</h2>
+            <div key={t} className="aa-soft-card p-6">
+              <h2 className="text-base font-semibold text-gray-900 capitalize">{t}s</h2>
               {items.length === 0 ? (
-                <p className="mt-2 text-sm text-gray-500">None added yet.</p>
+                <p className="mt-4 text-sm text-gray-500">None added yet.</p>
               ) : (
-                <ul className="mt-2 space-y-2">
+                <ul className="mt-4 flex flex-col gap-4">
                   {items.map((display) => {
-                    // For medications with dosage like "Zyrtec (10mg)", extract just the name for removal
                     const rawName = t === 'medication'
                       ? display.replace(/\s*\(.*\)$/, '')
                       : display;
                     return (
                       <li
                         key={`${t}:${display}`}
-                        className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3"
+                        className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/50 px-4 py-3"
                       >
                         <div className="text-sm text-gray-900">{display}</div>
                         <button
                           onClick={() => handleRemove(t, rawName)}
                           disabled={saving}
-                          className="text-sm text-red-600 hover:underline disabled:opacity-50"
+                          className="text-sm text-slate-500 hover:text-slate-700 disabled:opacity-50 transition-colors"
                         >
                           Remove
                         </button>

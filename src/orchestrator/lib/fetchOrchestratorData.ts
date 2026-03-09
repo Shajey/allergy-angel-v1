@@ -247,3 +247,41 @@ export async function fetchIngestionStats(): Promise<
 > {
   return fetchOrchestrator<IngestionStatsResponse>("Ingestion", "ingestion-stats");
 }
+
+// ── Graph ────────────────────────────────────────────────────────────────
+
+export interface GraphFocusResponse {
+  nodes?: Array<{
+    id: string;
+    label: string;
+    type: string;
+    metadata?: Record<string, unknown>;
+  }>;
+  edges?: Array<{ source: string; target: string; type: string }>;
+  focalIds?: string[];
+}
+
+export async function fetchGraphFocus(params: {
+  entity?: string;
+  entityA?: string;
+  entityB?: string;
+}): Promise<OrchestratorFetchResult<GraphFocusResponse>> {
+  const qs = new URLSearchParams();
+  qs.set("action", "graph-focus");
+  if (params.entity) qs.set("entity", params.entity);
+  if (params.entityA) qs.set("entityA", params.entityA);
+  if (params.entityB) qs.set("entityB", params.entityB);
+  const url = `${BASE}?${qs.toString()}`;
+  try {
+    const res = await fetch(url);
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = body?.error ?? "Graph data unavailable";
+      return { ok: false, error: msg, status: res.status };
+    }
+    return { ok: true, data: body as GraphFocusResponse };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Network error";
+    return { ok: false, error: msg };
+  }
+}

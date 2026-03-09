@@ -25,6 +25,7 @@ import {
   getRadarStats,
   getRadarSignals,
 } from "./_lib/admin/radarQueries.js";
+import { getGraphForFocus } from "./_lib/admin/graphQueries.js";
 
 function normalizeAlias(s: string): string {
   return s
@@ -95,6 +96,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return handleRadarStats(req, res);
     case "radar-signals":
       return handleRadarSignals(req, res);
+    case "graph-focus":
+      return handleGraphFocus(req, res);
     case "research-entity":
       return handleResearchEntity(req, res);
     case "research-combination":
@@ -111,7 +114,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({
         error: "Missing or invalid action",
         details:
-          "Use ?action=unmapped|pr-packager|promotion-export|registry-list|registry-search|registry-entry|alias-proposals|radar-entities|radar-combinations|radar-stats|radar-signals|research-entity|research-combination|ingestion-candidates|ingestion-stats|ingestion-create-proposal|ingestion-dismiss",
+          "Use ?action=unmapped|pr-packager|promotion-export|registry-list|registry-search|registry-entry|alias-proposals|radar-entities|radar-combinations|radar-stats|radar-signals|graph-focus|research-entity|research-combination|ingestion-candidates|ingestion-stats|ingestion-create-proposal|ingestion-dismiss",
       });
   }
 }
@@ -597,6 +600,29 @@ async function handleRadarStats(req: VercelRequest, res: VercelResponse) {
       : null;
     console.error("[Orchestrator] radar-stats failed:", message);
     return res.status(500).json({ error: "Radar data unavailable", details });
+  }
+}
+
+async function handleGraphFocus(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method Not Allowed", details: null });
+  }
+  try {
+    const entity = (req.query.entity as string)?.trim();
+    const entityA = (req.query.entityA as string)?.trim();
+    const entityB = (req.query.entityB as string)?.trim();
+    if (!entity && !entityA && !entityB) {
+      return res.status(400).json({
+        error: "Missing focus",
+        details: "Use ?entity=... or ?entityA=...&entityB=...",
+      });
+    }
+    const result = await getGraphForFocus({ entity, entityA, entityB });
+    return res.status(200).json(result);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Graph focus failed";
+    console.error("[Orchestrator] graph-focus failed:", message);
+    return res.status(500).json({ error: message, details: null });
   }
 }
 

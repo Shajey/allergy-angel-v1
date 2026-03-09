@@ -17,8 +17,8 @@ interface QuickActionsCardProps {
 
 export default function QuickActionsCard({ actions }: QuickActionsCardProps) {
   return (
-    <div className="rounded-lg border border-[#E2E8F0] bg-white p-3">
-      <p className="text-xs font-medium text-[#64748B] mb-2">Quick actions</p>
+    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-3">Quick actions</p>
       <div className="flex flex-wrap gap-2">
         {actions.map((a, i) => {
           const isPrimary = /research|draft proposal/i.test(a.label);

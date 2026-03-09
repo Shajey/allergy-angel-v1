@@ -9,6 +9,39 @@ body {
   font-family: Inter, system-ui, -apple-system, sans-serif;
 }
 
+/* ── Phase C1: Consumer Soft Modernist (no .orch- classes) ──────────────── */
+.aa-soft-card {
+  background: #FFFFFF;
+  border: 1px solid #F1F5F9;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.04);
+}
+/* Phase C2: Hero cards — 5% tint, 2px semantic border, backdrop-blur */
+.aa-hero-safe {
+  background: rgba(16, 185, 129, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #10B981;
+}
+.aa-hero-caution {
+  background: rgba(180, 35, 24, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #b42318;
+}
+.aa-hero-avoid {
+  background: rgba(180, 35, 24, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #b42318;
+}
+.aa-hero-neutral {
+  background: rgba(100, 116, 139, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #94A3B8;
+}
+
 /* Phase 18: Prevent horizontal scroll on mobile */
 html, body {
   overflow-x: hidden;
@@ -64,8 +97,24 @@ body {
 .orch-gradient-btn:hover:not(:disabled) {
   filter: brightness(1.05);
 }
-/* Phase O5: Darkened 3–5% for tab prominence */
-.orch-nav-active { background: #0A0F1A; color: white; }
+/* Phase O4.1: CommandBar fixed at top — always clickable when selection is active */
+.orch-command-bar-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 1rem 1rem 0;
+  background: #F8FAFC;
+  pointer-events: auto;
+}
+/* Phase O4.1: Stronger active tab */
+.orch-nav-active {
+  background: #0A0F1A;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
 /* Phase O4: Softer clinical high-priority badge */
 .orch-badge-high-risk {
   background: #fde8e8;
@@ -101,9 +150,18 @@ body {
 .orch-table {
   border: 1px solid #E2E8F0;
 }
-/* Phase O5: Header anchor — analytical separation */
+/* Phase O5: Analytical header — Inter 700, 11px, uppercase */
 .orch-table thead {
-  background: rgba(0, 0, 0, 0.03);
+  background: #F8FAFC;
+  border-bottom: 2px solid #E2E8F0;
+}
+.orch-table thead th {
+  padding: 0.75rem 1rem;
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 .orch-table-body tr {
   border-bottom: none;
@@ -112,15 +170,19 @@ body {
   border-top: 1px solid #E2E8F0;
 }
 .orch-table-row td {
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+  padding: 0.875rem 1rem;
+  vertical-align: middle;
 }
-/* Phase O5: Interactive hover — smooth tactical transition */
+/* Phase O5: Interactive hover — smooth tactical transition, suggested action scale */
 .orch-table-row {
   transition: background 0.15s ease;
 }
 .orch-table-row:hover {
-  background: rgba(0, 0, 0, 0.025) !important;
+  background: rgba(15, 23, 42, 0.03) !important;
+}
+.orch-table-row:hover .orch-suggested-action-hover {
+  transform: scale(1.02);
+  transition: transform 0.15s ease;
 }
 /* Phase O4: Priority accent — 4px left bar for high-priority rows */
 .orch-table-row.orch-priority-high td:first-child {
@@ -146,6 +208,9 @@ body {
   vertical-align: middle;
   animation: orch-pulse 1.5s ease-in-out infinite;
 }
+.orch-live-pulse-svg {
+  animation: orch-pulse 1.5s ease-in-out infinite;
+}
 @keyframes orch-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
@@ -158,16 +223,54 @@ body {
 .orch-tab-inactive:hover {
   background: rgba(15, 23, 42, 0.04);
   color: #0F172A;
+  text-decoration: underline;
 }
 
-/* Phase O5 – Polished Apple */
+/* Phase O5 – Telemetry header, entity links, graph */
+.orch-telemetry-panel {
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 1rem 0;
+}
+.orch-tab-active-o5 {
+  background: #0F172A;
+  color: white;
+}
+.orch-tab-inactive-o5 {
+  background: transparent;
+  color: #64748B;
+}
+.orch-tab-inactive-o5:hover {
+  text-decoration: underline;
+}
+.orch-last-sync {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: #64748B;
+}
+.orch-entity-link {
+  color: #0F172A;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  cursor: pointer;
+}
+.orch-entity-link:hover {
+  color: #334155;
+}
+
+/* Phase O4.1 – Polished Apple */
 .orch-intelligence-strip {
   background: rgba(0, 0, 0, 0.02);
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 .orch-suggested-cell {
-  padding-right: 1.25rem;
+  padding-right: 1rem;
+  min-width: 140px;
+}
+.orch-suggested-cell .orch-suggested-badge {
+  white-space: nowrap;
 }
 
 /* Phase O3 – Orchestrator Brand Identity */
@@ -190,4 +293,79 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.2em;
   color: #94A3B8;
+}
+
+/* Phase O4.3.1/O5.3/O4.4 – Activity Drawer (between sidebar & context, slides over workspace) */
+.orch-activity-panel {
+  position: fixed;
+  bottom: 0;
+  left: 16rem;
+  right: 18rem;
+  width: 100%;
+  background: #0F172A;
+  color: #F8FAFC;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: height 0.3s ease-in-out;
+  border-top: 1px solid #1E293B;
+  z-index: 100;
+}
+.orch-activity-panel.orch-activity-collapsed {
+  height: 32px;
+}
+.orch-activity-panel.orch-activity-expanded {
+  height: 280px;
+}
+.orch-activity-handle {
+  flex-shrink: 0;
+  height: 20px;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94A3B8;
+  border-bottom: 1px solid rgba(248, 250, 252, 0.1);
+  user-select: none;
+}
+.orch-activity-handle:hover {
+  background: rgba(248, 250, 252, 0.05);
+  color: #F8FAFC;
+}
+.orch-activity-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.05);
+}
+.orch-activity-row.orch-activity-pulse {
+  background: rgba(248, 250, 252, 0.08);
+}
+.orch-activity-timestamp {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: #64748B;
+  flex-shrink: 0;
+  width: 5rem;
+}
+.orch-activity-icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.orch-activity-message {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 11px;
+  color: #F8FAFC;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.orch-activity-icon-pulse {
+  animation: orch-pulse 1.5s ease-in-out infinite;
 }

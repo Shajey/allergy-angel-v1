@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { buildResearchUrl } from "../orchestrator/lib/researchTarget";
+import { buildGraphUrl } from "../orchestrator/lib/graphUtils";
 import {
   fetchRadarEntities,
   fetchRadarCombinations,
@@ -183,6 +184,8 @@ export default function AdminUnmappedPage() {
   const [error, setError] = useState<string | null>(null);
   const windowDays = 30;
 
+  const [lastSync, setLastSync] = useState<string | null>(null);
+
   const loadRadarData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -212,6 +215,7 @@ export default function AdminUnmappedPage() {
       setSignals(signalsRes.ok ? (signalsRes.data.signals ?? []) : []);
       setStats(statsRes.ok ? statsRes.data : null);
     }
+    setLastSync(new Date().toISOString().slice(11, 19) + "Z");
     setLoading(false);
   }, [windowDays]);
 
@@ -235,66 +239,73 @@ export default function AdminUnmappedPage() {
       onRetry={loadRadarData}
     >
     <div className="p-6 max-w-4xl mx-auto">
-      {/* Phase O5: Intelligence Strip — buffered header panel */}
-      <div className="orch-intelligence-strip mb-6">
-        <div className="flex items-center justify-between mb-4">
+      {/* Phase O5: Telemetry header — title, metric chips, Last Sync, tabs */}
+      <div className="orch-telemetry-panel mb-6 -mx-6 px-6">
+        <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <h1 className="orch-section-header text-xl">Signal Radar</h1>
-            <p className="mt-1 text-sm text-[#64748B]">
+            <p className="mt-2 text-sm text-[#64748B] leading-relaxed">
               Unknown entities and interaction gaps from telemetry. Evidence-based proposals only.
             </p>
           </div>
-          <Link
-            to="/orchestrator/registry"
-            className="text-sm font-medium text-[#64748B] hover:text-[#0F172A]"
-          >
-            Registry Browser →
-          </Link>
+          <div className="flex items-center gap-4 shrink-0">
+            {lastSync && (
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wide text-[#94A3B8]">Last Sync</p>
+                <p className="orch-last-sync">{lastSync}</p>
+              </div>
+            )}
+            <Link
+              to="/orchestrator/registry"
+              className="text-sm font-medium text-[#64748B] hover:text-[#0F172A]"
+            >
+              Registry Browser →
+            </Link>
+          </div>
         </div>
         {stats && (
-          <div className="orch-metric-strip flex flex-wrap gap-2">
-            <span className="orch-metric-chip">Unknown entities: {stats.totalUnknownEntities}</span>
-            <span className="orch-metric-chip">Interaction gaps: {stats.totalInteractionGaps}</span>
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="orch-metric-chip">Unknown Entities: {stats.totalUnknownEntities}</span>
+            <span className="orch-metric-chip">Interaction Gaps: {stats.totalInteractionGaps}</span>
             <span className="orch-metric-chip">
               <span className="orch-live-pulse" aria-hidden />
-              High priority: {stats.highPriorityCount}
+              High Priority: {stats.highPriorityCount}
             </span>
             {stats.totalCombinationsObserved != null && (
-              <span className="orch-metric-chip">Combinations observed: {stats.totalCombinationsObserved}</span>
+              <span className="orch-metric-chip">Combinations Observed: {stats.totalCombinationsObserved}</span>
             )}
           </div>
         )}
-      </div>
-
-      {/* Phase O4/O5: Tabs — prominent active, soft inactive */}
-      <div className="flex gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => setTab("entities")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === "entities" ? "orch-nav-active" : "orch-tab-inactive"
-          }`}
-        >
-          Unknown Entities
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("combinations")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === "combinations" ? "orch-nav-active" : "orch-tab-inactive"
-          }`}
-        >
-          Interaction Gaps
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("signals")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === "signals" ? "orch-nav-active" : "orch-tab-inactive"
-          }`}
-        >
-          Emerging Signals
-        </button>
+        {/* Tabs — active: navy bg white text; inactive: ghost, underline on hover */}
+        <div className="flex gap-2 pt-1 border-t border-[#E2E8F0]">
+          <button
+            type="button"
+            onClick={() => setTab("entities")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              tab === "entities" ? "orch-tab-active-o5" : "orch-tab-inactive-o5"
+            }`}
+          >
+            Unknown Entities
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("combinations")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              tab === "combinations" ? "orch-tab-active-o5" : "orch-tab-inactive-o5"
+            }`}
+          >
+            Interaction Gaps
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("signals")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              tab === "signals" ? "orch-tab-active-o5" : "orch-tab-inactive-o5"
+            }`}
+          >
+            Emerging Signals
+          </button>
+        </div>
       </div>
 
       {tab === "entities" && (
@@ -305,16 +316,16 @@ export default function AdminUnmappedPage() {
             <table className="orch-table min-w-full rounded-xl overflow-hidden">
               <thead>
                 <tr>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Type</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Count</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">High Risk</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Context</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Gap Type</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Priority</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Possible alias of</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Suggested</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Actions</th>
+                  <th className="text-left text-[#0F172A]">Entity</th>
+                  <th className="text-left text-[#0F172A]">Type</th>
+                  <th className="text-left text-[#0F172A]">Count</th>
+                  <th className="text-left text-[#0F172A]">High Risk</th>
+                  <th className="text-left text-[#0F172A]">Context</th>
+                  <th className="text-left text-[#0F172A]">Gap Type</th>
+                  <th className="text-left text-[#0F172A]">Priority</th>
+                  <th className="text-left text-[#0F172A]">Possible alias of</th>
+                  <th className="text-left text-[#0F172A]">Suggested</th>
+                  <th className="text-left text-[#0F172A]">Actions</th>
                 </tr>
               </thead>
               <tbody className="orch-table-body bg-white">
@@ -378,10 +389,12 @@ export default function AdminUnmappedPage() {
                         "—"
                       )}
                     </td>
-                    <td className="orch-suggested-cell px-4 py-3">
-                      <SuggestedActionBadge action={e.suggestedAction} />
+                    <td className="orch-suggested-cell">
+                      <span className="orch-suggested-action-hover inline-block">
+                        <SuggestedActionBadge action={e.suggestedAction} />
+                      </span>
                     </td>
-                    <td className="px-4 py-3 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                       <Link
                         to={`/orchestrator/registry?search=${encodeURIComponent(e.entity)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
@@ -403,6 +416,12 @@ export default function AdminUnmappedPage() {
                       >
                         Research
                       </Link>
+                      <Link
+                        to={buildGraphUrl({ entity: e.entity })}
+                        className="text-sm text-slate-600 hover:underline"
+                      >
+                        Inspect in Graph
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -420,12 +439,12 @@ export default function AdminUnmappedPage() {
             <table className="orch-table min-w-full rounded-xl overflow-hidden">
               <thead>
                 <tr>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity A</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity B</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Relationship</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Occurrences</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Priority</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Actions</th>
+                  <th className="text-left text-[#0F172A]">Entity A</th>
+                  <th className="text-left text-[#0F172A]">Entity B</th>
+                  <th className="text-left text-[#0F172A]">Relationship</th>
+                  <th className="text-left text-[#0F172A]">Occurrences</th>
+                  <th className="text-left text-[#0F172A]">Priority</th>
+                  <th className="text-left text-[#0F172A]">Actions</th>
                 </tr>
               </thead>
               <tbody className="orch-table-body bg-white">
@@ -474,7 +493,7 @@ export default function AdminUnmappedPage() {
                     <td className="px-4 py-3">
                       <PriorityBadge label={s.priority} />
                     </td>
-                    <td className="px-4 py-3 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                       <Link
                         to={`/orchestrator/registry?search=${encodeURIComponent(s.entityA)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
@@ -486,6 +505,12 @@ export default function AdminUnmappedPage() {
                         className="text-sm font-medium text-blue-600 hover:underline"
                       >
                         Check B
+                      </Link>
+                      <Link
+                        to={buildGraphUrl({ entityA: s.entityA, entityB: s.entityB })}
+                        className="text-sm text-slate-600 hover:underline"
+                      >
+                        Inspect in Graph
                       </Link>
                       <a
                         href={`https://www.google.com/search?q=${encodeURIComponent(s.entityA + " " + s.entityB + " interaction")}`}
@@ -525,15 +550,15 @@ export default function AdminUnmappedPage() {
             <table className="orch-table min-w-full rounded-xl overflow-hidden">
               <thead>
                 <tr>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity A</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Entity B</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Type</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Occurrences</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">High Risk</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Safe</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Signal Pattern</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Priority</th>
-                  <th className="orch-section-header px-4 py-3 text-left text-xs font-semibold text-[#0F172A]">Action</th>
+                  <th className="text-left text-[#0F172A]">Entity A</th>
+                  <th className="text-left text-[#0F172A]">Entity B</th>
+                  <th className="text-left text-[#0F172A]">Type</th>
+                  <th className="text-left text-[#0F172A]">Occurrences</th>
+                  <th className="text-left text-[#0F172A]">High Risk</th>
+                  <th className="text-left text-[#0F172A]">Safe</th>
+                  <th className="text-left text-[#0F172A]">Signal Pattern</th>
+                  <th className="text-left text-[#0F172A]">Priority</th>
+                  <th className="text-left text-[#0F172A]">Action</th>
                 </tr>
               </thead>
               <tbody className="orch-table-body bg-white">
@@ -585,13 +610,15 @@ export default function AdminUnmappedPage() {
                     <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{c.occurrenceCount}</td>
                     <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{c.highRiskCount}</td>
                     <td className="orch-data-cell px-4 py-3 text-sm text-[#64748B]">{c.safeOccurrenceCount ?? 0}</td>
-                    <td className="px-4 py-3">
-                      <SignalPatternBadge pattern={c.signalPattern} />
+                    <td className="orch-suggested-cell px-4 py-3">
+                      <span className="orch-suggested-action-hover inline-block">
+                        <SignalPatternBadge pattern={c.signalPattern} />
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <PriorityBadge label={c.priorityLabel} />
                     </td>
-                    <td className="px-4 py-3 flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
                       <Link
                         to={`/orchestrator/registry?search=${encodeURIComponent(c.entityA)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
@@ -603,6 +630,12 @@ export default function AdminUnmappedPage() {
                         className="text-sm font-medium text-blue-600 hover:underline"
                       >
                         Check B
+                      </Link>
+                      <Link
+                        to={buildGraphUrl({ entityA: c.entityA, entityB: c.entityB })}
+                        className="text-sm text-slate-600 hover:underline"
+                      >
+                        Inspect in Graph
                       </Link>
                       <Link
                         to="/orchestrator/radar"

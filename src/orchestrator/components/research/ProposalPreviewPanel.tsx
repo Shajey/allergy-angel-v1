@@ -51,45 +51,45 @@ function proposalTypeLabel(type: string): string {
 
 export default function ProposalPreviewPanel({ proposal }: Props) {
   return (
-    <div className="rounded-lg border-2 border-[#FCD34D] bg-[#FFFBEB] p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#92400E]">Proposal preview</h3>
-        <span className="rounded bg-[#FEF3C7] px-2 py-0.5 text-xs font-medium text-[#92400E]">
-          Not verified · Requires human review
+    <div className="rounded-xl border border-[#E2E8F0] bg-[#F1F5F9] p-6 font-mono text-[13px] shadow-sm">
+      <div className="mb-5 flex items-center justify-between">
+        <h3 className="text-base font-semibold text-[#0F172A]">Proposal Manifest</h3>
+        <span className="rounded-lg bg-[#E2E8F0] px-2.5 py-1 text-xs font-medium text-[#475569]">
+          Not verified – requires human review
         </span>
       </div>
 
-      <section className="mb-3">
-        <h4 className="text-xs font-medium uppercase tracking-wide text-[#B45309]">
+      <section className="mb-5">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">
           Proposal type
         </h4>
-        <p className="mt-1 font-medium text-[#0F172A]">
+        <p className="mt-2 text-base font-semibold text-[#0F172A]">
           {proposalTypeLabel(proposal.proposalType)}
         </p>
       </section>
 
       {proposal.entityDraft && (
-        <section className="mb-3">
-          <h4 className="text-xs font-medium uppercase tracking-wide text-[#B45309]">
+        <section className="mb-5 rounded-lg border border-[#CBD5E1] bg-white/60 p-4">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">
             Entity draft
           </h4>
-          <dl className="mt-1 space-y-1 text-sm text-[#334155]">
+          <dl className="mt-2 space-y-2 text-sm text-[#334155]">
             {proposal.entityDraft.canonicalName && (
-              <div>
-                <span className="font-medium text-[#475569]">Canonical:</span>{" "}
-                {proposal.entityDraft.canonicalName}
+              <div className="flex gap-2">
+                <span className="font-bold text-[#0F172A] shrink-0">CanonicalName:</span>
+                <span className="font-semibold text-[#0F172A]">{proposal.entityDraft.canonicalName}</span>
               </div>
             )}
             {proposal.entityDraft.aliases?.length ? (
-              <div>
-                <span className="font-medium text-[#475569]">Aliases:</span>{" "}
-                {proposal.entityDraft.aliases.join(", ")}
+              <div className="flex gap-2">
+                <span className="font-semibold text-[#475569] shrink-0">aliases:</span>
+                <span>{proposal.entityDraft.aliases.join(", ")}</span>
               </div>
             ) : null}
             {proposal.entityDraft.class && (
-              <div>
-                <span className="font-medium text-[#475569]">Class:</span>{" "}
-                {proposal.entityDraft.class}
+              <div className="flex gap-2">
+                <span className="font-bold text-[#0F172A] shrink-0">Category:</span>
+                <span className="font-semibold text-[#0F172A]">{proposal.entityDraft.class}</span>
               </div>
             )}
           </dl>
@@ -97,11 +97,11 @@ export default function ProposalPreviewPanel({ proposal }: Props) {
       )}
 
       {proposal.aliasDraft && (
-        <section className="mb-3">
-          <h4 className="text-xs font-medium uppercase tracking-wide text-[#B45309]">
+        <section className="mb-5 rounded-lg border border-[#CBD5E1] bg-white/60 p-4">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">
             Alias draft
           </h4>
-          <dl className="mt-1 space-y-1 text-sm text-[#334155]">
+          <dl className="mt-2 space-y-2 text-sm text-[#334155]">
             {proposal.aliasDraft.canonicalId && (
               <div>
                 <span className="font-medium text-[#475569]">Canonical ID:</span>{" "}
@@ -119,8 +119,8 @@ export default function ProposalPreviewPanel({ proposal }: Props) {
       )}
 
       {proposal.relationshipDraft && (
-        <section className="mb-3">
-          <h4 className="text-xs font-medium uppercase tracking-wide text-[#B45309]">
+        <section className="mb-5 rounded-lg border border-[#CBD5E1] bg-white/60 p-4">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">
             Relationship draft
           </h4>
           <dl className="mt-1 space-y-1 text-sm text-[#334155]">
@@ -156,10 +156,10 @@ export default function ProposalPreviewPanel({ proposal }: Props) {
 
       {proposal.reasoning && (
         <section>
-          <h4 className="text-xs font-medium uppercase tracking-wide text-[#B45309]">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">
             Reasoning
           </h4>
-          <p className="mt-1 text-sm text-[#334155] leading-relaxed">
+          <p className="mt-2 text-sm text-[#334155] leading-relaxed">
             {proposal.reasoning}
           </p>
         </section>

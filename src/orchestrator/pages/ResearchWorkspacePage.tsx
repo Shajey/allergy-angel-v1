@@ -3,7 +3,7 @@
  * Primary home for admin research. Lab bench flow.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useOptionalOrchestratorSelection } from "../context/OrchestratorSelectionContext";
 import {
@@ -16,6 +16,7 @@ import ProposalPreviewPanel from "../components/research/ProposalPreviewPanel";
 import ResearchOutputPanel from "../components/research/ResearchOutputPanel";
 import ResearchTargetSummary from "../components/research/ResearchTargetSummary";
 import ResearchWorkspaceLayout from "../components/research/ResearchWorkspaceLayout";
+import { useActivityStore } from "../lib/activityStore";
 import { Link } from "react-router-dom";
 
 type ResearchResult =
@@ -26,19 +27,38 @@ type ResearchResult =
       meta?: { sourceMode?: string; cached?: boolean };
     };
 
+function useStableTarget(target: ResearchTarget | null): ResearchTarget | null {
+  const ref = useRef<ResearchTarget | null>(null);
+  const key = target ? JSON.stringify(target) : null;
+  const prevKey = ref.current ? JSON.stringify(ref.current) : null;
+  if (key !== prevKey) {
+    ref.current = target;
+  }
+  return ref.current;
+}
+
 export default function ResearchWorkspacePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const selection = useOptionalOrchestratorSelection()?.selection ?? null;
+  const activityStore = useActivityStore();
 
   const [target, setTarget] = useState<ResearchTarget | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ResearchResult | null>(null);
 
-  const targetFromParams = parseResearchTargetFromSearchParams(searchParams);
-  const targetFromSelection = researchTargetFromSelection(selection);
-  const derivedTarget = targetFromParams ?? targetFromSelection;
+  const targetFromParams = useMemo(
+    () => parseResearchTargetFromSearchParams(searchParams),
+    [searchParams]
+  );
+  const targetFromSelection = useMemo(
+    () => researchTargetFromSelection(selection),
+    [selection]
+  );
+  const derivedTarget = useStableTarget(targetFromParams ?? targetFromSelection);
+  const hasParams = targetFromParams !== null;
+  const hasSelection = targetFromSelection !== null;
 
   useEffect(() => {
     setTarget(derivedTarget);
@@ -48,10 +68,10 @@ export default function ResearchWorkspacePage() {
       return;
     }
     // Persist target to URL when from selection — so "Start research" stays visible if selection clears
-    if (!targetFromParams && targetFromSelection) {
+    if (!hasParams && hasSelection) {
       navigate(buildResearchUrl(derivedTarget), { replace: true });
     }
-  }, [derivedTarget, targetFromParams, targetFromSelection, navigate]);
+  }, [derivedTarget, hasParams, hasSelection, navigate]);
 
   const runResearch = useCallback(
     async (forceResearch = false) => {
@@ -59,6 +79,14 @@ export default function ResearchWorkspacePage() {
       setLoading(true);
       setError(null);
       setResult(null);
+      const targetLabel = target.mode === "entity" ? target.entity : `${target.entityA} + ${target.entityB}`;
+      activityStore?.pushEvent({
+        type: "research_started",
+        message: `Research started: ${targetLabel}`,
+        status: "info",
+        source: "ui",
+        metadata: { target: target.mode === "entity" ? target.entity : [target.entityA, target.entityB] },
+      });
       try {
         const url =
           target.mode === "entity"
@@ -95,20 +123,42 @@ export default function ResearchWorkspacePage() {
             reason: data.reason,
             recommendation: data.recommendation,
           });
+          activityStore?.pushEvent({
+            type: "research_completed",
+            message: `Research skipped: ${targetLabel}`,
+            status: "warning",
+            source: "api",
+            metadata: { reason: data.reason },
+          });
         } else {
           setResult({
             research: data.research,
             proposal: data.proposal,
             meta: data.meta,
           });
+          activityStore?.pushEvent({
+            type: "research_completed",
+            message: `Research completed: ${targetLabel}`,
+            status: "success",
+            source: "api",
+            metadata: { cached: data.meta?.cached },
+          });
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Research failed");
+        const msg = err instanceof Error ? err.message : "Research failed";
+        setError(msg);
+        activityStore?.pushEvent({
+          type: "research_failed",
+          message: `Research failed: ${targetLabel}`,
+          status: "error",
+          source: "api",
+          metadata: { error: msg },
+        });
       } finally {
         setLoading(false);
       }
     },
-    [target]
+    [target, activityStore]
   );
 
   const exportDraft = useCallback(() => {
@@ -121,7 +171,13 @@ export default function ResearchWorkspacePage() {
     a.download = `research-draft-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-  }, [result]);
+    activityStore?.pushEvent({
+      type: "proposal_exported",
+      message: "Proposal draft exported",
+      status: "success",
+      source: "governance",
+    });
+  }, [result, activityStore]);
 
   if (!target) {
     return (
@@ -145,38 +201,46 @@ export default function ResearchWorkspacePage() {
 
   return (
     <ResearchWorkspaceLayout>
-      <ResearchTargetSummary target={target} />
+      {/* Section 1 — TARGET: observed unknown entity (input signal) */}
+      <section>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-4">1. Target</h2>
+        <ResearchTargetSummary target={target} />
+      </section>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-8">
         {!result && !loading && (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => runResearch(false)}
-              className="orch-gradient-btn rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50"
-            >
-              Start research
-            </button>
-            <button
-              type="button"
-              onClick={() => runResearch(true)}
-              className="rounded-lg border border-[#F59E0B] px-4 py-2 text-sm font-medium text-[#B45309] hover:bg-[#FFFBEB] disabled:opacity-50"
-            >
-              Force research
-            </button>
-          </div>
+          <section className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-4">2. Evidence</h2>
+            <p className="text-sm text-[#64748B] mb-4">Run research to gather evidence.</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => runResearch(false)}
+                className="orch-gradient-btn rounded-xl px-5 py-2.5 text-sm font-semibold disabled:opacity-50"
+              >
+                Start research
+              </button>
+              <button
+                type="button"
+                onClick={() => runResearch(true)}
+                className="rounded-xl border border-[#F59E0B] px-5 py-2.5 text-sm font-medium text-[#B45309] hover:bg-[#FFFBEB] disabled:opacity-50"
+              >
+                Force research
+              </button>
+            </div>
+          </section>
         )}
 
         {loading && (
-          <div className="rounded-lg border border-[#E2E8F0] bg-white p-6 text-center">
+          <section className="rounded-xl border border-[#E2E8F0] bg-white p-6 text-center">
             <p className="text-sm text-[#64748B]">Researching…</p>
-          </div>
+          </section>
         )}
 
         {error && (
-          <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#B91C1C]">
+          <section className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-5 text-sm text-[#B91C1C]">
             {error}
-          </div>
+          </section>
         )}
 
         {result && "researchSkipped" in result && !loading && (
@@ -195,48 +259,62 @@ export default function ResearchWorkspacePage() {
           </div>
         )}
 
+        {/* Section 2 — EVIDENCE: raw research findings */}
         {result && !("researchSkipped" in result) && result.research && (
-          <ResearchOutputPanel
-            research={result.research as Parameters<typeof ResearchOutputPanel>[0]["research"]}
-            meta={result.meta}
-            mode={target.mode}
-          />
+          <section>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-4">2. Evidence</h2>
+            <ResearchOutputPanel
+              research={result.research as Parameters<typeof ResearchOutputPanel>[0]["research"]}
+              meta={result.meta}
+              mode={target.mode}
+            />
+          </section>
         )}
 
+        {/* Section 3 — PROPOSAL MANIFEST: system-generated ontology change candidate */}
         {result && !("researchSkipped" in result) && result.proposal && (
-          <ProposalPreviewPanel proposal={result.proposal as Parameters<typeof ProposalPreviewPanel>[0]["proposal"]} />
+          <section>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-4">3. Proposal Manifest</h2>
+            <ProposalPreviewPanel proposal={result.proposal as Parameters<typeof ProposalPreviewPanel>[0]["proposal"]} />
+          </section>
         )}
 
+        {/* Section 4 — GOVERNANCE FOOTER: persistent action bar */}
         {result && !("researchSkipped" in result) && (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={exportDraft}
-              className="orch-gradient-btn rounded-lg px-4 py-2 text-sm font-medium"
-            >
-              Save draft proposal
-            </button>
-            <button
-              type="button"
-              onClick={exportDraft}
-              className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#334155] hover:bg-[#F8FAFC]"
-            >
-              Export draft
-            </button>
-            <Link
-              to="/orchestrator/radar"
-              className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#334155] hover:bg-[#F8FAFC]"
-            >
-              Back to Radar
-            </Link>
-            <button
-              type="button"
-              onClick={() => runResearch(true)}
-              className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]"
-            >
-              Re-run research
-            </button>
-          </div>
+          <footer
+            className="sticky bottom-0 -mx-6 px-6 py-4 mt-4 border-t border-[#E2E8F0] bg-white/90 backdrop-blur-md shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+            role="contentinfo"
+          >
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={exportDraft}
+                className="orch-gradient-btn rounded-xl px-5 py-2.5 text-sm font-semibold"
+              >
+                Save Draft Proposal
+              </button>
+              <button
+                type="button"
+                onClick={exportDraft}
+                className="rounded-xl border border-[#E2E8F0] px-5 py-2.5 text-sm font-medium text-[#334155] hover:bg-[#F8FAFC]"
+              >
+                Export Draft
+              </button>
+              <button
+                type="button"
+                onClick={() => runResearch(true)}
+                className="rounded-xl border border-[#CBD5E1] px-5 py-2.5 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]"
+              >
+                Re-run Research
+              </button>
+              <Link
+                to="/orchestrator/radar"
+                className="rounded-xl border border-[#CBD5E1] px-5 py-2.5 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]"
+              >
+                Back to Radar
+              </Link>
+            </div>
+          </footer>
         )}
       </div>
     </ResearchWorkspaceLayout>

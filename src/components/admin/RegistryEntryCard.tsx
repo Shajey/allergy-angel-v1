@@ -1,11 +1,13 @@
 /**
- * Phase 21c – Registry Entry Card
+ * Phase 21c/O5 – Registry Entry Card
  *
  * Displays a single registry entry with expandable aliases.
  * Supports drafting add/remove alias proposals.
+ * O5: Inspect in Graph link.
  */
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 interface RegistryEntryCardProps {
   id: string;
@@ -111,6 +113,12 @@ export default function RegistryEntryCard({
             <span><strong>Alias count:</strong> {aliases.length}</span>
             <span><strong>Source:</strong> {source}</span>
           </div>
+          <Link
+            to={`/orchestrator/graph?entity=${encodeURIComponent(id)}`}
+            className="inline-block text-xs font-medium text-slate-600 hover:text-slate-900"
+          >
+            Inspect in Graph →
+          </Link>
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">Aliases</p>
             <div className="flex flex-wrap gap-2">

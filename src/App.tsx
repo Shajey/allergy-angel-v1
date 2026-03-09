@@ -19,6 +19,7 @@ const AdminUnmappedPage = lazy(() => import("./pages/AdminUnmappedPage"));
 const AdminRegistryPage = lazy(() => import("./pages/AdminRegistryPage"));
 const AdminIngestionPage = lazy(() => import("./pages/AdminIngestionPage"));
 const ResearchWorkspacePage = lazy(() => import("./orchestrator/pages/ResearchWorkspacePage"));
+const GraphPage = lazy(() => import("./orchestrator/pages/GraphPage"));
 const GovernancePage = lazy(() => import("./orchestrator/pages/GovernancePage"));
 const ActivityPage = lazy(() => import("./orchestrator/pages/ActivityPage"));
 
@@ -88,6 +89,14 @@ function App() {
               element={
                 <Suspense fallback={<OrchestratorFallback />}>
                   <ResearchWorkspacePage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="graph"
+              element={
+                <Suspense fallback={<OrchestratorFallback />}>
+                  <GraphPage />
                 </Suspense>
               }
             />

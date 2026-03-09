@@ -66,7 +66,7 @@ export default function HistoryPage() {
   }, [selectedProfileId]);
 
   return (
-    <div className="px-4 py-4 max-w-xl mx-auto">
+    <div className="px-4 py-6 max-w-xl mx-auto">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-gray-900">History</h1>
         <p className="text-sm text-gray-500 mt-0.5">Your recent checks.</p>
@@ -77,16 +77,16 @@ export default function HistoryPage() {
       ) : loading ? (
         <p className="text-sm text-gray-500">Loading...</p>
       ) : error ? (
-        <div className="rounded-xl border border-red-100 bg-red-50 p-4">
+        <div className="aa-soft-card p-6 border-red-100 bg-red-50">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       ) : checks.length === 0 ? (
-        <div className="rounded-xl border border-gray-100 bg-white p-6 text-center">
+        <div className="aa-soft-card p-6 text-center">
           <p className="text-base text-gray-700">No checks yet.</p>
           <p className="text-sm text-gray-500 mt-1">Run a check from the Ask page.</p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="flex flex-col gap-4">
           {checks.map((check) => {
             const title = check.raw_text?.trim() || '(no text)';
             const riskLevel = check.verdict?.riskLevel ?? 'none';
@@ -95,16 +95,16 @@ export default function HistoryPage() {
               <li key={check.id}>
                 <Link
                   to={`/history/${check.id}`}
-                  className="block rounded-xl border border-gray-100 bg-white p-4 hover:border-gray-200 active:bg-gray-50 transition-colors"
+                  className="block aa-soft-card p-6 hover:border-gray-200 active:bg-gray-50/50 transition-colors"
                 >
                   <h3 className="text-lg font-semibold text-gray-900 truncate">{title}</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">
+                  <p className="text-sm text-gray-500 mt-1">
                     {check.summary.eventCount} event{check.summary.eventCount !== 1 ? 's' : ''}
                     {' · '}
                     {check.summary.eventTypes.join(', ')}
                   </p>
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 gap-4">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant={riskBadgeVariant(riskLevel)}>
                         {riskLabel(riskLevel)}
                       </Badge>
@@ -112,7 +112,7 @@ export default function HistoryPage() {
                         {formatHistoryDate(check.created_at)}
                       </span>
                     </div>
-                    <span className="text-sm text-gray-500 hover:text-gray-700">
+                    <span className="text-sm text-gray-500 hover:text-gray-700 shrink-0">
                       View details →
                     </span>
                   </div>
