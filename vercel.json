@@ -6,7 +6,7 @@
     { "source": "/Orchestrator/:path*", "destination": "/orchestrator/:path*", "permanent": false }
   ],
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" },
+    { "source": "/((?!api/|@|src/|assets/|node_modules/).*)", "destination": "/index.html" },
     { "source": "/api/admin", "destination": "/api/orchestrator" },
     { "source": "/api/admin/unmapped", "destination": "/api/orchestrator?action=unmapped" },
     { "source": "/api/admin/pr-packager", "destination": "/api/orchestrator?action=pr-packager" },
