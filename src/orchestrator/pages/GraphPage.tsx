@@ -217,9 +217,14 @@ export default function GraphPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="shrink-0 flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
-        <h1 className="orch-section-header text-xl">Ontology Graph</h1>
-        <div className="flex items-center gap-3">
+      <header className="shrink-0 flex items-start justify-between gap-4 pb-4 border-b border-[#E2E8F0]">
+        <div>
+          <h1 className="orch-section-header text-xl">Ontology Graph</h1>
+          <p className="mt-1 text-sm text-[#64748B]">
+            Visualize entity relationships and interactions in the safety ontology.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
           {isDemo && (
             <span className="orch-metric-chip text-amber-700 bg-amber-50">Demo: {params.demo}</span>
           )}

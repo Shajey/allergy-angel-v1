@@ -12,13 +12,10 @@ import QuickActionsCard, { type QuickAction } from "./context/QuickActionsCard";
 function EmptyState() {
   return (
     <div className="rounded-lg border-2 border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-4 text-center">
-      <p className="text-sm font-medium text-[#0F172A]">No item selected</p>
+      <p className="text-sm font-medium text-[#0F172A]">Select a safety signal to begin investigation.</p>
       <p className="mt-2 text-xs text-[#64748B] leading-relaxed">
-        Select a signal, candidate, registry entry, or activity item to inspect related context and
-        take the next action.
-      </p>
-      <p className="mt-3 text-xs text-[#94A3B8]">
-        Try: Signal Radar card · Activity item · Radar/Registry/Ingestion row
+        Signals represent knowledge gaps detected during safety checks.
+        Investigating them improves Allergy Angel&apos;s safety intelligence.
       </p>
     </div>
   );
@@ -42,10 +39,10 @@ function UnknownEntityContext({
     radarMetadata: occurrenceCount != null ? { occurrenceCount } : undefined,
   });
   const actions: QuickAction[] = [
-    { label: "Check registry", to: `/orchestrator/registry?search=${encodeURIComponent(entity)}` },
-    { label: "Open radar", to: "/orchestrator/radar" },
-    { label: "Research", to: researchUrl },
+    { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(entity)}` },
+    { label: "Investigate in Research", to: researchUrl },
     { label: "Inspect in Graph", to: buildGraphUrl({ entity }) },
+    { label: "Draft Proposal", to: researchUrl },
   ];
   return (
     <div className="space-y-3">
@@ -95,11 +92,10 @@ function InteractionGapContext({
     },
   });
   const actions: QuickAction[] = [
-    { label: "Investigate", to: "/orchestrator/radar" },
-    { label: "Research pair", to: researchUrl },
+    { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(entityA)}` },
+    { label: "Investigate in Research", to: researchUrl },
     { label: "Inspect in Graph", to: buildGraphUrl({ entityA, entityB }) },
-    { label: "Check A", to: `/orchestrator/registry?search=${encodeURIComponent(entityA)}` },
-    { label: "Check B", to: `/orchestrator/registry?search=${encodeURIComponent(entityB)}` },
+    { label: "Draft Proposal", to: researchUrl },
   ];
   return (
     <div className="space-y-3">
@@ -148,9 +144,10 @@ function SignalContext({
         })
       : "/orchestrator/research";
   const actions: QuickAction[] = [
-    { label: "Open radar", to: "/orchestrator/radar" },
-    { label: "Research", to: researchUrl },
+    { label: "Check Registry", to: entityA ? `/orchestrator/registry?search=${encodeURIComponent(entityA)}` : "/orchestrator/registry" },
+    { label: "Investigate in Research", to: researchUrl },
     { label: "Inspect in Graph", to: entityA && entityB ? buildGraphUrl({ entityA, entityB }) : "/orchestrator/graph" },
+    { label: "Draft Proposal", to: researchUrl },
   ];
   return (
     <div className="space-y-3">
@@ -183,10 +180,10 @@ function IngestionCandidateContext({
     radarMetadata: aliasCount != null ? { occurrenceCount: aliasCount } : undefined,
   });
   const actions: QuickAction[] = [
-    { label: "Open ingestion", to: "/orchestrator/ingestion" },
-    { label: "Create draft proposal", to: `/orchestrator/ingestion?candidateId=${encodeURIComponent(candidateId)}` },
-    { label: "Research", to: researchUrl },
-    { label: "Dismiss candidate", to: "/orchestrator/ingestion" },
+    { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(name ?? canonicalId ?? candidateId)}` },
+    { label: "Investigate in Research", to: researchUrl },
+    { label: "Inspect in Graph", to: buildGraphUrl({ entity: name ?? canonicalId ?? candidateId }) },
+    { label: "Draft Proposal", to: `/orchestrator/ingestion?candidateId=${encodeURIComponent(candidateId)}` },
   ];
   return (
     <div className="space-y-3">
@@ -218,10 +215,10 @@ function RegistryEntityContext({
     entityType: registryType ?? "unknown",
   });
   const actions: QuickAction[] = [
-    { label: "Open registry", to: `/orchestrator/registry?search=${encodeURIComponent(canonicalId)}` },
-    { label: "Research", to: researchUrl },
+    { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(canonicalId)}` },
+    { label: "Investigate in Research", to: researchUrl },
     { label: "Inspect in Graph", to: buildGraphUrl({ entity: canonicalId }) },
-    { label: "Search radar", to: "/orchestrator/radar" },
+    { label: "Draft Proposal", to: researchUrl },
   ];
   return (
     <div className="space-y-3">

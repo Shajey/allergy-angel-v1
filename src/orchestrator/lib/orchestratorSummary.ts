@@ -38,6 +38,12 @@ export interface OrchestratorSummary {
     ingestionPending: number;
     proposalsPending: number;
   };
+  /** Per-section availability: true = API failed for that section */
+  sectionUnavailable?: {
+    emerging: boolean;
+    unknownEntities: boolean;
+    governance: boolean;
+  };
 }
 
 const WINDOW_DAYS = 30;
@@ -101,11 +107,6 @@ export async function loadOrchestratorSummary(): Promise<OrchestratorSummaryResu
   const combinations = combinationsRes.data;
   const ingestionStats = ingestionRes.data;
   const proposals = proposalsRes.data;
-
-  const anyOk = statsRes.ok || entitiesRes.ok || combinationsRes.ok || ingestionRes.ok || proposalsRes.ok;
-  if (!anyOk) {
-    return { ok: false, error: "Summary data unavailable" };
-  }
 
   const emergingSignals: EmergingSignal[] = [];
   const unknownEntities: UnknownEntity[] = [];
@@ -173,15 +174,25 @@ export async function loadOrchestratorSummary(): Promise<OrchestratorSummaryResu
     });
   }
 
+  const sectionUnavailable = {
+    emerging: !combinationsRes.ok && !statsRes.ok,
+    unknownEntities: !entitiesRes.ok && !statsRes.ok,
+    governance: !ingestionRes.ok && !proposalsRes.ok,
+  };
+
   return {
-    emergingSignals,
-    unknownEntities,
-    governanceQueue,
-    summaryCounts: {
-      emergingRisk: stats?.emergingRiskCount ?? 0,
-      unknownEntities: stats?.totalUnknownEntities ?? 0,
-      ingestionPending,
-      proposalsPending,
+    ok: true,
+    data: {
+      emergingSignals,
+      unknownEntities,
+      governanceQueue,
+      summaryCounts: {
+        emergingRisk: stats?.emergingRiskCount ?? 0,
+        unknownEntities: stats?.totalUnknownEntities ?? 0,
+        ingestionPending,
+        proposalsPending,
+      },
+      sectionUnavailable,
     },
   };
 }

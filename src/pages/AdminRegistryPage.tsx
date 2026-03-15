@@ -175,14 +175,14 @@ export default function AdminRegistryPage() {
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Registry</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Browse registries. Draft proposals require governance promotion.
+            The canonical Allergy Angel knowledge base. Before drafting a proposal, verify whether an entity already exists in the registry.
           </p>
         </div>
         <Link
           to="/orchestrator/radar"
           className="text-sm font-medium text-gray-600 hover:text-gray-900"
         >
-          Signal Radar →
+          Safety Signals →
         </Link>
       </div>
 

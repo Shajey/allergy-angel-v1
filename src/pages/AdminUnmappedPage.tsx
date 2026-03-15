@@ -245,7 +245,7 @@ export default function AdminUnmappedPage() {
           <div>
             <h1 className="orch-section-header text-xl">Signal Radar</h1>
             <p className="mt-2 text-sm text-[#64748B] leading-relaxed">
-              Unknown entities and interaction gaps from telemetry. Evidence-based proposals only.
+              Knowledge gaps detected from real safety checks. Investigate and resolve these to improve Allergy Angel&apos;s safety intelligence.
             </p>
           </div>
           <div className="flex items-center gap-4 shrink-0">
@@ -394,13 +394,7 @@ export default function AdminUnmappedPage() {
                         <SuggestedActionBadge action={e.suggestedAction} />
                       </span>
                     </td>
-                    <td className="flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
-                      <Link
-                        to={`/orchestrator/registry?search=${encodeURIComponent(e.entity)}`}
-                        className="text-sm font-medium text-blue-600 hover:underline"
-                      >
-                        Check registry
-                      </Link>
+                    <td className="flex gap-2 flex-wrap items-center" onClick={(ev) => ev.stopPropagation()}>
                       <Link
                         to={buildResearchUrl({
                           mode: "entity",
@@ -412,9 +406,15 @@ export default function AdminUnmappedPage() {
                             dominantContext: e.dominantContext,
                           },
                         })}
-                        className="text-sm text-amber-700 hover:underline"
+                        className="orch-gradient-btn inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-semibold"
                       >
-                        Research
+                        Investigate
+                      </Link>
+                      <Link
+                        to={`/orchestrator/registry?search=${encodeURIComponent(e.entity)}`}
+                        className="text-sm font-medium text-blue-600 hover:underline"
+                      >
+                        Check registry
                       </Link>
                       <Link
                         to={buildGraphUrl({ entity: e.entity })}
@@ -493,7 +493,20 @@ export default function AdminUnmappedPage() {
                     <td className="px-4 py-3">
                       <PriorityBadge label={s.priority} />
                     </td>
-                    <td className="flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="flex gap-2 flex-wrap items-center" onClick={(ev) => ev.stopPropagation()}>
+                      <Link
+                        to={buildResearchUrl({
+                          mode: "combination",
+                          entityA: s.entityA,
+                          entityB: s.entityB,
+                          typeA: s.entityAType ?? "unknown",
+                          typeB: s.entityBType ?? "unknown",
+                          radarTelemetry: { occurrenceCount: s.occurrenceCount },
+                        })}
+                        className="orch-gradient-btn inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-semibold"
+                      >
+                        Investigate
+                      </Link>
                       <Link
                         to={`/orchestrator/registry?search=${encodeURIComponent(s.entityA)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
@@ -511,27 +524,6 @@ export default function AdminUnmappedPage() {
                         className="text-sm text-slate-600 hover:underline"
                       >
                         Inspect in Graph
-                      </Link>
-                      <a
-                        href={`https://www.google.com/search?q=${encodeURIComponent(s.entityA + " " + s.entityB + " interaction")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-amber-700 hover:underline"
-                      >
-                        Research interaction
-                      </a>
-                      <Link
-                        to={buildResearchUrl({
-                          mode: "combination",
-                          entityA: s.entityA,
-                          entityB: s.entityB,
-                          typeA: s.entityAType ?? "unknown",
-                          typeB: s.entityBType ?? "unknown",
-                          radarTelemetry: { occurrenceCount: s.occurrenceCount },
-                        })}
-                        className="text-sm text-amber-700 hover:underline"
-                      >
-                        Draft proposal
                       </Link>
                     </td>
                   </tr>
@@ -618,7 +610,25 @@ export default function AdminUnmappedPage() {
                     <td className="px-4 py-3">
                       <PriorityBadge label={c.priorityLabel} />
                     </td>
-                    <td className="flex gap-2 flex-wrap" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="flex gap-2 flex-wrap items-center" onClick={(ev) => ev.stopPropagation()}>
+                      <Link
+                        to={buildResearchUrl({
+                          mode: "combination",
+                          entityA: c.entityA,
+                          entityB: c.entityB,
+                          typeA: c.entityAType,
+                          typeB: c.entityBType,
+                          radarTelemetry: {
+                            occurrenceCount: c.occurrenceCount,
+                            highRiskCount: c.highRiskCount,
+                            safeOccurrenceCount: c.safeOccurrenceCount,
+                            signalPattern: c.signalPattern,
+                          },
+                        })}
+                        className="orch-gradient-btn inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-semibold"
+                      >
+                        Investigate
+                      </Link>
                       <Link
                         to={`/orchestrator/registry?search=${encodeURIComponent(c.entityA)}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
@@ -636,30 +646,6 @@ export default function AdminUnmappedPage() {
                         className="text-sm text-slate-600 hover:underline"
                       >
                         Inspect in Graph
-                      </Link>
-                      <Link
-                        to="/orchestrator/radar"
-                        className="text-sm text-gray-600 hover:underline"
-                      >
-                        Investigate
-                      </Link>
-                      <Link
-                        to={buildResearchUrl({
-                          mode: "combination",
-                          entityA: c.entityA,
-                          entityB: c.entityB,
-                          typeA: c.entityAType,
-                          typeB: c.entityBType,
-                          radarTelemetry: {
-                            occurrenceCount: c.occurrenceCount,
-                            highRiskCount: c.highRiskCount,
-                            safeOccurrenceCount: c.safeOccurrenceCount,
-                            signalPattern: c.signalPattern,
-                          },
-                        })}
-                        className="text-sm text-amber-700 hover:underline"
-                      >
-                        Draft proposal
                       </Link>
                     </td>
                   </tr>

@@ -9,6 +9,7 @@ import { OrchestratorSelectionProvider } from "../context/OrchestratorSelectionC
 import { GraphTelemetryProvider } from "../context/GraphTelemetryContext";
 import { ActivityStoreProvider } from "../lib/activityStore";
 import CommandBar from "../components/CommandBar";
+import OrchestratorPipeline from "../components/OrchestratorPipeline";
 import SignalRadarPanel from "../components/SignalRadarPanel";
 import ContextPanel from "../components/ContextPanel";
 import ActivityStream from "../components/ActivityStream";
@@ -20,6 +21,7 @@ export default function OrchestratorShell() {
       <GraphTelemetryProvider>
       <div className="orch-bg flex h-[100dvh] flex-col overflow-hidden px-4 pt-4">
         <CommandBar />
+        <OrchestratorPipeline />
         <div className="flex min-h-0 flex-1 gap-4 pt-4">
           <div className="orch-card w-56 shrink-0 overflow-auto">
             <SignalRadarPanel />

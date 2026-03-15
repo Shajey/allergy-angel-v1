@@ -13,6 +13,8 @@ import {
   type UnknownEntity,
   type GovernanceQueueItem,
 } from "../lib/orchestratorSummary";
+import { buildResearchUrl } from "../lib/researchTarget";
+import { buildGraphUrl } from "../lib/graphUtils";
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
@@ -42,7 +44,6 @@ export default function SignalRadarPanel() {
   const { selection, setSelection } = useOrchestratorSelection();
   const [summary, setSummary] = useState<OrchestratorSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [summaryFailed, setSummaryFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,8 +57,8 @@ export default function SignalRadarPanel() {
             unknownEntities: [],
             governanceQueue: [],
             summaryCounts: { emergingRisk: 0, unknownEntities: 0, ingestionPending: 0, proposalsPending: 0 },
+            sectionUnavailable: { emerging: true, unknownEntities: true, governance: true },
           });
-          setSummaryFailed(true);
         }
         setLoading(false);
       }
@@ -70,7 +71,9 @@ export default function SignalRadarPanel() {
     unknownEntities: [],
     governanceQueue: [],
     summaryCounts: { emergingRisk: 0, unknownEntities: 0, ingestionPending: 0, proposalsPending: 0 },
+    sectionUnavailable: { emerging: false, unknownEntities: false, governance: false },
   };
+  const unavail = s.sectionUnavailable ?? { emerging: false, unknownEntities: false, governance: false };
 
   const handleEmergingSelect = (sig: EmergingSignal) => {
     setSelection({
@@ -117,9 +120,10 @@ export default function SignalRadarPanel() {
   if (loading) {
     return (
       <aside className="w-56 shrink-0 bg-white p-4 overflow-y-auto">
-        <p className="orch-section-header mb-3 text-xs font-semibold uppercase tracking-wide text-[#0F172A]">
-          Signal Radar
+        <p className="orch-section-header mb-1 text-xs font-semibold uppercase tracking-wide text-[#0F172A]">
+          Safety Signals
         </p>
+        <p className="text-[11px] text-[#64748B] mb-3">Signals are knowledge gaps detected from real safety checks.</p>
         <div className="space-y-2">
           <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-3 text-xs text-[#94A3B8]">
             Loading…
@@ -131,13 +135,14 @@ export default function SignalRadarPanel() {
 
   return (
     <aside className="w-56 shrink-0 bg-white p-4 overflow-y-auto">
-      <p className="orch-section-header mb-3 text-xs font-semibold uppercase tracking-wide text-[#0F172A]">
-        Signal Radar
+      <p className="orch-section-header mb-1 text-xs font-semibold uppercase tracking-wide text-[#0F172A]">
+        Safety Signals
       </p>
+      <p className="text-[11px] text-[#64748B] mb-3">Signals are knowledge gaps detected from real safety checks.</p>
 
       <SectionHeader>Emerging Signals</SectionHeader>
       <div className="space-y-2">
-        {summaryFailed ? (
+        {unavail.emerging ? (
           <FallbackSectionPlaceholder label="Radar" />
         ) : s.emergingSignals.length > 0 ? (
           s.emergingSignals.slice(0, 3).map((sig, i) => (
@@ -156,6 +161,20 @@ export default function SignalRadarPanel() {
                   ? selection.entityA === sig.entityA && selection.entityB === sig.entityB
                   : selection.title === sig.title)
               }
+              investigateTo={
+                sig.entityA && sig.entityB
+                  ? buildResearchUrl({
+                      mode: "combination",
+                      entityA: sig.entityA,
+                      entityB: sig.entityB,
+                      typeA: "unknown",
+                      typeB: "unknown",
+                      radarTelemetry: { occurrenceCount: sig.count },
+                    })
+                  : undefined
+              }
+              graphTo={sig.entityA && sig.entityB ? buildGraphUrl({ entityA: sig.entityA, entityB: sig.entityB }) : undefined}
+              registryTo={sig.entityA ? `/orchestrator/registry?search=${encodeURIComponent(sig.entityA)}` : undefined}
             />
           ))
         ) : (
@@ -165,7 +184,7 @@ export default function SignalRadarPanel() {
 
       <SectionHeader>Unknown Entities</SectionHeader>
       <div className="space-y-2">
-        {summaryFailed ? (
+        {unavail.unknownEntities ? (
           <FallbackSectionPlaceholder label="Unknown entities" />
         ) : s.unknownEntities.length > 0 ? (
           s.unknownEntities.slice(0, 3).map((ent, i) => (
@@ -178,6 +197,14 @@ export default function SignalRadarPanel() {
               statusColor="investigate"
               onSelect={() => handleUnknownEntitySelect(ent)}
               isSelected={selection?.kind === "unknown-entity" && selection.entity === ent.title}
+              investigateTo={buildResearchUrl({
+                mode: "entity",
+                entity: ent.title,
+                entityType: ent.entityType ?? "unknown",
+                radarMetadata: { occurrenceCount: ent.count },
+              })}
+              graphTo={buildGraphUrl({ entity: ent.title })}
+              registryTo={`/orchestrator/registry?search=${encodeURIComponent(ent.title)}`}
             />
           ))
         ) : (
@@ -187,7 +214,7 @@ export default function SignalRadarPanel() {
 
       <SectionHeader>Governance Queue</SectionHeader>
       <div className="space-y-2">
-        {summaryFailed ? (
+        {unavail.governance ? (
           <FallbackSectionPlaceholder label="Queue" />
         ) : s.governanceQueue.length > 0 ? (
           s.governanceQueue.slice(0, 3).map((item, i) => (

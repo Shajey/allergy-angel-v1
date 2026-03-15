@@ -1,7 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
+  "redirects": [
+    { "source": "/Orchestrator", "destination": "/orchestrator", "permanent": false },
+    { "source": "/Orchestrator/:path*", "destination": "/orchestrator/:path*", "permanent": false }
+  ],
   "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" },
     { "source": "/api/admin", "destination": "/api/orchestrator" },
     { "source": "/api/admin/unmapped", "destination": "/api/orchestrator?action=unmapped" },
     { "source": "/api/admin/pr-packager", "destination": "/api/orchestrator?action=pr-packager" },
