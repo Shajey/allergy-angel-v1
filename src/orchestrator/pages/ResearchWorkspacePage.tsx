@@ -183,16 +183,15 @@ export default function ResearchWorkspacePage() {
     return (
       <ResearchWorkspaceLayout>
         <div className="rounded-xl border-2 border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-8 text-center">
-          <h2 className="text-lg font-semibold text-[#0F172A]">No research target selected</h2>
+          <h2 className="text-lg font-semibold text-[#0F172A]">No safety signal selected</h2>
           <p className="mt-2 text-sm text-[#64748B]">
-            Select a signal, entity, or interaction gap from Radar or the Context Panel, or open
-            Research with query params.
+            Select a safety signal, entity, or interaction gap from Safety Signals to begin investigation.
           </p>
           <Link
             to="/orchestrator/radar"
             className="mt-4 inline-block text-sm font-medium text-[#0F172A] hover:text-[#334155]"
           >
-            Open Radar →
+            Return to Safety Signals →
           </Link>
         </div>
       </ResearchWorkspaceLayout>
@@ -307,12 +306,6 @@ export default function ResearchWorkspacePage() {
               >
                 Re-run Research
               </button>
-              <Link
-                to="/orchestrator/radar"
-                className="rounded-xl border border-[#CBD5E1] px-5 py-2.5 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]"
-              >
-                Back to Radar
-              </Link>
             </div>
           </footer>
         )}

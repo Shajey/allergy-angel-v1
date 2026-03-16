@@ -1,5 +1,5 @@
 /**
- * Phase 21c – Read-Only Registry Browser
+ * Phase 21c – Read-Only Registry Access
  *
  * Provides list, search, and single-entry access for admin UI.
  * Does NOT mutate registries.

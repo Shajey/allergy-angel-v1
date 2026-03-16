@@ -37,7 +37,7 @@ export default function Logo() {
           <span className="orch-logo-aa">AA</span>
           <span className="orch-logo-word"> Orchestrator</span>
         </span>
-        <span className="orch-logo-sub">GOVERNED SAFETY INTELLIGENCE</span>
+        <span className="orch-logo-sub">SAFETY INTELLIGENCE</span>
       </div>
     </Link>
   );

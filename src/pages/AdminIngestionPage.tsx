@@ -1,5 +1,5 @@
 /**
- * Phase 24.1 – Ingestion Browser
+ * Phase 24.1 – Ingestion Review
  *
  * Lightweight review queue for staged ingestion candidates.
  * Proposal-safe wording. No direct registry writes.
@@ -131,7 +131,7 @@ export default function AdminIngestionPage() {
           to="/orchestrator/radar"
           className="text-sm font-medium text-gray-600 hover:text-gray-900"
         >
-          Signal Radar →
+          Safety Signals →
         </Link>
       </div>
 

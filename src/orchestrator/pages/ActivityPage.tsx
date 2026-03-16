@@ -37,7 +37,7 @@ export default function ActivityPage() {
     <div className="max-w-2xl">
       <h1 className="text-[22px] font-semibold text-[#0F172A]">Activity</h1>
       <p className="mt-1 text-sm text-[#64748B] leading-relaxed">
-        Audit trail of research, governance, and knowledge updates. Track session events, promotion activity, and API sync for operational visibility.
+        Audit trail of investigation, governance, and safety intelligence updates.
       </p>
       <div className="mt-6">
         {loading ? (

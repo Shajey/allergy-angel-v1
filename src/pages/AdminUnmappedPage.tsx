@@ -243,7 +243,7 @@ export default function AdminUnmappedPage() {
       <div className="orch-telemetry-panel mb-6 -mx-6 px-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <h1 className="orch-section-header text-xl">Signal Radar</h1>
+            <h1 className="orch-section-header text-xl">Safety Signals</h1>
             <p className="mt-2 text-sm text-[#64748B] leading-relaxed">
               Knowledge gaps detected from real safety checks. Investigate and resolve these to improve Allergy Angel&apos;s safety intelligence.
             </p>
@@ -259,7 +259,7 @@ export default function AdminUnmappedPage() {
               to="/orchestrator/registry"
               className="text-sm font-medium text-[#64748B] hover:text-[#0F172A]"
             >
-              Registry Browser →
+              Verify in Registry →
             </Link>
           </div>
         </div>
@@ -420,7 +420,7 @@ export default function AdminUnmappedPage() {
                         to={buildGraphUrl({ entity: e.entity })}
                         className="text-sm text-slate-600 hover:underline"
                       >
-                        Inspect in Graph
+                        View Graph
                       </Link>
                     </td>
                   </tr>
@@ -523,7 +523,7 @@ export default function AdminUnmappedPage() {
                         to={buildGraphUrl({ entityA: s.entityA, entityB: s.entityB })}
                         className="text-sm text-slate-600 hover:underline"
                       >
-                        Inspect in Graph
+                        View Graph
                       </Link>
                     </td>
                   </tr>
@@ -645,7 +645,7 @@ export default function AdminUnmappedPage() {
                         to={buildGraphUrl({ entityA: c.entityA, entityB: c.entityB })}
                         className="text-sm text-slate-600 hover:underline"
                       >
-                        Inspect in Graph
+                        View Graph
                       </Link>
                     </td>
                   </tr>

@@ -12,7 +12,7 @@ export default function GovernancePage() {
       </p>
       <div className="mt-6 rounded-xl border border-[#E2E8F0] bg-white p-6">
         <p className="text-sm text-[#64748B] leading-relaxed">
-          Use the CLI workflow (pr-packager, replay-validate, pr:apply) to promote proposals. Replay validation ensures no regression in safety verdicts before changes are applied. Governance timeline UI coming in a later phase.
+          Proposals are validated through replay testing before promotion to the canonical registry. Governance review UI is planned for a future phase.
         </p>
       </div>
     </div>

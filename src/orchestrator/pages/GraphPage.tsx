@@ -219,9 +219,9 @@ export default function GraphPage() {
     <div className="flex flex-col h-full">
       <header className="shrink-0 flex items-start justify-between gap-4 pb-4 border-b border-[#E2E8F0]">
         <div>
-          <h1 className="orch-section-header text-xl">Ontology Graph</h1>
+          <h1 className="orch-section-header text-xl">Safety Graph</h1>
           <p className="mt-1 text-sm text-[#64748B]">
-            Visualize entity relationships and interactions in the safety ontology.
+            Inspect entity relationships and interactions to support investigation.
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -232,7 +232,7 @@ export default function GraphPage() {
             to="/orchestrator/radar"
             className="text-sm font-medium text-[#64748B] hover:text-[#0F172A]"
           >
-            Back to Radar →
+            Back to Safety Signals →
           </Link>
         </div>
       </header>
@@ -500,7 +500,7 @@ export default function GraphPage() {
                   to={`/orchestrator/radar`}
                   className="text-xs font-medium text-[#3B82F6] hover:underline"
                 >
-                  Open in Radar
+                  View Safety Signals
                 </Link>
                 <Link
                   to={buildResearchUrl({
@@ -510,19 +510,19 @@ export default function GraphPage() {
                   })}
                   className="text-xs font-medium text-[#3B82F6] hover:underline"
                 >
-                  Open in Research
+                  Investigate
                 </Link>
                 <Link
                   to={`/orchestrator/registry?search=${encodeURIComponent(displayNode.label)}`}
                   className="text-xs font-medium text-[#3B82F6] hover:underline"
                 >
-                  Open in Registry
+                  Check Registry
                 </Link>
               </div>
             </div>
           ) : (
             <p className="text-xs text-[#94A3B8]">
-              {selectedEdge ? "Select a node or edge" : "Select a node or click an interaction edge"}
+              Select a node or edge to see next steps.
             </p>
           )}
         </aside>

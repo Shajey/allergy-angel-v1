@@ -41,7 +41,7 @@ function UnknownEntityContext({
   const actions: QuickAction[] = [
     { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(entity)}` },
     { label: "Investigate in Research", to: researchUrl },
-    { label: "Inspect in Graph", to: buildGraphUrl({ entity }) },
+    { label: "View Graph", to: buildGraphUrl({ entity }) },
     { label: "Draft Proposal", to: researchUrl },
   ];
   return (
@@ -94,7 +94,7 @@ function InteractionGapContext({
   const actions: QuickAction[] = [
     { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(entityA)}` },
     { label: "Investigate in Research", to: researchUrl },
-    { label: "Inspect in Graph", to: buildGraphUrl({ entityA, entityB }) },
+    { label: "View Graph", to: buildGraphUrl({ entityA, entityB }) },
     { label: "Draft Proposal", to: researchUrl },
   ];
   return (
@@ -146,7 +146,7 @@ function SignalContext({
   const actions: QuickAction[] = [
     { label: "Check Registry", to: entityA ? `/orchestrator/registry?search=${encodeURIComponent(entityA)}` : "/orchestrator/registry" },
     { label: "Investigate in Research", to: researchUrl },
-    { label: "Inspect in Graph", to: entityA && entityB ? buildGraphUrl({ entityA, entityB }) : "/orchestrator/graph" },
+    { label: "View Graph", to: entityA && entityB ? buildGraphUrl({ entityA, entityB }) : "/orchestrator/graph" },
     { label: "Draft Proposal", to: researchUrl },
   ];
   return (
@@ -182,7 +182,7 @@ function IngestionCandidateContext({
   const actions: QuickAction[] = [
     { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(name ?? canonicalId ?? candidateId)}` },
     { label: "Investigate in Research", to: researchUrl },
-    { label: "Inspect in Graph", to: buildGraphUrl({ entity: name ?? canonicalId ?? candidateId }) },
+    { label: "View Graph", to: buildGraphUrl({ entity: name ?? canonicalId ?? candidateId }) },
     { label: "Draft Proposal", to: `/orchestrator/ingestion?candidateId=${encodeURIComponent(candidateId)}` },
   ];
   return (
@@ -217,7 +217,7 @@ function RegistryEntityContext({
   const actions: QuickAction[] = [
     { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(canonicalId)}` },
     { label: "Investigate in Research", to: researchUrl },
-    { label: "Inspect in Graph", to: buildGraphUrl({ entity: canonicalId }) },
+    { label: "View Graph", to: buildGraphUrl({ entity: canonicalId }) },
     { label: "Draft Proposal", to: researchUrl },
   ];
   return (
@@ -250,8 +250,15 @@ function ActivityContext({
     proposal: "/orchestrator/registry",
     signal: "/orchestrator/radar",
   };
+  const labelMap: Record<string, string> = {
+    research: "Continue Investigation",
+    ingestion: "Review Ingestion",
+    proposal: "Check Registry",
+    signal: "View Safety Signal",
+  };
   const route = eventType ? routeMap[eventType] : "/orchestrator/activity";
-  const actions: QuickAction[] = [{ label: "Open related page", to: route }];
+  const label = eventType ? (labelMap[eventType] ?? "View Activity") : "View Activity";
+  const actions: QuickAction[] = [{ label, to: route }];
   return (
     <div className="space-y-3">
       <ContextSection title="Activity">
@@ -271,7 +278,7 @@ export default function ContextPanel() {
   return (
     <aside className="w-64 shrink-0 p-4 overflow-y-auto">
       <p className="orch-section-header mb-4 text-xs font-semibold uppercase tracking-wide text-[#64748B]">
-        Context
+        Next Step
       </p>
       <div className="space-y-4">
         {!selection && <EmptyState />}

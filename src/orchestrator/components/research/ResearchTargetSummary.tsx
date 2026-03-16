@@ -45,7 +45,7 @@ export default function ResearchTargetSummary({ target }: Props) {
           to={buildGraphUrl({ entity: target.entity })}
           className="mt-3 inline-block text-xs font-medium text-[#64748B] hover:text-[#0F172A]"
         >
-          Inspect in Graph →
+          View Graph →
         </Link>
       </div>
     );
@@ -90,7 +90,7 @@ export default function ResearchTargetSummary({ target }: Props) {
         to={buildGraphUrl({ entityA: target.entityA, entityB: target.entityB })}
         className="mt-3 inline-block text-xs font-medium text-[#64748B] hover:text-[#0F172A]"
       >
-        Inspect in Graph →
+        View Graph →
       </Link>
     </div>
   );

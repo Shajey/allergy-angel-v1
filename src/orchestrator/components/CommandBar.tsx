@@ -8,9 +8,9 @@ import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 
 const NAV_ITEMS = [
-  { path: "/orchestrator/radar", label: "Radar" },
+  { path: "/orchestrator/radar", label: "Safety Signals" },
   { path: "/orchestrator/registry", label: "Registry" },
-  { path: "/orchestrator/research", label: "Research" },
+  { path: "/orchestrator/research", label: "Investigation" },
   { path: "/orchestrator/graph", label: "Graph" },
   { path: "/orchestrator/ingestion", label: "Ingestion" },
   { path: "/orchestrator/governance", label: "Governance", placeholder: true },

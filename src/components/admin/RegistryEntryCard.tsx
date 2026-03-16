@@ -117,7 +117,7 @@ export default function RegistryEntryCard({
             to={`/orchestrator/graph?entity=${encodeURIComponent(id)}`}
             className="inline-block text-xs font-medium text-slate-600 hover:text-slate-900"
           >
-            Inspect in Graph →
+            View Graph →
           </Link>
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">Aliases</p>

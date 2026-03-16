@@ -1,7 +1,7 @@
 /**
- * Phase 21c – Admin Registry Browser
+ * Phase 21c – Registry Verification
  *
- * Read-only registry browser with draft alias proposal support.
+ * Read-only registry verification view with draft alias proposal support.
  * Proposals do NOT affect live inference.
  */
 
