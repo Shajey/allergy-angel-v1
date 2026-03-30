@@ -746,7 +746,7 @@ async function handleResearchEntity(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({
         error: outcome.error.message,
         code: outcome.error.code,
-        details: null,
+        details: outcome.error.details ?? null,
       });
     }
     return res.status(200).json({
@@ -821,7 +821,7 @@ async function handleResearchCombination(req: VercelRequest, res: VercelResponse
       return res.status(400).json({
         error: outcome.error.message,
         code: outcome.error.code,
-        details: null,
+        details: outcome.error.details ?? null,
       });
     }
     return res.status(200).json({

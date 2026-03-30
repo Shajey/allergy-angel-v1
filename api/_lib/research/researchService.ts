@@ -15,6 +15,11 @@ import {
   generateRelationshipDraft,
 } from "./proposalGenerator.js";
 import {
+  normalizeEntityResearchForSchema,
+  normalizeCombinationResearchForSchema,
+  summarizeAjvErrors,
+} from "./researchNormalize.js";
+import {
   generateEntityResearchKey,
   generateCombinationResearchKey,
   lookupCache,
@@ -205,15 +210,20 @@ export async function researchEntity(
   try {
     const raw = await provider.researchEntity(args);
     const parsed = JSON.parse(raw) as unknown;
+    normalizeEntityResearchForSchema(parsed, { entityHint: args.entity });
     normalizeProposalDrafts(parsed, "entity");
     const valid = validateEntityResearchOutput(parsed);
     if (!valid) {
+      const ajvErrors = validateEntityResearchOutput.errors;
       return {
         success: false,
         error: {
           code: "validation_failed",
           message: "LLM output failed schema validation",
-          details: validateEntityResearchOutput.errors,
+          details: {
+            errors: ajvErrors,
+            summary: summarizeAjvErrors(ajvErrors),
+          },
         },
       };
     }
@@ -333,15 +343,20 @@ export async function researchCombination(
   try {
     const raw = await provider.researchCombination(args);
     const parsed = JSON.parse(raw) as unknown;
+    normalizeCombinationResearchForSchema(parsed);
     normalizeProposalDrafts(parsed, "combination");
     const valid = validateCombinationResearchOutput(parsed);
     if (!valid) {
+      const ajvErrors = validateCombinationResearchOutput.errors;
       return {
         success: false,
         error: {
           code: "validation_failed",
           message: "LLM output failed schema validation",
-          details: validateCombinationResearchOutput.errors,
+          details: {
+            errors: ajvErrors,
+            summary: summarizeAjvErrors(ajvErrors),
+          },
         },
       };
     }

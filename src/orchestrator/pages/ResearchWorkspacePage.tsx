@@ -46,6 +46,7 @@ export default function ResearchWorkspacePage() {
   const [target, setTarget] = useState<ResearchTarget | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [result, setResult] = useState<ResearchResult | null>(null);
 
   const targetFromParams = useMemo(
@@ -65,6 +66,7 @@ export default function ResearchWorkspacePage() {
     if (!derivedTarget) {
       setResult(null);
       setError(null);
+      setErrorDetails(null);
       return;
     }
     // Persist target to URL when from selection — so "Start research" stays visible if selection clears
@@ -78,6 +80,7 @@ export default function ResearchWorkspacePage() {
       if (!target) return;
       setLoading(true);
       setError(null);
+      setErrorDetails(null);
       setResult(null);
       const targetLabel = target.mode === "entity" ? target.entity : `${target.entityA} + ${target.entityB}`;
       activityStore?.pushEvent({
@@ -115,7 +118,21 @@ export default function ResearchWorkspacePage() {
         });
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error ?? "Research failed");
+          setError(typeof data.error === "string" ? data.error : "Research failed");
+          const d = data.details as { summary?: string } | string | null | undefined;
+          if (d && typeof d === "object" && "summary" in d && typeof d.summary === "string") {
+            setErrorDetails(d.summary);
+          } else if (d != null) {
+            setErrorDetails(typeof d === "string" ? d : JSON.stringify(d, null, 2));
+          }
+          activityStore?.pushEvent({
+            type: "research_failed",
+            message: `Research failed: ${targetLabel}`,
+            status: "error",
+            source: "api",
+            metadata: { error: data.error, code: data.code },
+          });
+          return;
         }
         if (data.researchSkipped) {
           setResult({
@@ -147,6 +164,7 @@ export default function ResearchWorkspacePage() {
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Research failed";
         setError(msg);
+        setErrorDetails(null);
         activityStore?.pushEvent({
           type: "research_failed",
           message: `Research failed: ${targetLabel}`,
@@ -245,7 +263,12 @@ export default function ResearchWorkspacePage() {
 
         {error && (
           <section className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-5 text-sm text-[#B91C1C]">
-            {error}
+            <p className="font-medium">{error}</p>
+            {errorDetails ? (
+              <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg bg-white/80 p-3 text-xs text-[#7F1D1D] ring-1 ring-[#FECACA]">
+                {errorDetails}
+              </pre>
+            ) : null}
           </section>
         )}
 
