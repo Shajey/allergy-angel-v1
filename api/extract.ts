@@ -10,6 +10,7 @@ import { postProcessExtractionResult } from "./_lib/inference/postProcessExtract
 import { saveExtractionRun } from "./_lib/persistence/saveExtractionRun.js";
 import { postProcessFollowUps } from "./_lib/inference/postProcessFollowUps.js";
 import { enrichWithResolution } from "./_lib/knowledge/enrichWithResolution.js";
+import { ensurePromotedRegistryLoaded } from "./_lib/knowledge/promotedRegistryDb.js";
 
 /**
  * Vercel Serverless Function
@@ -119,6 +120,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── Post-process: meal needsClarification + carb follow-up suppression ─
     postProcessExtractionResult(rawText, result);
+
+    // ── O8.1: Hydrate promoted registry before resolution + downstream checkRisk ─
+    await ensurePromotedRegistryLoaded();
 
     // ── Phase 21a: Enrich events with entity resolution before inference ─
     result.events = enrichWithResolution(result.events ?? []);

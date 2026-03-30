@@ -11,6 +11,8 @@ export const RULE_CROSS_REACTIVE = "AA-RULE-CR-001";
 export const RULE_MED_INTERACTION = "AA-RULE-MI-001";
 export const RULE_SUPPLEMENT_MED_INTERACTION = "AA-RULE-SM-001";
 export const RULE_FOOD_MED_INTERACTION = "AA-RULE-FM-001";
+/** O8 — Registry entity risk tag matched profile allergy token */
+export const RULE_ENTITY_RISK_TAG = "AA-RULE-ER-001";
 
 export function ruleCodeFor(rule: string): string | null {
   switch (rule) {
@@ -26,6 +28,8 @@ export function ruleCodeFor(rule: string): string | null {
       return RULE_SUPPLEMENT_MED_INTERACTION;
     case "food_medication_interaction":
       return RULE_FOOD_MED_INTERACTION;
+    case "entity_risk_tag_match":
+      return RULE_ENTITY_RISK_TAG;
     default:
       return null;
   }

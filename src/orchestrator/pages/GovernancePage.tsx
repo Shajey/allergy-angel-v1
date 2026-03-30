@@ -3,7 +3,7 @@
  * Client queue (Signals) + registry-backed API rows; center uses same preview as Signals.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   dismissAliasProposal,
   fetchGovernancePendingProposals,
@@ -16,6 +16,7 @@ import {
 } from "../lib/governanceProposal";
 import { useActivityStore } from "../lib/activityStore";
 import { useInvestigationStore } from "../context/InvestigationStoreContext";
+import { governanceItemFromInvestigationEntry } from "../lib/governanceRehydrate";
 import { useGovernanceStore, type GovernanceItem } from "../lib/governanceStore";
 import { useOrchestratorSelection } from "../context/OrchestratorSelectionContext";
 import { stableSelectionKey } from "../lib/investigationKey";
@@ -45,8 +46,18 @@ function formatShortDate(ts: number): string {
 export default function GovernancePage() {
   const activity = useActivityStore();
   const { selection } = useOrchestratorSelection();
-  const { proposals: governanceItems, updateItemStatus } = useGovernanceStore();
-  const { resolveFromGovernance } = useInvestigationStore();
+  const { proposals: governanceItems, add: addGovernanceRow, updateItemStatus } = useGovernanceStore();
+  const { resolveFromGovernance, listPendingGovernanceWithProposal } = useInvestigationStore();
+
+  /** Investigation can be pending_governance (sidebar badge) while the governance queue row was lost — sync rows. */
+  useLayoutEffect(() => {
+    const storeIds = new Set(governanceItems.map((p) => p.id));
+    for (const { signalId, entry } of listPendingGovernanceWithProposal()) {
+      if (storeIds.has(signalId)) continue;
+      const row = governanceItemFromInvestigationEntry(signalId, entry);
+      if (row) addGovernanceRow(row);
+    }
+  }, [governanceItems, listPendingGovernanceWithProposal, addGovernanceRow]);
 
   const governancePending = useMemo(
     () => governanceItems.filter((p) => p.status === "pending"),
@@ -101,7 +112,11 @@ export default function GovernancePage() {
     }
   }, [selection, governancePending, resetActionUi]);
 
+  /** Only reset action UI when the user actually changes selection — not on spurious effect runs. */
+  const prevSelectedKeyForActionRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
+    if (prevSelectedKeyForActionRef.current === selectedKey) return;
+    prevSelectedKeyForActionRef.current = selectedKey;
     setActionPhase("idle");
     setActionError(null);
     setSuccessVariant(null);

@@ -46,7 +46,7 @@ async function runTests() {
     assert(drug.entries.length > 0, "drug entries non-empty");
     const first = drug.entries[0];
     assert(first.id && Array.isArray(first.aliases), "entry has id and aliases");
-    assert(first.source === "static", "source is static");
+    assert(first.source === "registry", "source is unified registry");
 
     const supp = listRegistry("supplement");
     assert(supp.meta.type === "supplement", "supplement list meta type");
@@ -77,7 +77,7 @@ async function runTests() {
     assert(!!e, "getRegistryEntry finds escitalopram");
     assert(e!.id === "escitalopram", "id correct");
     assert(e!.aliases.includes("lexapro"), "aliases include lexapro");
-    assert(e!.source === "static", "source static");
+    assert(e!.source === "registry", "source registry");
 
     const notFound = getRegistryEntry("drug", "nonexistent-xyz");
     assert(!notFound, "nonexistent returns null");

@@ -36,7 +36,9 @@ import {
   RULE_MED_INTERACTION,
   RULE_SUPPLEMENT_MED_INTERACTION,
   RULE_FOOD_MED_INTERACTION,
+  RULE_ENTITY_RISK_TAG,
 } from "./ruleCodes.js";
+import { matchEntityRiskTagsToProfile } from "./entityRiskTagMatch.js";
 import {
   SUPPLEMENT_INTERACTION_MAP,
   normalizeSupplementName,
@@ -220,6 +222,38 @@ export function checkRisk(args: {
             },
           });
         } else {
+          // ── O8: Promoted entity risk tags vs profile (HIGH) ───────────
+          const entityRiskMatch = matchEntityRiskTagsToProfile({
+            mealText,
+            resolvedMealText,
+            knownAllergies: profile.known_allergies,
+          });
+          if (entityRiskMatch) {
+            highestRisk = "high";
+            const severity = getAllergenSeverity(entityRiskMatch.matchedTag);
+            const meta: VerdictMeta = {
+              taxonomyVersion: ALLERGEN_TAXONOMY_VERSION,
+              matchedCategory: entityRiskMatch.matchedTag,
+              matchedChild: entityRiskMatch.entityId,
+              severity,
+              crossReactive: false,
+            };
+            if (!bestAllergyMeta || severity > (bestAllergyMeta.severity ?? 0)) {
+              bestAllergyMeta = meta;
+            }
+            matched.push({
+              rule: "entity_risk_tag_match",
+              ruleCode: RULE_ENTITY_RISK_TAG,
+              details: {
+                meal: mealText,
+                entityId: entityRiskMatch.entityId,
+                matchedTag: entityRiskMatch.matchedTag,
+                riskTags: entityRiskMatch.riskTags,
+                severity,
+              },
+            });
+          }
+
           // ── Phase 18.1.1: Dish commonly contains allergen (HIGH) ─
           // e.g. pad thai → peanut. Ask for confirmation.
           const dishMatch = getDishAllergenMatch(resolvedMealText, profile.known_allergies);
@@ -255,34 +289,34 @@ export function checkRisk(args: {
               profile.known_allergies,
               resolvedMealText
             );
-          if (crossMatch && highestRisk !== "high") {
-            highestRisk = "medium";
-            const baseSeverity = getAllergenSeverity(crossMatch.source);
-            const severity = baseSeverity + crossMatch.modifier;
-            const meta: VerdictMeta = {
-              taxonomyVersion: ALLERGEN_TAXONOMY_VERSION,
-              severity,
-              crossReactive: true,
-              source: crossMatch.source,
-              matchedTerm: crossMatch.matchedTerm,
-            };
-            if (
-              !bestAllergyMeta ||
-              severity > (bestAllergyMeta.severity ?? 0)
-            ) {
-              bestAllergyMeta = meta;
-            }
-            matched.push({
-              rule: "cross_reactive",
-              ruleCode: RULE_CROSS_REACTIVE,
-              details: {
-                meal: mealText,
+            if (crossMatch && highestRisk !== "high") {
+              highestRisk = "medium";
+              const baseSeverity = getAllergenSeverity(crossMatch.source);
+              const severity = baseSeverity + crossMatch.modifier;
+              const meta: VerdictMeta = {
+                taxonomyVersion: ALLERGEN_TAXONOMY_VERSION,
+                severity,
+                crossReactive: true,
                 source: crossMatch.source,
                 matchedTerm: crossMatch.matchedTerm,
-                severity,
-              },
-            });
-          }
+              };
+              if (
+                !bestAllergyMeta ||
+                severity > (bestAllergyMeta.severity ?? 0)
+              ) {
+                bestAllergyMeta = meta;
+              }
+              matched.push({
+                rule: "cross_reactive",
+                ruleCode: RULE_CROSS_REACTIVE,
+                details: {
+                  meal: mealText,
+                  source: crossMatch.source,
+                  matchedTerm: crossMatch.matchedTerm,
+                  severity,
+                },
+              });
+            }
           }
         }
 
@@ -418,6 +452,10 @@ export function checkRisk(args: {
     }
     if (m.rule === "food_medication_interaction") {
       return (m.details.reason as string) ?? `${m.details.food} may interact with ${m.details.medication}`;
+    }
+    if (m.rule === "entity_risk_tag_match") {
+      const sev = (m.details.severity as number) ?? 50;
+      return `Meal "${m.details.meal}" mentions registry entity "${m.details.entityId}" with risk tag "${m.details.matchedTag}" that matches your profile (severity ${sev}/100).`;
     }
     return JSON.stringify(m);
   });

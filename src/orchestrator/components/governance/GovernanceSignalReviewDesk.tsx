@@ -31,7 +31,7 @@ export default function GovernanceSignalReviewDesk({ item }: { item: GovernanceI
 
       <ProposalPreviewSection
         className="mt-0"
-        preview={{ before: item.before, after: item.after }}
+        preview={item.proposal.preview}
         ledgerLine={item.ledgerLine}
         readOnly
       />

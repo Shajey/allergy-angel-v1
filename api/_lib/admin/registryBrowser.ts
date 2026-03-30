@@ -1,17 +1,19 @@
 /**
- * Phase 21c – Read-Only Registry Access
+ * Phase 21c – Registry access (static + O8.1 promoted runtime rows)
  *
- * Provides list, search, and single-entry access for admin UI.
- * Does NOT mutate registries.
+ * List, search, and single-entry access for admin UI.
+ * Merged view: ship static registries plus promoted_registry_entities.
  */
 
-import { DRUGS } from "../knowledge/drugs.registry.js";
-import { SUPPLEMENTS } from "../knowledge/supplements.registry.js";
-import { FOODS } from "../knowledge/foods.registry.js";
 import { REGISTRY_VERSIONS } from "../knowledge/registryVersions.js";
 import type { CanonicalEntity } from "../knowledge/types.js";
+import { getPromotedRegistryEntities } from "../knowledge/entityResolver.js";
+import {
+  mergeStaticAndPromotedForType,
+  type RegistryType,
+} from "../knowledge/registryMerge.js";
 
-export type RegistryType = "drug" | "supplement" | "food";
+export type { RegistryType };
 
 function normalize(s: string): string {
   return s
@@ -22,17 +24,8 @@ function normalize(s: string): string {
     .replace(/\s+/g, " ");
 }
 
-function getRegistry(type: RegistryType): CanonicalEntity[] {
-  switch (type) {
-    case "drug":
-      return DRUGS;
-    case "supplement":
-      return SUPPLEMENTS;
-    case "food":
-      return FOODS;
-    default:
-      return [];
-  }
+function getMergedRegistry(type: RegistryType): CanonicalEntity[] {
+  return mergeStaticAndPromotedForType(type, getPromotedRegistryEntities());
 }
 
 export interface RegistryEntrySummary {
@@ -41,7 +34,8 @@ export interface RegistryEntrySummary {
   aliases: string[];
   class?: string;
   aliasCount: number;
-  source: "static";
+  /** O8.1 — unified read model (static + promoted) */
+  source: "registry";
 }
 
 export interface RegistryListResult {
@@ -54,7 +48,7 @@ export interface RegistryListResult {
 }
 
 export function listRegistry(type: RegistryType): RegistryListResult {
-  const entities = getRegistry(type);
+  const entities = getMergedRegistry(type);
   const version = REGISTRY_VERSIONS[type];
   const entries: RegistryEntrySummary[] = entities.map((e) => ({
     id: e.id,
@@ -62,7 +56,7 @@ export function listRegistry(type: RegistryType): RegistryListResult {
     aliases: [...e.aliases],
     class: e.class,
     aliasCount: e.aliases.length,
-    source: "static",
+    source: "registry",
   }));
   return {
     meta: { type, version, count: entries.length },
@@ -76,7 +70,7 @@ export interface SearchResult {
   matchedOn: string;
   aliases: string[];
   class?: string;
-  source: "static";
+  source: "registry";
 }
 
 export interface RegistrySearchResult {
@@ -94,7 +88,7 @@ export function searchRegistry(
   const results: SearchResult[] = [];
 
   for (const t of types) {
-    const entities = getRegistry(t);
+    const entities = getMergedRegistry(t);
     for (const e of entities) {
       const matchedAlias = e.aliases.find(
         (a) => normalize(a).includes(q) || q.includes(normalize(a))
@@ -106,7 +100,7 @@ export function searchRegistry(
           matchedOn: matchedAlias ?? e.id,
           aliases: [...e.aliases],
           class: e.class,
-          source: "static",
+          source: "registry",
         });
       }
     }
@@ -120,14 +114,14 @@ export interface RegistryEntryDetail {
   type: RegistryType;
   aliases: string[];
   class?: string;
-  source: "static";
+  source: "registry";
 }
 
 export function getRegistryEntry(
   type: RegistryType,
   id: string
 ): RegistryEntryDetail | null {
-  const entities = getRegistry(type);
+  const entities = getMergedRegistry(type);
   const idNorm = normalize(id);
   const entity = entities.find((e) => normalize(e.id) === idNorm);
   if (!entity) return null;
@@ -136,13 +130,17 @@ export function getRegistryEntry(
     type,
     aliases: [...entity.aliases],
     class: entity.class,
-    source: "static",
+    source: "registry",
   };
 }
 
 export function aliasExistsInStaticRegistry(alias: string): boolean {
   const q = normalize(alias);
-  const all = [...DRUGS, ...SUPPLEMENTS, ...FOODS];
+  const all = [
+    ...getMergedRegistry("drug"),
+    ...getMergedRegistry("supplement"),
+    ...getMergedRegistry("food"),
+  ];
   for (const e of all) {
     for (const a of e.aliases) {
       if (normalize(a) === q) return true;
@@ -155,7 +153,7 @@ export function getEntryByCanonicalId(
   type: RegistryType,
   canonicalId: string
 ): CanonicalEntity | null {
-  const entities = getRegistry(type);
+  const entities = getMergedRegistry(type);
   const idNorm = normalize(canonicalId);
   return entities.find((e) => normalize(e.id) === idNorm) ?? null;
 }

@@ -14,7 +14,10 @@ import type { OrchestratorSelection } from "./OrchestratorSelectionContext";
 import { createProposal } from "../lib/createProposal";
 import { stableSelectionKey } from "../lib/investigationKey";
 import { mockResearchResult } from "../lib/investigationProposalBridge";
-import { defaultInvestigationEntry, type InvestigationEntry } from "../lib/investigationTypes";
+import {
+  defaultInvestigationEntry,
+  type InvestigationEntry,
+} from "../lib/investigationTypes";
 import { useActivityStore } from "../lib/activityStore";
 import { governingEntityLabel, useGovernanceStore } from "../lib/governanceStore";
 
@@ -97,6 +100,8 @@ export type QueueInvestigationBadge = "researching" | "proposal_ready" | "pendin
 
 interface InvestigationStoreValue {
   getEntry: (signalId: string) => InvestigationEntry;
+  /** Signals awaiting governance with a stored proposal packet (for queue rehydration). */
+  listPendingGovernanceWithProposal: () => Array<{ signalId: string; entry: InvestigationEntry }>;
   setManualSelection: (signalId: string, value: string | null) => void;
   startResearch: (selection: OrchestratorSelection) => void;
   generateProposal: (selection: OrchestratorSelection) => void;
@@ -138,6 +143,20 @@ function useInvestigationStoreInner(): InvestigationStoreValue {
     (signalId: string) => mergeEntry(signalId, map[signalId]),
     [map]
   );
+
+  const listPendingGovernanceWithProposal = useCallback((): Array<{
+    signalId: string;
+    entry: InvestigationEntry;
+  }> => {
+    const out: Array<{ signalId: string; entry: InvestigationEntry }> = [];
+    for (const signalId of Object.keys(map)) {
+      const e = mergeEntry(signalId, map[signalId]);
+      if (e.status !== "pending_governance") continue;
+      if (!e.proposalPreview || !e.proposalPayload) continue;
+      out.push({ signalId, entry: e });
+    }
+    return out;
+  }, [map]);
 
   const touch = useCallback((entry: InvestigationEntry): InvestigationEntry => {
     return { ...entry, lastUpdatedAt: Date.now() };
@@ -370,6 +389,7 @@ function useInvestigationStoreInner(): InvestigationStoreValue {
   return useMemo<InvestigationStoreValue>(
     () => ({
       getEntry,
+      listPendingGovernanceWithProposal,
       setManualSelection,
       startResearch,
       generateProposal,
@@ -381,6 +401,7 @@ function useInvestigationStoreInner(): InvestigationStoreValue {
     }),
     [
       getEntry,
+      listPendingGovernanceWithProposal,
       setManualSelection,
       startResearch,
       generateProposal,

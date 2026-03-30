@@ -255,7 +255,7 @@ export default function AdminRegistryPage() {
                   type={e.type}
                   aliases={e.aliases}
                   entityClass={e.class}
-                  source={e.source ?? "static"}
+                  source={e.source ?? "registry"}
                   matchedOn={e.matchedOn}
                   onProposeAdd={(alias) => handleProposeAdd(e.id, alias)}
                   onProposeRemove={(alias) => handleProposeRemove(e.id, alias)}

@@ -22,6 +22,7 @@ import {
   classifySuggestedAction,
   type SuggestedAction,
 } from "./suggestedAction.js";
+import { ensurePromotedRegistryLoaded } from "../knowledge/promotedRegistryDb.js";
 
 // ── Stopwords for meal tokenization ────────────────────────────────────
 const MEAL_STOPWORDS = new Set([
@@ -440,6 +441,8 @@ export async function discoverUnmapped(
   const { profileId } = options;
   const windowHours = options.windowHours ?? 168;
   const limit = options.limit ?? 20;
+
+  await ensurePromotedRegistryLoaded();
 
   const supabase = getSupabaseClient();
   const since = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString();

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getSupabaseClient } from "../supabaseClient.js";
 import { checkRisk, type Verdict } from "../inference/checkRisk.js";
+import { ensurePromotedRegistryLoaded } from "../knowledge/promotedRegistryDb.js";
 import { ALLERGEN_TAXONOMY_VERSION } from "../inference/allergenTaxonomy.js";
 import { postProcessFollowUps } from "../inference/postProcessFollowUps.js";
 import { recordRadarTelemetry } from "../telemetry/verdictObserver.js";
@@ -48,6 +49,8 @@ export async function saveExtractionRun(args: {
   if (!profile) {
     throw new Error(`Profile not found for id "${profileId}"`);
   }
+
+  await ensurePromotedRegistryLoaded();
 
   // ── 0b. Compute deterministic risk verdict (Phase 9B) ─────────────
   // Phase 21b: Normalize profile for checkRisk (extract names from object form)

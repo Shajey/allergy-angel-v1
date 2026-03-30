@@ -37,7 +37,10 @@ function renderGovernance(ui: ReactElement) {
 }
 
 describe("GovernancePage", () => {
+  /** Unique keys per test case to avoid sessionStorage races when the full suite runs in parallel workers. */
+  let testIso = 0;
   beforeEach(() => {
+    testIso += 1;
     vi.stubGlobal("fetch", vi.fn());
     mockPushEvent.mockClear();
     sessionStorage.removeItem("orch_governance_queue_v1");
@@ -55,12 +58,13 @@ describe("GovernancePage", () => {
   };
 
   it("integration: shows Signals queue from session when API returns no proposals", async () => {
+    const signalKey = `ue:peanut-int-${testIso}`;
     const clientRow = {
-      id: "unknown-entity:peanut-test",
-      signalId: "unknown-entity:peanut-test",
+      id: signalKey,
+      signalId: signalKey,
       entity: "Peanut",
       proposal: {
-        signalId: "unknown-entity:peanut-test",
+        signalId: signalKey,
         research: { aliases: [], classificationConfidence: 88 },
         classification: "new-entity",
         createdAt: 1,
@@ -174,7 +178,7 @@ describe("GovernancePage", () => {
 
   it("local Signals item: approve removes from pending queue and resolves investigation", async () => {
     const user = userEvent.setup();
-    const signalKey = "unknown-entity:peanut-test";
+    const signalKey = `ue:peanut-approve-${testIso}`;
     const clientRow = {
       id: signalKey,
       signalId: signalKey,
@@ -203,7 +207,13 @@ describe("GovernancePage", () => {
           manualSelection: "new_entity",
           result: { aliases: [], classificationConfidence: 88 },
           proposalPreview: { before: "a", after: "b" },
-          proposalPayload: { signalId: signalKey, preview: { before: "a", after: "b" } },
+          proposalPayload: {
+            signalId: signalKey,
+            research: {},
+            classification: "new_entity",
+            createdAt: 1,
+            preview: { before: "a", after: "b" },
+          },
           lastUpdatedAt: Date.now(),
         },
       })
@@ -248,7 +258,7 @@ describe("GovernancePage", () => {
 
   it("local Signals item: reject closes investigation and logs event", async () => {
     const user = userEvent.setup();
-    const signalKey = "unknown-entity:reject-me";
+    const signalKey = `ue:reject-${testIso}`;
     const clientRow = {
       id: signalKey,
       signalId: signalKey,
@@ -277,7 +287,13 @@ describe("GovernancePage", () => {
           manualSelection: "new_entity",
           result: { aliases: [], classificationConfidence: 50 },
           proposalPreview: { before: "a", after: "b" },
-          proposalPayload: { signalId: signalKey, preview: { before: "a", after: "b" } },
+          proposalPayload: {
+            signalId: signalKey,
+            research: {},
+            classification: "new_entity",
+            createdAt: 1,
+            preview: { before: "a", after: "b" },
+          },
           lastUpdatedAt: Date.now(),
         },
       })
@@ -317,6 +333,48 @@ describe("GovernancePage", () => {
         type: "governance_rejected",
       })
     );
+  });
+
+  it("rehydrates governance queue from investigation when queue storage was empty", async () => {
+    const signalKey = `ue:rehydrate-${testIso}`;
+    sessionStorage.setItem(
+      "orch_investigation_v2",
+      JSON.stringify({
+        [signalKey]: {
+          signalId: signalKey,
+          status: "pending_governance",
+          manualSelection: "new_entity",
+          result: { aliases: [], classificationConfidence: 88 },
+          proposalPreview: { before: "a", after: "b" },
+          proposalPayload: {
+            signalId: signalKey,
+            research: {},
+            classification: "new_entity",
+            createdAt: 1,
+            preview: { before: "a", after: "b" },
+          },
+          lastUpdatedAt: Date.now(),
+        },
+      })
+    );
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementation((input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : String(input);
+      if (url.includes("alias-proposals")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ meta: { count: 0 }, proposals: [] }),
+        });
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) });
+    });
+
+    renderGovernance(<GovernancePage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("governance-signal-review-desk")).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Registry is up to date/i)).not.toBeInTheDocument();
   });
 
   it("empty state copy when no pending work", async () => {

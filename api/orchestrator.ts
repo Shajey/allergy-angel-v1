@@ -18,7 +18,12 @@ import {
   listProposals,
   dismissProposal,
   markProposalsExported,
+  buildAliasProposalExportChange,
 } from "./_lib/admin/aliasProposalStore.js";
+import {
+  applyPromotedProposalsToSharedRegistry,
+  ensurePromotedRegistryLoaded,
+} from "./_lib/knowledge/promotedRegistryDb.js";
 import {
   getRadarEntities,
   getRadarCombinations,
@@ -229,6 +234,13 @@ async function handleRegistryList(req: VercelRequest, res: VercelResponse) {
       details: "Use ?action=registry-list&type=drug|supplement|food",
     });
   }
+  try {
+    await ensurePromotedRegistryLoaded();
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Registry load failed";
+    console.error("[Orchestrator] registry-list hydrate failed:", message);
+    return res.status(500).json({ error: message, details: null });
+  }
   const result = listRegistry(type as RegistryType);
   return res.status(200).json(result);
 }
@@ -249,6 +261,13 @@ async function handleRegistrySearch(req: VercelRequest, res: VercelResponse) {
     type && ["drug", "supplement", "food"].includes(type)
       ? (type as RegistryType)
       : undefined;
+  try {
+    await ensurePromotedRegistryLoaded();
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Registry load failed";
+    console.error("[Orchestrator] registry-search hydrate failed:", message);
+    return res.status(500).json({ error: message, details: null });
+  }
   const result = searchRegistry(search, typeFilter);
   return res.status(200).json(result);
 }
@@ -267,6 +286,13 @@ async function handleRegistryEntry(req: VercelRequest, res: VercelResponse) {
   }
   if (!["drug", "supplement", "food"].includes(type)) {
     return res.status(400).json({ error: "Invalid type", details: null });
+  }
+  try {
+    await ensurePromotedRegistryLoaded();
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Registry load failed";
+    console.error("[Orchestrator] registry-entry hydrate failed:", message);
+    return res.status(500).json({ error: message, details: null });
   }
   const entry = getRegistryEntry(type as RegistryType, id);
   if (!entry) {
@@ -326,9 +352,15 @@ async function handleAliasProposeAdd(req: VercelRequest, res: VercelResponse) {
     }
 
     const normalizedAlias = normalizeAlias(alias);
+    try {
+      await ensurePromotedRegistryLoaded();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Registry load failed";
+      return res.status(500).json({ error: message, details: null });
+    }
     if (aliasExistsInStaticRegistry(normalizedAlias)) {
       return res.status(400).json({
-        error: "Alias already exists in static registry",
+        error: "Alias already exists in registry",
         details: { alias: normalizedAlias },
       });
     }
@@ -398,6 +430,13 @@ async function handleAliasProposeRemove(req: VercelRequest, res: VercelResponse)
     }
     if (!["drug", "supplement", "food"].includes(type)) {
       return res.status(400).json({ error: "Invalid type", details: null });
+    }
+
+    try {
+      await ensurePromotedRegistryLoaded();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Registry load failed";
+      return res.status(500).json({ error: message, details: null });
     }
 
     const entry = getRegistryEntry(type as RegistryType, id);
@@ -505,12 +544,23 @@ async function handleAliasProposalExport(req: VercelRequest, res: VercelResponse
       });
     }
 
-    const changes = toExport.map((p) => ({
-      registryType: p.registry_type,
-      canonicalId: p.canonical_id,
-      action: p.proposal_action,
-      alias: p.proposed_alias,
-    }));
+    const changes = toExport.map((p) => buildAliasProposalExportChange(p));
+
+    try {
+      await applyPromotedProposalsToSharedRegistry(toExport);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Apply promotion to registry failed";
+      if (isMissingTable(err)) {
+        return res.status(503).json({
+          error: "Promotion storage not available",
+          details:
+            "Run docs/migrations/010_promoted_registry_entities.sql on Supabase, then retry.",
+        });
+      }
+      console.error("[Orchestrator] alias-proposal-export apply failed:", message);
+      return res.status(500).json({ error: message, details: null });
+    }
 
     await markProposalsExported(toExport.map((p) => p.id));
 
@@ -617,6 +667,7 @@ async function handleGraphFocus(req: VercelRequest, res: VercelResponse) {
         details: "Use ?entity=... or ?entityA=...&entityB=...",
       });
     }
+    await ensurePromotedRegistryLoaded();
     const result = await getGraphForFocus({ entity, entityA, entityB });
     return res.status(200).json(result);
   } catch (err: unknown) {

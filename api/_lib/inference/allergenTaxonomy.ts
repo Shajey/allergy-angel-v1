@@ -60,6 +60,8 @@ const ALLERGEN_SEVERITY: Record<string, number> = {
   egg: 85,
   dairy: 80,
   legume: 60,
+  /** O8 — profile token matched to promoted entity risk tag */
+  legume_family: 62,
   sesame: 85,
   wheat: 70,
   soy: 65,

@@ -28,7 +28,7 @@ export default function RegistryEntryCard({
   type,
   aliases,
   entityClass,
-  source = "static",
+  source = "registry",
   matchedOn,
   onProposeAdd,
   onProposeRemove,

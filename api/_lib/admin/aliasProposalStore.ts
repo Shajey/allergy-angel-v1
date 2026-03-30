@@ -99,3 +99,34 @@ export async function markProposalsExported(proposalIds: string[]): Promise<void
 
   if (error) throw new Error(`Mark exported failed: ${error.message}`);
 }
+
+/** O8 — JSON export row for replay / apply (includes semantic safety fields when present). */
+export function buildAliasProposalExportChange(p: AliasProposal): Record<string, unknown> {
+  const pe = p.proposed_entry as Record<string, unknown> | undefined;
+  const riskRaw = pe?.riskTags ?? pe?.risk_tags;
+  const riskTags = Array.isArray(riskRaw)
+    ? riskRaw.filter((x): x is string => typeof x === "string")
+    : undefined;
+  const cls =
+    typeof pe?.class === "string"
+      ? pe.class
+      : typeof pe?.family === "string"
+        ? pe.family
+        : undefined;
+  const typ = typeof pe?.type === "string" ? pe.type : undefined;
+  const aliasList = Array.isArray(pe?.aliases)
+    ? (pe.aliases as unknown[]).filter((x): x is string => typeof x === "string")
+    : undefined;
+  return {
+    canonical: p.canonical_id,
+    registryType: p.registry_type,
+    canonicalId: p.canonical_id,
+    action: p.proposal_action,
+    alias: p.proposed_alias,
+    type: typ,
+    class: cls,
+    aliases: aliasList,
+    riskTags,
+    proposedEntry: pe ?? undefined,
+  };
+}

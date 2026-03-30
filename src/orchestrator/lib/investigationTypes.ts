@@ -19,6 +19,12 @@ export type UnknownEntityManualSelection = "new_entity" | "alias" | "dismiss";
 export interface ProposalPreview {
   before: string;
   after: string;
+  /** O8 — Shown in Signals + Governance so stewards see verdict impact, not only naming. */
+  safetySemantics?: {
+    type: string;
+    class?: string;
+    riskTags: string[];
+  };
 }
 
 /** Client-side proposal record (O6.9c — no API / no registry write). */

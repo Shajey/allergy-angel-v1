@@ -103,6 +103,35 @@ export default function ProposalReviewPanel({
         )}
       </div>
 
+      {(() => {
+        const pe = proposal.proposed_entry;
+        if (!pe || typeof pe !== "object") return null;
+        const o = pe as Record<string, unknown>;
+        const typ = typeof o.type === "string" ? o.type : null;
+        const cls =
+          typeof o.class === "string" ? o.class : typeof o.family === "string" ? o.family : null;
+        const riskTags = Array.isArray(o.riskTags)
+          ? o.riskTags.filter((x): x is string => typeof x === "string")
+          : [];
+        if (!typ && !cls && riskTags.length === 0) return null;
+        return (
+          <div
+            data-testid="proposal-review-o8-safety"
+            className="rounded-xl border border-amber-200 bg-amber-50/90 p-6 shadow-sm"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Safety meaning (O8)</p>
+            <ul className="mt-3 list-inside list-disc space-y-1 text-sm leading-relaxed text-amber-950">
+              {typ ? <li>Type: {typ}</li> : null}
+              {cls ? <li>Class: {cls}</li> : null}
+              {riskTags.length > 0 ? <li>Risk tag(s): {riskTags.join(", ")}</li> : null}
+            </ul>
+            <p className="mt-3 text-xs leading-relaxed text-amber-900/90">
+              This change adds semantic risk signals used by deterministic verdict checks — not only canonical naming.
+            </p>
+          </div>
+        );
+      })()}
+
       <div
         data-testid="proposal-review-block-change"
         className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-sm"

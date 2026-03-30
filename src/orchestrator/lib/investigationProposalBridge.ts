@@ -51,9 +51,11 @@ export function buildProposalPreview(
   switch (selection.kind) {
     case "unknown-entity": {
       const cat = friendlyRegistryCategory(selection.entityType);
+      const safetySemantics = inferSafetySemanticsForUnknownEntity(selection, manualSelection);
       return {
         before: `No registry entry yet for “${selection.entity}” (${cat}).`,
         after: `Suggested direction: ${humanizeManual(manualSelection)} · aliases to consider: ${aliases} · ${confStr}.`,
+        safetySemantics,
       };
     }
     case "interaction-gap":
@@ -88,6 +90,25 @@ export function buildProposalPreview(
 
 function humanizeManual(m: string): string {
   return m.replace(/-/g, " ");
+}
+
+/**
+ * O8 — Infer minimal safety semantics for new food entities (v1: legume / daal → legume_family).
+ * Deterministic; no LLM.
+ */
+export function inferSafetySemanticsForUnknownEntity(
+  sel: Extract<OrchestratorSelection, { kind: "unknown-entity" }>,
+  manualSelection: string
+): ProposalPreview["safetySemantics"] | undefined {
+  const m = manualSelection.replace(/-/g, "_");
+  if (m !== "new_entity" && m !== "new-entity") return undefined;
+  const et = (sel.entityType ?? "").toLowerCase();
+  if (et !== "food" && !et.includes("food") && et !== "meal") return undefined;
+  const lower = sel.entity.toLowerCase();
+  if (lower.includes("daal") || lower.includes("dal") || lower.includes("lentil")) {
+    return { type: "food", class: "legume", riskTags: ["legume_family"] };
+  }
+  return undefined;
 }
 
 export function mockResearchResult(

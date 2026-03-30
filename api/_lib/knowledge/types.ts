@@ -19,8 +19,11 @@ export interface CanonicalEntity {
   /** All known aliases (lowercase, trimmed) */
   aliases: string[];
 
-  /** Functional class, e.g., "ssri", "anticoagulant", "tree_nut" */
+  /** Functional class, e.g., "ssri", "anticoagulant", "tree_nut", "legume" */
   class?: string;
+
+  /** O8 — Deterministic risk family tags matched against profile known_allergies (e.g. legume_family). */
+  riskTags?: string[];
 }
 
 /**
@@ -38,6 +41,9 @@ export interface ResolvedEntity {
 
   /** Functional class if known */
   class?: string;
+
+  /** O8 — Risk tags when resolved from registry knowledge */
+  riskTags?: string[];
 
   /** Whether entity was found in a registry */
   resolved: boolean;

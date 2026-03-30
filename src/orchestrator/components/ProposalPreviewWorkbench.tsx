@@ -47,6 +47,22 @@ export function ProposalPreviewSection({
           <p className="mt-2 text-[15px] leading-snug text-[#334155]">{preview.after}</p>
         </div>
       </div>
+      {"safetySemantics" in preview && preview.safetySemantics ? (
+        <div
+          className="rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 text-[13px] text-amber-950"
+          data-testid="proposal-safety-semantics"
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-900">Safety meaning (O8)</p>
+          <ul className="mt-2 list-inside list-disc space-y-1 leading-relaxed">
+            <li>Type: {preview.safetySemantics.type}</li>
+            {preview.safetySemantics.class ? <li>Class: {preview.safetySemantics.class}</li> : null}
+            <li>Risk tag(s): {preview.safetySemantics.riskTags.join(", ")}</li>
+          </ul>
+          <p className="mt-2 text-[12px] leading-snug text-amber-900/90">
+            This proposal changes future verdicts when profile risks match these tags — not only naming or resolution.
+          </p>
+        </div>
+      ) : null}
       {!readOnly && onSubmitGovernance ? (
         <button
           type="button"

@@ -8,6 +8,7 @@ import { createProfile } from "./_lib/profiles/createProfile.js";
 import { updateProfile } from "./_lib/profiles/updateProfile.js";
 import { deleteProfile } from "./_lib/profiles/deleteProfile.js";
 import { resolveEntity } from "./_lib/knowledge/entityResolver.js";
+import { ensurePromotedRegistryLoaded } from "./_lib/knowledge/promotedRegistryDb.js";
 
 /**
  * Vercel Serverless Function
@@ -80,6 +81,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (fetchErr || !profile) {
         return res.status(404).json({ error: "Profile not found", details: null });
       }
+
+      await ensurePromotedRegistryLoaded();
 
       const resolution = resolveEntity(name);
       const canonicalName = resolution.resolved
@@ -267,6 +270,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!body || typeof body !== "object") {
         return res.status(400).json({ error: "Request body required", details: null });
       }
+
+      await ensurePromotedRegistryLoaded();
 
       const updates: Record<string, unknown> = {};
 
