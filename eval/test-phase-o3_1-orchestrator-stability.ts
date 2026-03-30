@@ -60,13 +60,15 @@ function runTests(): number {
   if (assert(pageStateContent.includes("Retry"), "Retry action")) passed++;
   else failed++;
 
-  // Radar page uses fetch helpers and OrchestratorPageState
-  const radarContent = fs.readFileSync(path.join(SRC, "pages", "AdminUnmappedPage.tsx"), "utf-8");
-  if (assert(radarContent.includes("fetchRadarEntities"), "Radar uses fetchRadarEntities")) passed++;
+  // Radar workbench: queue fetches in SignalRadarPanel; center page uses OrchestratorPageState
+  const radarPageContent = fs.readFileSync(path.join(SRC, "pages", "AdminUnmappedPage.tsx"), "utf-8");
+  const signalPanelFetchContent = fs.readFileSync(
+    path.join(SRC, "orchestrator", "components", "SignalRadarPanel.tsx"),
+    "utf-8"
+  );
+  if (assert(signalPanelFetchContent.includes("fetchRadarEntities"), "Signal queue uses fetchRadarEntities")) passed++;
   else failed++;
-  if (assert(radarContent.includes("OrchestratorPageState"), "Radar uses OrchestratorPageState")) passed++;
-  else failed++;
-  if (assert(radarContent.includes("onRetry"), "Radar has retry")) passed++;
+  if (assert(radarPageContent.includes("OrchestratorPageState"), "Radar page uses OrchestratorPageState")) passed++;
   else failed++;
 
   // Registry page

@@ -28,10 +28,11 @@ describe("OrchestratorShell", () => {
     );
 
     expect(screen.getByRole("link", { name: /AA.*Orchestrator/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^Radar$/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^Registry$/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^Research$/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Signals$/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Graph$/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^Ingestion$/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Governance$/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Activity$/ })).toBeInTheDocument();
   });
 
   it("renders Research page content inside shell", () => {
@@ -47,6 +48,6 @@ describe("OrchestratorShell", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/No research target selected/)).toBeInTheDocument();
+    expect(screen.getByText(/No safety signal selected/)).toBeInTheDocument();
   });
 });

@@ -177,6 +177,8 @@ export interface AliasProposalsResponse {
     proposal_action: string;
     status: string;
     created_at: string;
+    proposed_entry?: Record<string, unknown> | null;
+    notes?: string | null;
   }>;
   meta?: { count?: number };
 }
@@ -205,6 +207,70 @@ export async function fetchPendingProposals(
     type,
     status,
   });
+}
+
+/** Pending proposals across registry types (no type filter). Used by Governance review. */
+export async function fetchGovernancePendingProposals(
+  status = "pending"
+): Promise<OrchestratorFetchResult<AliasProposalsResponse>> {
+  return fetchOrchestrator<AliasProposalsResponse>("Governance", "alias-proposals", { status });
+}
+
+export type PromoteAliasProposalsResult =
+  | { ok: true; data: unknown }
+  | { ok: false; error: string };
+
+/**
+ * Reuses existing alias-proposal-export: marks proposals exported and returns promotion JSON.
+ * Same path as Registry “Export to JSON” — governed promotion handoff.
+ */
+export async function promoteAliasProposals(
+  proposalIds: string[]
+): Promise<PromoteAliasProposalsResult> {
+  if (proposalIds.length === 0) {
+    return { ok: false, error: "No proposal selected" };
+  }
+  try {
+    const res = await fetch(`${BASE}?action=alias-proposal-export`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proposalIds }),
+    });
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = typeof body?.error === "string" ? body.error : `HTTP ${res.status}`;
+      return { ok: false, error: msg };
+    }
+    return { ok: true, data: body };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Network error";
+    return { ok: false, error: msg };
+  }
+}
+
+export type DismissAliasProposalResult = { ok: true } | { ok: false; error: string };
+
+/** Registry-backed proposal dismiss — same action as Admin Registry. */
+export async function dismissAliasProposal(proposalId: string): Promise<DismissAliasProposalResult> {
+  if (!proposalId.trim()) {
+    return { ok: false, error: "No proposal selected" };
+  }
+  try {
+    const res = await fetch(`${BASE}?action=alias-proposal-dismiss`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proposalId }),
+    });
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = typeof body?.error === "string" ? body.error : `HTTP ${res.status}`;
+      return { ok: false, error: msg };
+    }
+    return { ok: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Network error";
+    return { ok: false, error: msg };
+  }
 }
 
 // ── Ingestion ─────────────────────────────────────────────────────────────

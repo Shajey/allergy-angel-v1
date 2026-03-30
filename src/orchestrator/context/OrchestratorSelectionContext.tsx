@@ -3,7 +3,7 @@
  * Tracks active selection for Context Panel updates.
  */
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
 
 export type OrchestratorSelection =
   | {
@@ -76,10 +76,13 @@ export function OrchestratorSelectionProvider({ children }: { children: ReactNod
   }, []);
   const clearSelection = useCallback(() => setSelectionState(null), []);
 
+  const value = useMemo(
+    () => ({ selection, setSelection, clearSelection }),
+    [selection, setSelection, clearSelection]
+  );
+
   return (
-    <OrchestratorSelectionContext.Provider
-      value={{ selection, setSelection, clearSelection }}
-    >
+    <OrchestratorSelectionContext.Provider value={value}>
       {children}
     </OrchestratorSelectionContext.Provider>
   );

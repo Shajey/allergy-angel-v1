@@ -1,100 +1,116 @@
 /**
- * Phase O1/O2/O3/O6 – Signal Card
- * Compact summary for Signal Radar Panel. Click to select.
- * O6: Optional Investigate button (primary, sm) for Radar → Research flow.
+ * Phase O6.4 — High-density queue row for the left rail.
+ * Click row to select; actions live in the right Context panel.
  */
 
-import { Link } from "react-router-dom";
+export type QueueRiskLevel = "high" | "medium" | "low";
+export type QueueBadge = "new" | "gap";
+
+export type QueueInvestigationStatus = "researching" | "proposal_ready" | "pending_governance";
 
 interface SignalCardProps {
+  /** Primary label (entity pair, name, etc.) */
   title: string;
-  signalType: string;
-  subtitle?: string;
-  confidence?: string;
-  priority?: string;
-  count?: number;
-  statusColor?: "emerging" | "mostlySafe" | "investigate" | "insufficient";
-  /** Click handler for selection (sets context, does not navigate) */
+  /** Muted subline, e.g. occurrences or type */
+  subtext?: string;
+  /** Left 4px bar: high = red, medium = amber, low = slate */
+  riskLevel: QueueRiskLevel;
+  /** Optional right badge */
+  badge?: QueueBadge | null;
+  /** Phase O6.9 — center workflow state (left-rail dot / check) */
+  investigationStatus?: QueueInvestigationStatus | null;
   onSelect?: () => void;
-  /** Whether this card is currently selected */
   isSelected?: boolean;
-  /** O6: URL for Investigate button (routes to Research with entity preloaded) */
-  investigateTo?: string;
-  /** URL for View Graph secondary action */
-  graphTo?: string;
-  /** URL for Check Registry secondary action */
-  registryTo?: string;
 }
 
-const statusClasses: Record<string, string> = {
-  emerging: "border-l-4 border-l-[#EF4444]",
-  mostlySafe: "border-l-4 border-l-[#10B981]",
-  investigate: "border-l-4 border-l-[#F59E0B]",
-  insufficient: "border-l-4 border-l-[#94A3B8]",
+const riskBarClass: Record<QueueRiskLevel, string> = {
+  high: "bg-[#EF4444]",
+  medium: "bg-[#F59E0B]",
+  low: "bg-[#CBD5E1]",
 };
 
 export default function SignalCard({
   title,
-  signalType,
-  subtitle,
-  confidence,
-  priority,
-  count,
-  statusColor = "insufficient",
+  subtext,
+  riskLevel,
+  badge,
+  investigationStatus,
   onSelect,
   isSelected = false,
-  investigateTo,
-  graphTo,
-  registryTo,
 }: SignalCardProps) {
-  const accentClass = statusClasses[statusColor] ?? statusClasses.insufficient;
-  const baseClass = `rounded-lg border p-3 text-left shadow-sm ${accentClass} transition-colors cursor-pointer`;
-  const interactiveClass = onSelect
-    ? `hover:bg-[#F8FAFC] ${isSelected ? "ring-2 ring-[#0F172A] ring-offset-1 bg-[#F1F5F9]" : "bg-white border-[#E2E8F0]"}`
-    : "bg-white border-[#E2E8F0]";
+  const bar = riskBarClass[riskLevel];
 
-  const content = (
+  const row = (
     <>
-      <p className="text-xs font-medium text-[#64748B] uppercase tracking-wide">{signalType}</p>
-      <p className="mt-0.5 text-sm font-medium text-[#0F172A]">{title}</p>
-      {count != null && (
-        <p className="mt-0.5 text-xs text-[#64748B]">{count} occurrence{count !== 1 ? "s" : ""}</p>
-      )}
-      <p className="mt-0.5 text-[11px] text-[#94A3B8] italic">Detected from safety checks.</p>
-      {(confidence != null || priority != null) && (
-        <div className="mt-1 flex flex-wrap gap-2 text-xs text-[#64748B]">
-          {confidence != null && <span>Confidence: {confidence}</span>}
-          {priority != null && <span>Priority: {priority}</span>}
+      <span className={`w-1 shrink-0 self-stretch rounded-l-[3px] ${bar}`} aria-hidden />
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-1.5 pl-2 pr-1">
+        <p
+          className={`truncate text-[13px] font-semibold leading-tight ${
+            isSelected ? "text-white" : "text-[#0F172A]"
+          }`}
+        >
+          {title}
+        </p>
+        {subtext ? (
+          <p
+            className={`truncate text-[11px] leading-tight ${
+              isSelected ? "text-slate-200" : "text-[#64748B]"
+            }`}
+          >
+            {subtext}
+          </p>
+        ) : null}
+      </div>
+      {investigationStatus || badge ? (
+        <div className="flex shrink-0 items-center gap-1 pr-2">
+          {investigationStatus === "researching" ? (
+            <span
+              className="h-2 w-2 shrink-0 rounded-full bg-sky-500 shadow-sm"
+              title="Research in progress"
+              aria-label="Research in progress"
+            />
+          ) : null}
+          {investigationStatus === "proposal_ready" ? (
+            <span
+              className="shrink-0 text-[13px] font-semibold leading-none text-emerald-600"
+              title="Proposal ready for Governance"
+              aria-label="Proposal ready for Governance"
+            >
+              ✓
+            </span>
+          ) : null}
+          {investigationStatus === "pending_governance" ? (
+            <span
+              className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                isSelected ? "bg-amber-400/25 text-amber-100" : "text-amber-800"
+              }`}
+              title="Pending governance review"
+              aria-label="Pending governance review"
+            >
+              <span
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${isSelected ? "bg-amber-300" : "bg-amber-500"}`}
+                aria-hidden
+              />
+              Pending
+            </span>
+          ) : null}
+          {badge ? (
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                isSelected
+                  ? badge === "new"
+                    ? "bg-white/20 text-white"
+                    : "bg-white/15 text-white"
+                  : badge === "new"
+                    ? "bg-sky-100 text-sky-900"
+                    : "bg-violet-100 text-violet-900"
+              }`}
+            >
+              {badge === "new" ? "New" : "Gap"}
+            </span>
+          ) : null}
         </div>
-      )}
-      {(investigateTo || graphTo || registryTo) && (
-        <div className="mt-2 flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-          {investigateTo && (
-            <Link
-              to={investigateTo}
-              className="orch-gradient-btn inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold"
-            >
-              Investigate
-            </Link>
-          )}
-          {graphTo && (
-            <Link
-              to={graphTo}
-              className="inline-flex items-center rounded-md border border-[#E2E8F0] bg-transparent px-2 py-1 text-xs font-medium text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]"
-            >
-              View Graph
-            </Link>
-          )}
-          {registryTo && (
-            <Link
-              to={registryTo}
-              className="inline-flex items-center rounded-md border border-[#E2E8F0] bg-transparent px-2 py-1 text-xs font-medium text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]"
-            >
-              Check Registry
-            </Link>
-          )}
-        </div>
-      )}
+      ) : null}
     </>
   );
 
@@ -106,16 +122,24 @@ export default function SignalCard({
           e.preventDefault();
           onSelect();
         }}
-        className={`block w-full text-left ${baseClass} ${interactiveClass}`}
+        className={`flex w-full min-h-[40px] items-stretch overflow-hidden rounded-md border text-left transition-colors ${
+          isSelected
+            ? "border-[#0F172A] bg-[#0F172A] shadow-sm"
+            : "border-slate-200/90 bg-white hover:bg-slate-50"
+        }`}
       >
-        {content}
+        {row}
       </button>
     );
   }
 
   return (
-    <div className={`${baseClass} ${interactiveClass}`}>
-      {content}
+    <div
+      className={`flex min-h-[40px] items-stretch overflow-hidden rounded-md border border-slate-200/90 bg-white ${
+        isSelected ? "border-[#0F172A] bg-[#0F172A]" : ""
+      }`}
+    >
+      {row}
     </div>
   );
 }

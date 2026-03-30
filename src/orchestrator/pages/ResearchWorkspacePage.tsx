@@ -161,7 +161,14 @@ export default function ResearchWorkspacePage() {
     [target, activityStore]
   );
 
-  const exportDraft = useCallback(() => {
+  const proposalManifestRef = useRef<HTMLElement | null>(null);
+
+  /** In-app draft is already the Proposal Manifest (section 3). Do not download JSON. */
+  const focusProposalManifest = useCallback(() => {
+    proposalManifestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const exportDraftJson = useCallback(() => {
     if (!result || "researchSkipped" in result) return;
     const blob = new Blob([JSON.stringify(result, null, 2)], {
       type: "application/json",
@@ -173,7 +180,7 @@ export default function ResearchWorkspacePage() {
     URL.revokeObjectURL(a.href);
     activityStore?.pushEvent({
       type: "proposal_exported",
-      message: "Proposal draft exported",
+      message: "Proposal draft exported (JSON)",
       status: "success",
       source: "governance",
     });
@@ -272,7 +279,7 @@ export default function ResearchWorkspacePage() {
 
         {/* Section 3 — PROPOSAL MANIFEST: system-generated ontology change candidate */}
         {result && !("researchSkipped" in result) && result.proposal && (
-          <section>
+          <section ref={proposalManifestRef} id="proposal-manifest">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-4">3. Proposal Manifest</h2>
             <ProposalPreviewPanel proposal={result.proposal as Parameters<typeof ProposalPreviewPanel>[0]["proposal"]} />
           </section>
@@ -284,20 +291,25 @@ export default function ResearchWorkspacePage() {
             className="sticky bottom-0 -mx-6 px-6 py-4 mt-4 border-t border-[#E2E8F0] bg-white/90 backdrop-blur-md shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
             role="contentinfo"
           >
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-[#64748B] max-w-xl">
+                The proposal manifest above is your draft. Use Export JSON only if you need a file for tooling or
+                review outside the app. Production registry changes still require Governance approval.
+              </p>
+              <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={exportDraft}
+                onClick={focusProposalManifest}
                 className="orch-gradient-btn rounded-xl px-5 py-2.5 text-sm font-semibold"
               >
-                Save Draft Proposal
+                View draft proposal
               </button>
               <button
                 type="button"
-                onClick={exportDraft}
+                onClick={exportDraftJson}
                 className="rounded-xl border border-[#E2E8F0] px-5 py-2.5 text-sm font-medium text-[#334155] hover:bg-[#F8FAFC]"
               >
-                Export Draft
+                Export JSON
               </button>
               <button
                 type="button"
@@ -306,6 +318,7 @@ export default function ResearchWorkspacePage() {
               >
                 Re-run Research
               </button>
+            </div>
             </div>
           </footer>
         )}

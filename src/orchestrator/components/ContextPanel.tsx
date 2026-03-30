@@ -1,13 +1,13 @@
 /**
- * Phase O1/O2/O3/O4 – Context Panel
- * Right rail. Dynamic content based on selection.
+ * Phase O1/O2/O3/O4 / O6.6 / O6.9 – Context Panel
+ * Right rail: identity + optional shortcuts (Registry, Graph). Center owns workflow.
  */
 
+import type { OrchestratorSelection } from "../context/OrchestratorSelectionContext";
 import { useOrchestratorSelection } from "../context/OrchestratorSelectionContext";
-import { buildResearchUrl } from "../lib/researchTarget";
 import { buildGraphUrl } from "../lib/graphUtils";
 import ContextSection from "./context/ContextSection";
-import QuickActionsCard, { type QuickAction } from "./context/QuickActionsCard";
+import QuickActionsCard from "./context/QuickActionsCard";
 
 function EmptyState() {
   return (
@@ -22,252 +22,141 @@ function EmptyState() {
 }
 
 function UnknownEntityContext({
-  entity,
-  entityType,
-  occurrenceCount,
-  suggestedAction,
+  selection,
 }: {
-  entity: string;
-  entityType?: string;
-  occurrenceCount?: number;
-  suggestedAction?: string;
+  selection: Extract<OrchestratorSelection, { kind: "unknown-entity" }>;
 }) {
-  const researchUrl = buildResearchUrl({
-    mode: "entity",
-    entity,
-    entityType: entityType ?? "unknown",
-    radarMetadata: occurrenceCount != null ? { occurrenceCount } : undefined,
-  });
-  const actions: QuickAction[] = [
+  const { entity, entityType } = selection;
+  const shortcuts = [
     { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(entity)}` },
-    { label: "Investigate in Research", to: researchUrl },
     { label: "View Graph", to: buildGraphUrl({ entity }) },
-    { label: "Draft Proposal", to: researchUrl },
   ];
   return (
     <div className="space-y-3">
-      <ContextSection title="Unknown entity">
+      <ContextSection title="Identity">
         <p className="font-medium">{entity}</p>
-        {entityType && <p className="text-xs text-[#64748B] mt-0.5">Type: {entityType}</p>}
-        {occurrenceCount != null && (
-          <p className="text-xs text-[#64748B]">Occurrences: {occurrenceCount}</p>
-        )}
-        {suggestedAction && (
-          <p className="text-xs text-[#F59E0B] mt-1">Suggested: {suggestedAction}</p>
-        )}
+        <p className="mt-0.5 text-xs text-[#64748B]">Type: {entityType ?? "—"}</p>
       </ContextSection>
-      <QuickActionsCard actions={actions} />
+      <QuickActionsCard shortcuts={shortcuts} />
     </div>
   );
 }
 
 function InteractionGapContext({
-  entityA,
-  entityB,
-  combinationType,
-  occurrenceCount,
-  highRiskCount,
-  safeCount,
-  signalPattern,
+  selection,
 }: {
-  entityA: string;
-  entityB: string;
-  combinationType?: string;
-  occurrenceCount?: number;
-  highRiskCount?: number;
-  safeCount?: number;
-  signalPattern?: string;
+  selection: Extract<OrchestratorSelection, { kind: "interaction-gap" }>;
 }) {
-  const researchUrl = buildResearchUrl({
-    mode: "combination",
-    entityA,
-    entityB,
-    typeA: "unknown",
-    typeB: "unknown",
-    radarTelemetry: {
-      occurrenceCount,
-      highRiskCount,
-      safeOccurrenceCount: safeCount,
-      signalPattern,
-    },
-  });
-  const actions: QuickAction[] = [
+  const { entityA, entityB, combinationType } = selection;
+  const shortcuts = [
     { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(entityA)}` },
-    { label: "Investigate in Research", to: researchUrl },
     { label: "View Graph", to: buildGraphUrl({ entityA, entityB }) },
-    { label: "Draft Proposal", to: researchUrl },
   ];
   return (
     <div className="space-y-3">
-      <ContextSection title="Interaction gap">
-        <p className="font-medium">{entityA} + {entityB}</p>
-        {combinationType && (
-          <p className="text-xs text-[#64748B] mt-0.5">Type: {combinationType}</p>
-        )}
-        {occurrenceCount != null && (
-          <p className="text-xs text-[#64748B]">Occurrences: {occurrenceCount}</p>
-        )}
-        {highRiskCount != null && (
-          <p className="text-xs text-[#EF4444]">High risk: {highRiskCount}</p>
-        )}
-        {safeCount != null && (
-          <p className="text-xs text-[#10B981]">Safe: {safeCount}</p>
-        )}
-        {signalPattern && (
-          <p className="text-xs text-[#64748B] mt-1">Pattern: {signalPattern}</p>
-        )}
+      <ContextSection title="Identity">
+        <p className="font-medium">
+          {entityA} + {entityB}
+        </p>
+        <p className="mt-0.5 text-xs text-[#64748B]">Type: {combinationType ?? "Interaction gap"}</p>
       </ContextSection>
-      <QuickActionsCard actions={actions} />
+      <QuickActionsCard shortcuts={shortcuts} />
     </div>
   );
 }
 
 function SignalContext({
-  title,
-  signalType,
-  entityA,
-  entityB,
+  selection,
 }: {
-  title: string;
-  signalType?: string;
-  entityA?: string;
-  entityB?: string;
+  selection: Extract<OrchestratorSelection, { kind: "signal" }>;
 }) {
-  const researchUrl =
-    entityA && entityB
-      ? buildResearchUrl({
-          mode: "combination",
-          entityA,
-          entityB,
-          typeA: "unknown",
-          typeB: "unknown",
-        })
-      : "/orchestrator/research";
-  const actions: QuickAction[] = [
-    { label: "Check Registry", to: entityA ? `/orchestrator/registry?search=${encodeURIComponent(entityA)}` : "/orchestrator/registry" },
-    { label: "Investigate in Research", to: researchUrl },
-    { label: "View Graph", to: entityA && entityB ? buildGraphUrl({ entityA, entityB }) : "/orchestrator/graph" },
-    { label: "Draft Proposal", to: researchUrl },
+  const { title, signalType, entityA, entityB } = selection;
+  const shortcuts = [
+    {
+      label: "Check Registry",
+      to: entityA
+        ? `/orchestrator/registry?search=${encodeURIComponent(entityA)}`
+        : "/orchestrator/registry",
+    },
+    {
+      label: "View Graph",
+      to: entityA && entityB ? buildGraphUrl({ entityA, entityB }) : "/orchestrator/graph",
+    },
   ];
   return (
     <div className="space-y-3">
-      <ContextSection title="Signal">
+      <ContextSection title="Identity">
         <p className="font-medium">{title}</p>
-        {signalType && <p className="text-xs text-[#64748B] mt-0.5">{signalType}</p>}
+        <p className="mt-0.5 text-xs text-[#64748B]">Type: {signalType ?? "Safety signal"}</p>
       </ContextSection>
-      <QuickActionsCard actions={actions} />
+      <QuickActionsCard shortcuts={shortcuts} />
     </div>
   );
 }
 
 function IngestionCandidateContext({
-  name,
-  canonicalId,
-  sourceDataset,
-  aliasCount,
-  candidateId,
+  selection,
 }: {
-  candidateId: string;
-  name?: string;
-  canonicalId?: string;
-  sourceDataset?: string;
-  aliasCount?: number;
+  selection: Extract<OrchestratorSelection, { kind: "ingestion-candidate" }>;
 }) {
-  const researchUrl = buildResearchUrl({
-    mode: "entity",
-    entity: name ?? canonicalId ?? candidateId,
-    entityType: "drug",
-    radarMetadata: aliasCount != null ? { occurrenceCount: aliasCount } : undefined,
-  });
-  const actions: QuickAction[] = [
-    { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(name ?? canonicalId ?? candidateId)}` },
-    { label: "Investigate in Research", to: researchUrl },
+  const { candidateId, name, canonicalId } = selection;
+  const displayName = name ?? canonicalId ?? candidateId;
+  const shortcuts = [
+    {
+      label: "Check Registry",
+      to: `/orchestrator/registry?search=${encodeURIComponent(name ?? canonicalId ?? candidateId)}`,
+    },
     { label: "View Graph", to: buildGraphUrl({ entity: name ?? canonicalId ?? candidateId }) },
-    { label: "Draft Proposal", to: `/orchestrator/ingestion?candidateId=${encodeURIComponent(candidateId)}` },
   ];
   return (
     <div className="space-y-3">
-      <ContextSection title="Ingestion candidate">
-        <p className="font-medium">{name ?? candidateId}</p>
-        {canonicalId && <p className="text-xs text-[#64748B] mt-0.5">ID: {canonicalId}</p>}
-        {sourceDataset && <p className="text-xs text-[#64748B]">Source: {sourceDataset}</p>}
-        {aliasCount != null && <p className="text-xs text-[#64748B]">Aliases: {aliasCount}</p>}
+      <ContextSection title="Identity">
+        <p className="font-medium">{displayName}</p>
+        <p className="mt-0.5 text-xs text-[#64748B]">Type: Ingestion candidate</p>
       </ContextSection>
-      <QuickActionsCard actions={actions} />
+      <QuickActionsCard shortcuts={shortcuts} />
     </div>
   );
 }
 
 function RegistryEntityContext({
-  canonicalId,
-  registryType,
-  aliasCount,
-  entityClass,
+  selection,
 }: {
-  canonicalId: string;
-  registryType?: string;
-  aliasCount?: number;
-  entityClass?: string;
+  selection: Extract<OrchestratorSelection, { kind: "registry-entity" }>;
 }) {
-  const researchUrl = buildResearchUrl({
-    mode: "entity",
-    entity: canonicalId,
-    entityType: registryType ?? "unknown",
-  });
-  const actions: QuickAction[] = [
+  const { canonicalId, registryType } = selection;
+  const shortcuts = [
     { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(canonicalId)}` },
-    { label: "Investigate in Research", to: researchUrl },
     { label: "View Graph", to: buildGraphUrl({ entity: canonicalId }) },
-    { label: "Draft Proposal", to: researchUrl },
   ];
   return (
     <div className="space-y-3">
-      <ContextSection title="Registry entity">
+      <ContextSection title="Identity">
         <p className="font-medium">{canonicalId}</p>
-        {registryType && <p className="text-xs text-[#64748B] mt-0.5">Type: {registryType}</p>}
-        {aliasCount != null && <p className="text-xs text-[#64748B]">Aliases: {aliasCount}</p>}
-        {entityClass && <p className="text-xs text-[#64748B]">Class: {entityClass}</p>}
+        <p className="mt-0.5 text-xs text-[#64748B]">Type: {registryType ?? "—"}</p>
       </ContextSection>
-      <QuickActionsCard actions={actions} />
+      <QuickActionsCard shortcuts={shortcuts} />
     </div>
   );
 }
 
 function ActivityContext({
-  title,
-  eventType,
-  detail,
-  timestamp,
+  selection,
 }: {
-  title: string;
-  eventType?: string;
-  detail?: string;
-  timestamp?: string;
+  selection: Extract<OrchestratorSelection, { kind: "activity" }>;
 }) {
-  const routeMap: Record<string, string> = {
-    research: "/orchestrator/research",
-    ingestion: "/orchestrator/ingestion",
-    proposal: "/orchestrator/registry",
-    signal: "/orchestrator/radar",
-  };
-  const labelMap: Record<string, string> = {
-    research: "Continue Investigation",
-    ingestion: "Review Ingestion",
-    proposal: "Check Registry",
-    signal: "View Safety Signal",
-  };
-  const route = eventType ? routeMap[eventType] : "/orchestrator/activity";
-  const label = eventType ? (labelMap[eventType] ?? "View Activity") : "View Activity";
-  const actions: QuickAction[] = [{ label, to: route }];
+  const { title } = selection;
+  const shortcuts = [
+    { label: "Check Registry", to: `/orchestrator/registry?search=${encodeURIComponent(title)}` },
+    { label: "View Graph", to: "/orchestrator/graph" },
+  ];
   return (
     <div className="space-y-3">
-      <ContextSection title="Activity">
+      <ContextSection title="Identity">
         <p className="font-medium">{title}</p>
-        {eventType && <p className="text-xs text-[#64748B] mt-0.5">Type: {eventType}</p>}
-        {detail && <p className="text-xs text-[#64748B]">{detail}</p>}
-        {timestamp && <p className="text-xs text-[#94A3B8] font-mono mt-1">{timestamp}</p>}
+        <p className="mt-0.5 text-xs text-[#64748B]">Type: {selection.eventType ?? "—"}</p>
       </ContextSection>
-      <QuickActionsCard actions={actions} />
+      <QuickActionsCard shortcuts={shortcuts} />
     </div>
   );
 }
@@ -277,63 +166,22 @@ export default function ContextPanel() {
 
   return (
     <aside className="w-64 shrink-0 p-4 overflow-y-auto">
-      <p className="orch-section-header mb-4 text-xs font-semibold uppercase tracking-wide text-[#64748B]">
-        Next Step
-      </p>
       <div className="space-y-4">
         {!selection && <EmptyState />}
         {selection?.kind === "unknown-entity" && (
-          <UnknownEntityContext
-            entity={selection.entity}
-            entityType={selection.entityType}
-            occurrenceCount={selection.occurrenceCount}
-            suggestedAction={selection.suggestedAction}
-          />
+          <UnknownEntityContext selection={selection} />
         )}
         {selection?.kind === "interaction-gap" && (
-          <InteractionGapContext
-            entityA={selection.entityA}
-            entityB={selection.entityB}
-            combinationType={selection.combinationType}
-            occurrenceCount={selection.occurrenceCount}
-            highRiskCount={selection.highRiskCount}
-            safeCount={selection.safeCount}
-            signalPattern={selection.signalPattern}
-          />
+          <InteractionGapContext selection={selection} />
         )}
-        {selection?.kind === "signal" && (
-          <SignalContext
-            title={selection.title}
-            signalType={selection.signalType}
-            entityA={selection.entityA}
-            entityB={selection.entityB}
-          />
-        )}
+        {selection?.kind === "signal" && <SignalContext selection={selection} />}
         {selection?.kind === "ingestion-candidate" && (
-          <IngestionCandidateContext
-            candidateId={selection.candidateId}
-            name={selection.name}
-            canonicalId={selection.canonicalId}
-            sourceDataset={selection.sourceDataset}
-            aliasCount={selection.aliasCount}
-          />
+          <IngestionCandidateContext selection={selection} />
         )}
         {selection?.kind === "registry-entity" && (
-          <RegistryEntityContext
-            canonicalId={selection.canonicalId}
-            registryType={selection.registryType}
-            aliasCount={selection.aliasCount}
-            entityClass={selection.entityClass}
-          />
+          <RegistryEntityContext selection={selection} />
         )}
-        {selection?.kind === "activity" && (
-          <ActivityContext
-            title={selection.title}
-            eventType={selection.eventType}
-            detail={selection.detail}
-            timestamp={selection.timestamp}
-          />
-        )}
+        {selection?.kind === "activity" && <ActivityContext selection={selection} />}
       </div>
     </aside>
   );

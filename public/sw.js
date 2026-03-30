@@ -36,7 +36,9 @@ self.addEventListener('fetch', (event) => {
   // Don't cache icons/favicon — always fetch fresh so app icon updates deploy correctly
   const url = new URL(event.request.url);
   if (url.pathname.startsWith('/icons/') || url.pathname === '/favicon.ico') {
-    event.respondWith(fetch(event.request));
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request).then((c) => c ?? Response.error()))
+    );
     return;
   }
 
@@ -50,9 +52,12 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => {
-        // Fallback to cache
-        return caches.match(event.request);
-      })
+      .catch(() =>
+        caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+          // Avoid respondWith(undefined) when offline / no cache (invalid → net::ERR in DevTools)
+          return fetch(event.request).catch(() => Response.error());
+        })
+      )
   );
 });

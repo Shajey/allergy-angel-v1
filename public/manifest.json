@@ -2,7 +2,7 @@
   "name": "Allergy Angel",
   "short_name": "AllergyAngel",
   "description": "Family allergy and medication safety checks",
-  "start_url": "/",
+  "start_url": "/orchestrator/radar",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#dc2626",
@@ -13,18 +13,6 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
     }
   ]
 }

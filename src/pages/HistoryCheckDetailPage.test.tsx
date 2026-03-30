@@ -5,6 +5,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { ProfileProvider } from "../context/ProfileContext";
 import HistoryCheckDetailPage from "./HistoryCheckDetailPage.jsx";
 
 describe("HistoryCheckDetailPage", () => {
@@ -26,18 +27,52 @@ describe("HistoryCheckDetailPage", () => {
       created_at: "2025-01-15T12:00:00Z",
     };
 
-    (fetch as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ check: mockCheck, events: [] }),
-      })
-      .mockResolvedValueOnce({ ok: false }); // profile fetch fails (optional)
+    const mockProfile = {
+      id: "profile-1",
+      display_name: "Test",
+      known_allergies: [] as string[],
+      current_medications: [] as unknown[],
+      supplements: [] as string[],
+      is_primary: true,
+      created_at: "2025-01-01T00:00:00Z",
+    };
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementation((input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : String(input);
+      if (url.includes("/api/knowledge/aliases")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({}),
+        });
+      }
+      if (url.includes("/api/profile?action=list")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ profiles: [mockProfile] }),
+        });
+      }
+      if (url.includes("/api/history/check-123")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ check: mockCheck, events: [] }),
+        });
+      }
+      if (url.includes("/api/profile?") && url.includes("profileId=")) {
+        return Promise.resolve({ ok: false, json: async () => ({}) });
+      }
+      if (url.includes("/api/trajectory")) {
+        return Promise.resolve({ ok: false, json: async () => ({}) });
+      }
+      return Promise.resolve({ ok: false, json: async () => ({}) });
+    });
 
     render(
       <MemoryRouter initialEntries={["/history/check-123"]}>
-        <Routes>
-          <Route path="/history/:id" element={<HistoryCheckDetailPage />} />
-        </Routes>
+        <ProfileProvider>
+          <Routes>
+            <Route path="/history/:id" element={<HistoryCheckDetailPage />} />
+          </Routes>
+        </ProfileProvider>
       </MemoryRouter>
     );
 

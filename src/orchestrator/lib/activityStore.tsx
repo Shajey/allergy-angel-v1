@@ -12,6 +12,8 @@ export type ActivityEventType =
   | "research_failed"
   | "proposal_drafted"
   | "proposal_exported"
+  | "governance_submitted"
+  | "governance_rejected"
   | "registry_promotion"
   | "api_sync"
   | "candidate_opened"
@@ -30,6 +32,8 @@ export const ACTIVITY_ICONOGRAPHY: Record<
   research_completed: { icon: "🧪", color: "#22D3EE", category: "research" },
   research_failed: { icon: "❌", color: "#b42318", category: "alert" },
   proposal_drafted: { icon: "🏛️", color: "#F59E0B", category: "governance" },
+  governance_submitted: { icon: "🏛️", color: "#D97706", category: "governance" },
+  governance_rejected: { icon: "🏛️", color: "#64748B", category: "governance" },
   proposal_exported: { icon: "🏛️", color: "#F59E0B", category: "governance" },
   registry_promotion: { icon: "🏛️", color: "#F59E0B", category: "governance" },
   api_sync: { icon: "⚡", color: "#3B82F6", category: "api" },

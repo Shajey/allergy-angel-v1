@@ -175,7 +175,7 @@ export function ResearchModal({ open, onClose, context }: ResearchModalProps) {
               )}
               {result.proposal && (
                 <section>
-                  <h3 className="font-medium text-gray-900 mb-2">Draft Proposal</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">Generate Draft Proposal</h3>
                   <pre className="p-3 bg-amber-50 rounded overflow-x-auto text-xs whitespace-pre-wrap">
                     {JSON.stringify(result.proposal, null, 2)}
                   </pre>

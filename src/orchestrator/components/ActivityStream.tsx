@@ -30,6 +30,8 @@ const LUCIDE_ICON_MAP: Record<string, { Icon: LucideIcon; color: string }> = {
   research_completed: { Icon: FlaskConical, color: "#22D3EE" },
   research_failed: { Icon: XCircle, color: "#EF4444" },
   proposal_drafted: { Icon: Landmark, color: "#F59E0B" },
+  governance_submitted: { Icon: Landmark, color: "#D97706" },
+  governance_rejected: { Icon: Landmark, color: "#64748B" },
   proposal_exported: { Icon: Landmark, color: "#F59E0B" },
   registry_promotion: { Icon: Landmark, color: "#F59E0B" },
   api_sync: { Icon: Zap, color: "#3B82F6" },

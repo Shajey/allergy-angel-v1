@@ -42,23 +42,23 @@ function runTests(): number {
   // SignalRadarPanel sections
   const panelPath = path.join(SRC, "orchestrator", "components", "SignalRadarPanel.tsx");
   const panelContent = fs.readFileSync(panelPath, "utf-8");
-  if (assert(panelContent.includes("Emerging Signals"), "Signal Radar has Emerging Signals section")) passed++;
+  if (assert(panelContent.includes("Emerging") && panelContent.includes("Signal Queue"), "Signal Radar has Emerging section + queue header")) passed++;
   else failed++;
-  if (assert(panelContent.includes("Unknown Entities"), "Signal Radar has Unknown Entities section")) passed++;
+  if (assert(panelContent.includes("Active") && panelContent.includes("Signal Queue"), "Signal Radar has Active section")) passed++;
   else failed++;
-  if (assert(panelContent.includes("Governance Queue"), "Signal Radar has Governance Queue section")) passed++;
+  if (assert(panelContent.includes("Governance") && panelContent.includes("Signal Queue"), "Signal Radar has Governance section")) passed++;
   else failed++;
   if (assert(panelContent.includes("SignalCard"), "Signal Radar uses SignalCard")) passed++;
   else failed++;
 
-  // SignalCard link support
+  // O6.4: high-density queue rows (risk bar + subtext + badge; actions in Context panel)
   const cardPath = path.join(SRC, "orchestrator", "components", "SignalCard.tsx");
   const cardContent = fs.readFileSync(cardPath, "utf-8");
-  if (assert(cardContent.includes("linkTo"), "SignalCard supports linkTo")) passed++;
+  if (assert(cardContent.includes("riskLevel"), "SignalCard has riskLevel")) passed++;
   else failed++;
-  if (assert(cardContent.includes("searchParam"), "SignalCard supports searchParam")) passed++;
+  if (assert(cardContent.includes("QueueBadge") || cardContent.includes("badge"), "SignalCard supports badge")) passed++;
   else failed++;
-  if (assert(cardContent.includes("Link"), "SignalCard uses Link for routing")) passed++;
+  if (assert(cardContent.includes("onSelect"), "SignalCard has onSelect")) passed++;
   else failed++;
 
   // Activity feed
@@ -78,7 +78,7 @@ function runTests(): number {
   const commandBarContent = fs.readFileSync(commandBarPath, "utf-8");
   if (assert(commandBarContent.includes("rounded-full"), "CommandBar uses rounded pill for tabs")) passed++;
   else failed++;
-  if (assert(commandBarContent.includes("Governed Safety Intelligence"), "CommandBar has identity subtitle")) passed++;
+  if (assert(commandBarContent.includes("Signals"), "CommandBar includes Signals route")) passed++;
   else failed++;
 
   // Context Panel structure
@@ -86,17 +86,17 @@ function runTests(): number {
   const contextContent = fs.readFileSync(contextPath, "utf-8");
   if (assert(contextContent.includes("Registry"), "Context Panel has Registry block")) passed++;
   else failed++;
-  if (assert(contextContent.includes("Source"), "Context Panel has Source block")) passed++;
+  if (assert(contextContent.includes("Identity"), "Context Panel has Identity block (O6.6)")) passed++;
   else failed++;
-  if (assert(contextContent.includes("Governance"), "Context Panel has Governance block")) passed++;
+  if (assert(contextContent.includes("ingestion-candidate"), "Context Panel handles ingestion selection")) passed++;
   else failed++;
 
-  // Route links in SignalRadarPanel
-  if (assert(panelContent.includes("/orchestrator/radar"), "Signal cards link to radar")) passed++;
+  // O6.2: left rail selects into context; registry/research URLs live in ContextPanel / right rail
+  if (assert(panelContent.includes("setSelection"), "Signal queue sets orchestrator selection")) passed++;
   else failed++;
-  if (assert(panelContent.includes("/orchestrator/registry"), "Signal cards link to registry")) passed++;
+  if (assert(panelContent.includes("fetchRadarEntities"), "Signal queue loads radar entities")) passed++;
   else failed++;
-  if (assert(panelContent.includes("/orchestrator/ingestion"), "Signal cards link to ingestion")) passed++;
+  if (assert(contextContent.includes("/orchestrator/registry"), "Context Panel links to registry")) passed++;
   else failed++;
 
   // No AA contamination

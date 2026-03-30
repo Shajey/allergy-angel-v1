@@ -3,6 +3,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X, History, Search, User, Activity, RotateCcw } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import AllergyAngelMark from '../brand/AllergyAngelMark';
 
 interface MobileDrawerProps {
   open: boolean;
@@ -54,7 +55,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
             <DialogPrimitive.Title className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-              <img src="/icons/icon.svg" alt="" className="h-7 w-7 flex-shrink-0" aria-hidden />
+              <AllergyAngelMark className="h-7 w-7 flex-shrink-0" />
               Allergy Angel
             </DialogPrimitive.Title>
             <DialogPrimitive.Close className="p-2 -mr-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 min-w-[44px] min-h-[44px] flex items-center justify-center">

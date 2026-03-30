@@ -1,56 +1,27 @@
 /**
- * Phase O3 – Quick Actions Card
- * Action buttons for Context Panel.
+ * Phase O6.9 — Right rail: optional tool shortcuts only (center owns draft / research flow).
  */
 
 import { Link } from "react-router-dom";
 
-export interface QuickAction {
-  label: string;
-  to?: string;
-  onClick?: () => void;
+export interface QuickActionsCardProps {
+  shortcuts: Array<{ label: string; to: string }>;
 }
 
-interface QuickActionsCardProps {
-  actions: QuickAction[];
-}
-
-function getButtonClass(label: string): string {
-  if (/investigate in research/i.test(label)) {
-    return "orch-gradient-btn border-0";
-  }
-  if (/draft proposal/i.test(label)) {
-    return "border border-[#F59E0B] bg-amber-50 text-[#B45309] hover:bg-amber-100";
-  }
-  return "border border-[#E2E8F0] bg-white text-[#0F172A] hover:bg-[#F1F5F9]";
-}
-
-export default function QuickActionsCard({ actions }: QuickActionsCardProps) {
+export default function QuickActionsCard({ shortcuts }: QuickActionsCardProps) {
   return (
     <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-3">Next Step</p>
-      <div className="flex flex-wrap gap-2">
-        {actions.map((a, i) => {
-          const btnClass = getButtonClass(a.label);
-          return a.to ? (
-            <Link
-              key={i}
-              to={a.to}
-              className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${btnClass}`}
-            >
-              {a.label}
-            </Link>
-          ) : (
-            <button
-              key={i}
-              type="button"
-              onClick={a.onClick}
-              className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${btnClass}`}
-            >
-              {a.label}
-            </button>
-          );
-        })}
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-3">Shortcuts</p>
+      <div className="flex flex-col gap-2">
+        {shortcuts.map((s) => (
+          <Link
+            key={s.label + s.to}
+            to={s.to}
+            className="inline-flex w-full justify-center rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-xs font-medium text-[#475569] hover:bg-[#F8FAFC] hover:text-[#0F172A]"
+          >
+            {s.label}
+          </Link>
+        ))}
       </div>
     </div>
   );

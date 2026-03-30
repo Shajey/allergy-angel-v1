@@ -112,11 +112,11 @@ function runTests(): number {
   if (assert(contextPanelContent.includes("/orchestrator/research"), "Context Panel links to research")) passed++;
   else failed++;
 
-  // Radar research links
+  // O6.2: center workbench is selection-only; research links remain on Context Panel / right rail
   const unmappedContent = fs.readFileSync(path.join(SRC, "pages", "AdminUnmappedPage.tsx"), "utf-8");
-  if (assert(unmappedContent.includes("buildResearchUrl"), "Radar uses buildResearchUrl")) passed++;
+  if (assert(unmappedContent.includes("useOptionalOrchestratorSelection"), "Radar workbench uses selection context")) passed++;
   else failed++;
-  if (assert(!unmappedContent.includes("ResearchModal") || unmappedContent.includes("buildResearchUrl"), "Radar navigates to workspace (not modal-first)")) passed++;
+  if (assert(!unmappedContent.includes("ResearchModal"), "Radar does not use ResearchModal")) passed++;
   else failed++;
 
   console.log("\n--- Summary ---");

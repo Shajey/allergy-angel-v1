@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Outlet } from 'react-router-dom';
 import { Menu } from 'lucide-react';
+import AllergyAngelMark from '../brand/AllergyAngelMark';
 import NotificationsPanel from './NotificationsPanel';
 import MobileDrawer from './MobileDrawer';
 import ProfileSwitcher from './ProfileSwitcher';
@@ -49,7 +50,7 @@ function AppShell() {
             className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-lg font-semibold text-gray-900 hover:text-gray-700 transition-colors"
             aria-label="Go to Allergy Angel home"
           >
-            <img src="/icons/icon.svg" alt="" className="h-7 w-7 flex-shrink-0" aria-hidden />
+            <AllergyAngelMark className="h-7 w-7 flex-shrink-0" />
             Allergy Angel
           </Link>
 
@@ -73,7 +74,7 @@ function AppShell() {
               className="flex items-center gap-2 text-lg sm:text-xl font-semibold text-gray-900 hover:text-gray-700 transition-colors"
               aria-label="Go to Allergy Angel home"
             >
-              <img src="/icons/icon.svg" alt="" className="h-8 w-8 flex-shrink-0" aria-hidden />
+              <AllergyAngelMark className="h-8 w-8 flex-shrink-0" />
               Allergy Angel
             </Link>
 
